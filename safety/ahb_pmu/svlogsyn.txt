@@ -1,0 +1,13 @@
+# -- IP_0
+./bsc_pmu/hdl/dummy_ahb.sv
+
+# -- IP_1
+./bsc_pmu/hdl/pmu_ahb.sv
+# ---- IP_1 Submodules
+./bsc_pmu/hdl/PMU_raw.sv
+./bsc_pmu/submodules/overflow/PMU_overflow.sv  
+./bsc_pmu/submodules/counters/PMU_counters.sv
+./bsc_pmu/submodules/quota/PMU_quota.sv        
+./bsc_pmu/submodules/MCCU/hdl/MCCU.sv
+./bsc_pmu/submodules/RDC/hdl/RDC.sv
+./bsc_pmu/submodules/crossbar/hdl/crossbar.sv

@@ -1,0 +1,26 @@
+set benchmark $::env(MULTICORE_BENCHMARK)
+#cpu act 0         
+#cpu act 1         
+##cpu act 2         
+##cpu act 3         
+#load $benchmark.riscv/$benchmark-3.riscv
+#load $benchmark.riscv/$benchmark-4.riscv
+#cpu act 3         
+#ep 0x43000000     
+#stack 0x430fff00  
+#cpu act 2         
+#ep 0x42000000     
+#stack 0x420fff00  
+reset
+cpu dis 1
+cpu act 0         
+#cpu act 1
+load $benchmark.riscv/$benchmark-1.riscv
+#load $benchmark.riscv/$benchmark-2.riscv
+cpu act 0
+ep 0x40000000     
+stack 0x400fff00 
+#cpu act 1        
+#ep 0x41000000     
+#stack 0x410fff00  
+run 

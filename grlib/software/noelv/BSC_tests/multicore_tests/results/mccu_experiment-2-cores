@@ -1,0 +1,364 @@
+                                SESSION: Wed Sep 16 17:27:12 2020
+                                GRMON version: v3.2.4 pro (De-Risc) version
+                                ID: 692040366 (ldk)
+                                OS: Linux
+                                Command line: grmon -digilent -u -v -abaud 115200 -log results/mccu_experiment-2-cores -c grmon_scripts/active_cores_2.grmon
+                                
+                                GRMON debug monitor v3.2.4 64-bit pro (De-Risc) version
+                                
+                                Copyright (C) 2020 Cobham Gaisler - All rights reserved.
+                                For latest updates, go to http://www.gaisler.com/
+                                Comments or bug-reports to support@gaisler.com
+                                
+[SE0:sys]         001600270032  JTAG chain (1): xcku040 
+[SE0:sys]         001600270033  Freq detection: Hz = 99965109.780439 (100 MHz), time=0.501000, 5008252 cycles
+[SE0:cli]         001600270033  Device ID:           0x287
+[SE0:cli]         001600270033  GRLIB build version: 4254
+[SE0:cli]         001600270033  Detected frequency:  100.0 MHz
+[SE0:cli]         001600270033  
+[SE0:cli]         001600270033  Component                            Vendor
+[SE0:cli]         001600270033  NOEL-V RISC-V Processor              Cobham Gaisler
+[SE0:cli]         001600270033  NOEL-V RISC-V Processor              Cobham Gaisler
+[SE0:cli]         001600270033  GR Ethernet MAC                      Cobham Gaisler
+[SE0:cli]         001600270033  AHB Debug UART                       Cobham Gaisler
+[SE0:cli]         001600270033  JTAG Debug Link                      Cobham Gaisler
+[SE0:cli]         001600270033  EDCL master interface                Cobham Gaisler
+[SE0:cli]         001600270033  L2-Cache Controller                  Cobham Gaisler
+[SE0:cli]         001600270033  Generic AHB ROM                      Cobham Gaisler
+[SE0:cli]         001600270033  Xilinx MIG Controller                Cobham Gaisler
+[SE0:cli]         001600270033  Unknown device                       BSC
+[SE0:cli]         001600270033  AHB/APB Bridge                       Cobham Gaisler
+[SE0:cli]         001600270033  RISC-V CLINT                         Cobham Gaisler
+[SE0:cli]         001600270033  RISC-V PLIC                          Cobham Gaisler
+[SE0:cli]         001600270033  RISC-V Debug Module                  Cobham Gaisler
+[SE0:cli]         001600270033  AMBA Trace Buffer                    Cobham Gaisler
+[SE0:cli]         001600270033  AHB Status Register                  Cobham Gaisler
+[SE0:cli]         001600270033  General Purpose I/O port             Cobham Gaisler
+[SE0:cli]         001600270033  Core 2                               BSC
+[SE0:cli]         001600270033  Generic UART                         Cobham Gaisler
+[SE0:cli]         001600270033  Version and Revision Register        Cobham Gaisler
+[SE0:cli]         001600270033  Modular Timer Unit                   Cobham Gaisler
+[SE0:cli]         001600270033  
+[SE0:cli]         001600270033  Use command 'info sys' to print a detailed report of attached cores
+[SE0:cli]         001600270033  
+[SE0:sys]         001600270033  01:0bd.00 Cobham Gaisler  NOEL-V RISC-V Processor  (cpu0)
+[SE0:sys]         001600270033  ff:0      AHB Master 0
+[SE0:sys]         001600270033  01:0bd.00 Cobham Gaisler  NOEL-V RISC-V Processor  (cpu1)
+[SE0:sys]         001600270033  ff:1      AHB Master 1
+[SE0:sys]         001600270033  01:01d.00 Cobham Gaisler  GR Ethernet MAC  (greth0)
+[SE0:sys]         001600270033  ff:2      AHB Master 2
+[SE0:sys]         001600270033   0:4      APB: 80000500 - 80000600
+[SE0:sys]         001600270033            IRQ: 5
+[SE0:sys]         001600270033            edcl ip 192.168.0.51, buffer 2 kbyte
+[SE0:sys]         001600270033  01:007.00 Cobham Gaisler  AHB Debug UART  (ahbuart0)
+[SE0:sys]         001600270033  ff:3      AHB Master 3
+[SE0:sys]         001600270033   0:1      APB: 80000e00 - 80000f00
+[SE0:sys]         001600270033            Baudrate 115200, AHB frequency 100.00 MHz
+[SE0:sys]         001600270033  01:01c.02 Cobham Gaisler  JTAG Debug Link  (ahbjtag0)
+[SE0:sys]         001600270033  ff:4      AHB Master 4
+[SE0:sys]         001600270033  01:08c.00 Cobham Gaisler  EDCL master interface  (edcl0)
+[SE0:sys]         001600270033  ff:5      AHB Master 5
+[SE0:sys]         001600270033  01:04b.03 Cobham Gaisler  L2-Cache Controller  (l2cache0)
+[SE0:sys]         001600270033  ff:0      AHB: 40000000 - 80000000
+[SE0:sys]         001600270033            AHB: ff000000 - ff400000
+[SE0:sys]         001600270033            USR: 00000110
+[SE0:sys]         001600270033            L2C: 4-ways, cachesize: 256 kbytes, mtrr: 0, AHB SPLIT support
+[SE0:sys]         001600270033  01:01b.00 Cobham Gaisler  Generic AHB ROM  (ahbrom0)
+[SE0:sys]         001600270033  ff:1      AHB: 00000000 - 00100000
+[SE0:sys]         001600270033            32-bit ROM: 1 MB @ 0x00000000
+[SE0:sys]         001600270033  01:090.00 Cobham Gaisler  Xilinx MIG Controller  (mig0)
+[SE0:sys]         001600270033  ff:2      AHB: 40000000 - 80000000
+[SE0:sys]         001600270033            SDRAM: 1024 Mbyte
+[SE0:sys]         001600270033  0e:003.00 BSC  Unknown device  (adev9)
+[SE0:sys]         001600270033  ff:4      AHB: 80200000 - 80300000
+[SE0:sys]         001600270033            IRQ: 1
+[SE0:sys]         001600270033  01:006.01 Cobham Gaisler  AHB/APB Bridge  (apbmst0)
+[SE0:sys]         001600270033  ff:5      AHB: 80000000 - 80100000
+[SE0:sys]         001600270033  01:0c3.00 Cobham Gaisler  RISC-V CLINT  (clint0)
+[SE0:sys]         001600270033  ff:6      AHB: e0100000 - e0200000
+[SE0:sys]         001600270033  01:0c2.00 Cobham Gaisler  RISC-V PLIC  (plic0)
+[SE0:sys]         001600270033  ff:7      AHB: 84000000 - 88000000
+[SE0:sys]         001600270033            4 contexts, 32 interrupt sources
+[SE0:sys]         001600270033  01:0be.01 Cobham Gaisler  RISC-V Debug Module  (dm0)
+[SE0:sys]         001600270033  ff:8      AHB: 90000000 - a0000000
+[SE0:sys]         001600270033            hart0: DXLEN 64, MXLEN 64, SXLEN 64, UXLEN 64
+[SE0:sys]         001600270033                   ISA A D F I M,  Modes M S U
+[SE0:sys]         001600270033                   Stack pointer 0x7ffffff0
+[SE0:sys]         001600270033                   icache 4 * 4 kB, 32 B/line, rnd
+[SE0:sys]         001600270033                   dcache 4 * 4 kB, 32 B/line, rnd
+[SE0:sys]         001600270033                   2 triggers
+[SE0:sys]         001600270033            hart1: DXLEN 64, MXLEN 64, SXLEN 64, UXLEN 64
+[SE0:sys]         001600270033                   ISA A D F I M,  Modes M S U
+[SE0:sys]         001600270033                   Stack pointer 0x7ffffff0
+[SE0:sys]         001600270033                   icache 4 * 4 kB, 32 B/line, rnd
+[SE0:sys]         001600270033                   dcache 4 * 4 kB, 32 B/line, rnd
+[SE0:sys]         001600270033                   2 triggers
+[SE0:sys]         001600270033  01:017.00 Cobham Gaisler  AMBA Trace Buffer  (ahbtrace0)
+[SE0:sys]         001600270033  ff:b      AHB: fff00000 - fff20000
+[SE0:sys]         001600270033            Trace buffer size: 128 lines
+[SE0:sys]         001600270033  01:052.00 Cobham Gaisler  AHB Status Register  (ahbstat0)
+[SE0:sys]         001600270033   0:2      APB: 80000f00 - 80001000
+[SE0:sys]         001600270033            IRQ: 4
+[SE0:sys]         001600270033  01:01a.03 Cobham Gaisler  General Purpose I/O port  (gpio0)
+[SE0:sys]         001600270033   0:3      APB: 80000400 - 80000500
+[SE0:sys]         001600270033  0e:002.00 BSC  Core 2  (adev17)
+[SE0:sys]         001600270033   0:5      APB: 80000600 - 80000700
+[SE0:sys]         001600270033  01:00c.01 Cobham Gaisler  Generic UART  (uart0)
+[SE0:sys]         001600270033   0:6      APB: 80000100 - 80000200
+[SE0:sys]         001600270033            IRQ: 1
+[SE0:sys]         001600270033            Baudrate 114678, FIFO debug mode available
+[SE0:sys]         001600270033  01:03a.00 Cobham Gaisler  Version and Revision Register  (version0)
+[SE0:sys]         001600270033   0:7      APB: 80000200 - 80000300
+[SE0:sys]         001600270033            Version 3, Revision 0
+[SE0:sys]         001600270033  01:011.01 Cobham Gaisler  Modular Timer Unit  (gptimer0)
+[SE0:sys]         001600270033   0:8      APB: 80000300 - 80000400
+[SE0:sys]         001600270033            IRQ: 2
+[SE0:sys]         001600270033            16-bit scalar, 2 * 32-bit timers, divisor 100
+[SE0:sys]         001600270033  NOEL-V RISC-V Processor
+[SE0:sys]         001600270033                  ISA and extensions                      0x8000000000141129
+[SE0:sys]         001600270033                  Machine status register (mstatus)       0x0000000a00000000
+[SE0:sys]         001600270033                  Machine interrupt pending (mip)         0x0000000000000000
+[SE0:sys]         001600270033  NOEL-V RISC-V Processor
+[SE0:sys]         001600270033                  ISA and extensions                      0x8000000000141129
+[SE0:sys]         001600270033                  Machine status register (mstatus)       0x0000000a00000000
+[SE0:sys]         001600270033                  Machine interrupt pending (mip)         0x0000000000000000
+[SE0:sys]         001600270033  GR Ethernet MAC
+[SE0:sys]         001600270033      0x80000500  Control register                        0x94000000
+[SE0:sys]         001600270033      0x80000504  Status register                         0x00000000
+[SE0:sys]         001600270033      0x80000508  MAC address MSB                         0x00000000
+[SE0:sys]         001600270033      0x8000050c  MAC address LSB                         0x00000000
+[SE0:sys]         001600270033      0x80000510  MDIO register                           0x7949384a
+[SE0:sys]         001600270033      0x80000514  Tx descriptor register                  0x00000000
+[SE0:sys]         001600270033      0x80000518  Rx descriptor register                  0x00000000
+[SE0:sys]         001600270033      0x8000051c  EDCL IP register                        0xc0a80033
+[SE0:sys]         001600270033      0x80000520  Hash table MSB register                 0x00000000
+[SE0:sys]         001600270033      0x80000524  Hash table LSB register                 0x00000000
+[SE0:sys]         001600270033      0x80000528  ECDL MAC address MSB                    0x00000200
+[SE0:sys]         001600270033      0x8000052c  ECDL MAC address LSB                    0x00000000
+[SE0:sys]         001600270033  L2-Cache Controller
+[SE0:sys]         001600270033      0xff000000  L2C Control register                    0x80040000
+[SE0:sys]         001600270033      0xff000004  L2C Status register                     0x46002103
+[SE0:sys]         001600270033      0xff000020  L2C Error status/control                0x02000000
+[SE0:sys]         001600270033  RISC-V CLINT
+[SE0:sys]         001600270033      0xe0100000  hart0 msip                              0x00000000
+[SE0:sys]         001600270033      0xe0104000  hart0 mtimecmp lo                       0xffffffff
+[SE0:sys]         001600270033      0xe0104004  hart0 mtimecmp hi                       0xffffffff
+[SE0:sys]         001600270033      0xe0100004  hart1 msip                              0x00000000
+[SE0:sys]         001600270033      0xe0104008  hart1 mtimecmp lo                       0xffffffff
+[SE0:sys]         001600270033      0xe010400c  hart1 mtimecmp hi                       0xffffffff
+[SE0:sys]         001600270033      0xe0100008  hart2 msip                              0x00000000
+[SE0:sys]         001600270033      0xe0104010  hart2 mtimecmp lo                       0x00000000
+[SE0:sys]         001600270033      0xe0104014  hart2 mtimecmp hi                       0x00000000
+[SE0:sys]         001600270033      0xe010000c  hart3 msip                              0x00000000
+[SE0:sys]         001600270033      0xe0104018  hart3 mtimecmp lo                       0x00000000
+[SE0:sys]         001600270033      0xe010401c  hart3 mtimecmp hi                       0x00000000
+[SE0:sys]         001600270033      0xe010bff8  mtime lo                                0x00000000
+[SE0:sys]         001600270033      0xe010bffc  mtime hi                                0x00000000
+[SE0:sys]         001600270033  RISC-V PLIC
+[SE0:sys]         001600270033      0x84000004  Interrupt source  1 priority            0x00000000
+[SE0:sys]         001600270033      0x84000008  Interrupt source  2 priority            0x00000000
+[SE0:sys]         001600270033      0x8400000c  Interrupt source  3 priority            0x00000000
+[SE0:sys]         001600270033      0x84000010  Interrupt source  4 priority            0x00000000
+[SE0:sys]         001600270033      0x84000014  Interrupt source  5 priority            0x00000000
+[SE0:sys]         001600270033      0x84000018  Interrupt source  6 priority            0x00000000
+[SE0:sys]         001600270033      0x8400001c  Interrupt source  7 priority            0x00000000
+[SE0:sys]         001600270033      0x84000020  Interrupt source  8 priority            0x00000000
+[SE0:sys]         001600270033      0x84000024  Interrupt source  9 priority            0x00000000
+[SE0:sys]         001600270033      0x84000028  Interrupt source 10 priority            0x00000000
+[SE0:sys]         001600270033      0x8400002c  Interrupt source 11 priority            0x00000000
+[SE0:sys]         001600270033      0x84000030  Interrupt source 12 priority            0x00000000
+[SE0:sys]         001600270033      0x84000034  Interrupt source 13 priority            0x00000000
+[SE0:sys]         001600270033      0x84000038  Interrupt source 14 priority            0x00000000
+[SE0:sys]         001600270033      0x8400003c  Interrupt source 15 priority            0x00000000
+[SE0:sys]         001600270033      0x84000040  Interrupt source 16 priority            0x00000000
+[SE0:sys]         001600270033      0x84000044  Interrupt source 17 priority            0x00000000
+[SE0:sys]         001600270033      0x84000048  Interrupt source 18 priority            0x00000000
+[SE0:sys]         001600270033      0x8400004c  Interrupt source 19 priority            0x00000000
+[SE0:sys]         001600270033      0x84000050  Interrupt source 20 priority            0x00000000
+[SE0:sys]         001600270033      0x84000054  Interrupt source 21 priority            0x00000000
+[SE0:sys]         001600270033      0x84000058  Interrupt source 22 priority            0x00000000
+[SE0:sys]         001600270033      0x8400005c  Interrupt source 23 priority            0x00000000
+[SE0:sys]         001600270033      0x84000060  Interrupt source 24 priority            0x00000000
+[SE0:sys]         001600270033      0x84000064  Interrupt source 25 priority            0x00000000
+[SE0:sys]         001600270033      0x84000068  Interrupt source 26 priority            0x00000000
+[SE0:sys]         001600270033      0x8400006c  Interrupt source 27 priority            0x00000000
+[SE0:sys]         001600270033      0x84000070  Interrupt source 28 priority            0x00000000
+[SE0:sys]         001600270033      0x84000074  Interrupt source 29 priority            0x00000000
+[SE0:sys]         001600270033      0x84000078  Interrupt source 30 priority            0x00000000
+[SE0:sys]         001600270033      0x8400007c  Interrupt source 31 priority            0x00000000
+[SE0:sys]         001600270033      0x84000080  Interrupt source 32 priority            0x00000000
+[SE0:sys]         001600270033      0x84001000  Interrupt Pending bit  0-31             0x00000890
+[SE0:sys]         001600270033      0x84001004  Interrupt Pending bit 32-63             0x00000000
+[SE0:sys]         001600270033      0x84002000  context  0 enable source  0-31          0x00000000
+[SE0:sys]         001600270033      0x84002004  context  0 enable source 32-63          0x00000000
+[SE0:sys]         001600270033      0x84002080  context  1 enable source  0-31          0x00000000
+[SE0:sys]         001600270033      0x84002084  context  1 enable source 32-63          0x00000000
+[SE0:sys]         001600270033      0x84002100  context  2 enable source  0-31          0x00000000
+[SE0:sys]         001600270033      0x84002104  context  2 enable source 32-63          0x00000000
+[SE0:sys]         001600270033      0x84002180  context  3 enable source  0-31          0x00000000
+[SE0:sys]         001600270033      0x84002184  context  3 enable source 32-63          0x00000000
+[SE0:sys]         001600270033      0x84200000  context  0 priority threshold           0x00000001
+[SE0:sys]         001600270033      0x84201000  context  1 priority threshold           0x00000001
+[SE0:sys]         001600270033      0x84202000  context  2 priority threshold           0x00000001
+[SE0:sys]         001600270033      0x84203000  context  3 priority threshold           0x00000001
+[SE0:sys]         001600270033  AMBA Trace Buffer
+[SE0:sys]         001600270033      0xfff00000  Trace buffer control register           0x00008080
+[SE0:sys]         001600270033      0xfff00004  Trace buffer index register             0x000007f0
+[SE0:sys]         001600270033      0xfff00008  Trace buffer time tag counter           0x00000000
+[SE0:sys]         001600270033      0xfff0000c  Trace buffer mst/slv filter register    0x00000000
+[SE0:sys]         001600270033      0xfff00010  Trace buffer bp 1 address               0x00000000
+[SE0:sys]         001600270033      0xfff00014  Trace buffer bp 1 mask                  0x00000000
+[SE0:sys]         001600270033      0xfff00018  Trace buffer bp 2 address               0x00000000
+[SE0:sys]         001600270033      0xfff0001c  Trace buffer bp 2 mask                  0x00000000
+[SE0:sys]         001600270033  AHB Status Register
+[SE0:sys]         001600270033      0x80000f00  Status register                         0x00000022
+[SE0:sys]         001600270033      0x80000f04  Failing address register                0x80000f04
+[SE0:sys]         001600270033  General Purpose I/O port
+[SE0:sys]         001600270033      0x80000400  I/O port data register                  0x0000ff00
+[SE0:sys]         001600270033      0x80000404  I/O port output register                0x00000000
+[SE0:sys]         001600270033      0x80000408  I/O port direction register             0x00000000
+[SE0:sys]         001600270033      0x8000040c  I/O interrupt mask register             0x00000000
+[SE0:sys]         001600270033      0x80000410  I/O interrupt polarity register         0x00000000
+[SE0:sys]         001600270033      0x80000414  I/O interrupt edge register             0x00000000
+[SE0:sys]         001600270033      0x8000041c  Capability register                     0x00000013
+[SE0:sys]         001600270033  Generic UART
+[SE0:sys]         001600270033      0x80000104  UART Status register                    0x00000086
+[SE0:sys]         001600270033      0x80000108  UART Control register                   0x80000003
+[SE0:sys]         001600270033      0x8000010c  UART Scaler register                    0x0000006c
+[SE0:sys]         001600270033  Version and Revision Register
+[SE0:sys]         001600270033      0x80000200  Configuration register                  0x00030000
+[SE0:sys]         001600270033  Modular Timer Unit
+[SE0:sys]         001600270033      0x80000300  Scalar value register                   0x00000063
+[SE0:sys]         001600270033      0x80000304  Scalar reload value register            0x00000063
+[SE0:sys]         001600270033      0x80000308  Configuration register                  0x00000112
+[SE0:sys]         001600270033      0x80000310  Timer 0 Value register                  0xffffffff
+[SE0:sys]         001600270033      0x80000314  Timer 0 Reload value register           0xffffffff
+[SE0:sys]         001600270033      0x80000318  Timer 0 Control register                0x00000043
+[SE0:sys]         001600270033      0x80000320  Timer 1 Value register                  0x00000000
+[SE0:sys]         001600270033      0x80000324  Timer 1 Reload value register           0x00000000
+[SE0:sys]         001600270033      0x80000328  Timer 1 Control register                0x00000040
+[SE0:cli]         001600270033  grmon3> ::source [file normalize {grmon_scripts/active_cores_2.grmon}]
+[SE0:cli]         001600270033  
+[SE0:cli]         001600270033          40000000 .text.init           0B              [>               ]   0%
+[SE0:cli]         001600270033          40000000 .text.init         592B              [===============>] 100%
+[SE0:cli]         001600270033  
+[SE0:cli]         001600270033          40001000 .tohost              0B              [>               ]   0%
+[SE0:cli]         001600270033          40001000 .tohost             72B              [===============>] 100%
+[SE0:cli]         001600270033  
+[SE0:cli]         001600270033          40002000 .text                0B              [>               ]   0%
+[SE0:cli]         001600270034          40002000 .text              8.0kB /  49.3kB   [==>             ]  16%
+[SE0:cli]         001600270034          40002000 .text             16.0kB /  49.3kB   [====>           ]  32%
+[SE0:cli]         001600270034          40002000 .text             24.0kB /  49.3kB   [=======>        ]  48%
+[SE0:cli]         001600270034          40002000 .text             32.0kB /  49.3kB   [=========>      ]  64%
+[SE0:cli]         001600270034          40002000 .text             40.0kB /  49.3kB   [============>   ]  81%
+[SE0:cli]         001600270034          40002000 .text             48.0kB /  49.3kB   [==============> ]  97%
+[SE0:cli]         001600270034          40002000 .text             49.3kB /  49.3kB   [===============>] 100%
+[SE0:cli]         001600270034  
+[SE0:cli]         001600270034          4000E560 .data                0B              [>               ]   0%
+[SE0:cli]         001600270034          4000E560 .data               48B              [===============>] 100%
+[SE0:cli]         001600270034  
+[SE0:cli]         001600270034          4000E590 .sdata               0B              [>               ]   0%
+[SE0:cli]         001600270034          4000E590 .sdata             104B              [===============>] 100%
+[SE0:cli]         001600270034  
+[SE0:cli]         001600270034          4000E5F8 .rodata              0B              [>               ]   0%
+[SE0:cli]         001600270034          4000E5F8 .rodata            840B              [===============>] 100%
+[SE0:cli]         001600270034  
+[SE0:cli]         001600270034          4000E940 .rodata.str1.8       0B              [>               ]   0%
+[SE0:cli]         001600270034          4000E940 .rodata.str1.8     3.1kB /   3.1kB   [===============>] 100%
+[SE0:cli]         001600270034  
+[SE0:cli]         001600270034          40017B00 .tdata               0B              [>               ]   0%
+[SE0:cli]         001600270034          40017B00 .tdata               8B              [===============>] 100%
+[SE0:cli]         001600270034  Total size: 54.08kB (597.12kbit/s)
+[SE0:cli]         001600270034  Entry point 0x40000000
+[SE0:cli]         001600270034  Image /home/fbasjalo/BSC_tests/multicore_tests/mccu_experiment.riscv/mccu_experiment-1.riscv loaded
+[SE0:cli]         001600270034  
+[SE0:cli]         001600270034          41000000 .text.init           0B              [>               ]   0%
+[SE0:cli]         001600270034          41000000 .text.init         592B              [===============>] 100%
+[SE0:cli]         001600270034  
+[SE0:cli]         001600270034          41001000 .tohost              0B              [>               ]   0%
+[SE0:cli]         001600270034          41001000 .tohost             72B              [===============>] 100%
+[SE0:cli]         001600270034  
+[SE0:cli]         001600270034          41002000 .text                0B              [>               ]   0%
+[SE0:cli]         001600270034          41002000 .text              8.0kB /  49.4kB   [==>             ]  16%
+[SE0:cli]         001600270034          41002000 .text             16.0kB /  49.4kB   [====>           ]  32%
+[SE0:cli]         001600270035          41002000 .text             24.0kB /  49.4kB   [=======>        ]  48%
+[SE0:cli]         001600270035          41002000 .text             32.0kB /  49.4kB   [=========>      ]  64%
+[SE0:cli]         001600270035          41002000 .text             40.0kB /  49.4kB   [============>   ]  81%
+[SE0:cli]         001600270035          41002000 .text             48.0kB /  49.4kB   [==============> ]  97%
+[SE0:cli]         001600270035          41002000 .text             49.4kB /  49.4kB   [===============>] 100%
+[SE0:cli]         001600270035  
+[SE0:cli]         001600270035          4100E580 .data                0B              [>               ]   0%
+[SE0:cli]         001600270035          4100E580 .data               48B              [===============>] 100%
+[SE0:cli]         001600270035  
+[SE0:cli]         001600270035          4100E5B0 .sdata               0B              [>               ]   0%
+[SE0:cli]         001600270035          4100E5B0 .sdata             104B              [===============>] 100%
+[SE0:cli]         001600270035  
+[SE0:cli]         001600270035          4100E618 .rodata              0B              [>               ]   0%
+[SE0:cli]         001600270035          4100E618 .rodata            840B              [===============>] 100%
+[SE0:cli]         001600270035  
+[SE0:cli]         001600270035          4100E960 .rodata.str1.8       0B              [>               ]   0%
+[SE0:cli]         001600270035          4100E960 .rodata.str1.8     3.1kB /   3.1kB   [===============>] 100%
+[SE0:cli]         001600270035  
+[SE0:cli]         001600270035          41017B00 .tdata               0B              [>               ]   0%
+[SE0:cli]         001600270035          41017B00 .tdata               8B              [===============>] 100%
+[SE0:cli]         001600270035  Total size: 54.12kB (594.26kbit/s)
+[SE0:cli]         001600270035  Entry point 0x41000000
+[SE0:cli]         001600270035  Image /home/fbasjalo/BSC_tests/multicore_tests/mccu_experiment.riscv/mccu_experiment-2.riscv loaded
+[SE0:cli]         001600270035  Cpu 0 entry point: 0x0000000040000000
+[SE0:cli]         001600270035   CPU 0 stack pointer: 0x00000000400fff00
+[SE0:cli]         001600270035  Cpu 1 entry point: 0x0000000041000000
+[SE0:cli]         001600270035   CPU 1 stack pointer: 0x00000000410fff00
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  CCOONNFFIIGGUURREE__PPLLIICC::
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  ppeennddiinngg  bbiittss::  889900
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  INTERRUPT_HANDLER:
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  CORE: 1
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  mcause: 11
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  mip: 2048
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  mip: 0
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  pending bits: 890
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  Interrupt source: 0
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  MACHINE_EXTERNAL_INTERUPT:
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  Quota left1: 200
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  Quota left2: 4294967295
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  Quota left3: 4294967295
+[SE0:term0]       001600270035  
+[SE0:term0]       001600270035  pending bits: 890
+[SE0:exec]        001600270037  
+[SE0:exec]        001600270037  CPU 0:  Interrupted!
+[SE0:exec]        001600270037          0x400030e4: 5e053683  ld      a3, 1504(a0)
+[SE0:exec]        001600270037  CPU 1:  Interrupted!
+[SE0:exec]        001600270037          0x4100e558: 0000006f  j       0x4100e558    <main+56>
+[SE0:cli]         001600270037  SIGINT SIGINT
+[SE0:cli]         001600270037  
+[SE0:cli]         001600270039  grmon3> exit
+[SE0:cli]         001600270039  

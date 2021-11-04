@@ -1,0 +1,9 @@
+[submodule "interconnect/axi"]
+	path = interconnect/axi
+	url = https://github.com/pulp-platform/axi.git
+[submodule "interconnect/common_cells"]
+	path = interconnect/common_cells
+	url = https://github.com/pulp-platform/common_cells.git
+[submodule "safety/ahb_pmu/bsc_pmu"]
+	path = safety/ahb_pmu/bsc_pmu
+	url = https://gitlab.bsc.es/caos_hw/hdl_ip/bsc_pmu.git

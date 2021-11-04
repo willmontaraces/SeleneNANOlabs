@@ -1,0 +1,663 @@
+                                SESSION: Wed Sep 16 14:41:15 2020
+                                GRMON version: v3.2.4 pro (De-Risc) version
+                                ID: 692040366 (ldk)
+                                OS: Linux
+                                Command line: grmon -digilent -u -v -abaud 115200 -log results/mccu_tests-2-cores -c grmon_scripts/active_cores_2.grmon
+                                
+                                GRMON debug monitor v3.2.4 64-bit pro (De-Risc) version
+                                
+                                Copyright (C) 2020 Cobham Gaisler - All rights reserved.
+                                For latest updates, go to http://www.gaisler.com/
+                                Comments or bug-reports to support@gaisler.com
+                                
+[SE0:sys]         001600260076  JTAG chain (1): xcku040 
+[SE0:sys]         001600260076  Freq detection: Hz = 99944630.738523 (100 MHz), time=0.501000, 5007226 cycles
+[SE0:cli]         001600260077  Device ID:           0x287
+[SE0:cli]         001600260077  GRLIB build version: 4254
+[SE0:cli]         001600260077  Detected frequency:  100.0 MHz
+[SE0:cli]         001600260077  
+[SE0:cli]         001600260077  Component                            Vendor
+[SE0:cli]         001600260077  NOEL-V RISC-V Processor              Cobham Gaisler
+[SE0:cli]         001600260077  NOEL-V RISC-V Processor              Cobham Gaisler
+[SE0:cli]         001600260077  GR Ethernet MAC                      Cobham Gaisler
+[SE0:cli]         001600260077  AHB Debug UART                       Cobham Gaisler
+[SE0:cli]         001600260077  JTAG Debug Link                      Cobham Gaisler
+[SE0:cli]         001600260077  EDCL master interface                Cobham Gaisler
+[SE0:cli]         001600260077  L2-Cache Controller                  Cobham Gaisler
+[SE0:cli]         001600260077  Generic AHB ROM                      Cobham Gaisler
+[SE0:cli]         001600260077  Xilinx MIG Controller                Cobham Gaisler
+[SE0:cli]         001600260077  Unknown device                       BSC
+[SE0:cli]         001600260077  AHB/APB Bridge                       Cobham Gaisler
+[SE0:cli]         001600260077  RISC-V CLINT                         Cobham Gaisler
+[SE0:cli]         001600260077  RISC-V PLIC                          Cobham Gaisler
+[SE0:cli]         001600260077  RISC-V Debug Module                  Cobham Gaisler
+[SE0:cli]         001600260077  AMBA Trace Buffer                    Cobham Gaisler
+[SE0:cli]         001600260077  AHB Status Register                  Cobham Gaisler
+[SE0:cli]         001600260077  General Purpose I/O port             Cobham Gaisler
+[SE0:cli]         001600260077  Core 2                               BSC
+[SE0:cli]         001600260077  Generic UART                         Cobham Gaisler
+[SE0:cli]         001600260077  Version and Revision Register        Cobham Gaisler
+[SE0:cli]         001600260077  Modular Timer Unit                   Cobham Gaisler
+[SE0:cli]         001600260077  
+[SE0:cli]         001600260077  Use command 'info sys' to print a detailed report of attached cores
+[SE0:cli]         001600260077  
+[SE0:sys]         001600260077  01:0bd.00 Cobham Gaisler  NOEL-V RISC-V Processor  (cpu0)
+[SE0:sys]         001600260077  ff:0      AHB Master 0
+[SE0:sys]         001600260077  01:0bd.00 Cobham Gaisler  NOEL-V RISC-V Processor  (cpu1)
+[SE0:sys]         001600260077  ff:1      AHB Master 1
+[SE0:sys]         001600260077  01:01d.00 Cobham Gaisler  GR Ethernet MAC  (greth0)
+[SE0:sys]         001600260077  ff:2      AHB Master 2
+[SE0:sys]         001600260077   0:4      APB: 80000500 - 80000600
+[SE0:sys]         001600260077            IRQ: 5
+[SE0:sys]         001600260077            edcl ip 192.168.0.51, buffer 2 kbyte
+[SE0:sys]         001600260077  01:007.00 Cobham Gaisler  AHB Debug UART  (ahbuart0)
+[SE0:sys]         001600260077  ff:3      AHB Master 3
+[SE0:sys]         001600260077   0:1      APB: 80000e00 - 80000f00
+[SE0:sys]         001600260077            Baudrate 115200, AHB frequency 100.00 MHz
+[SE0:sys]         001600260077  01:01c.02 Cobham Gaisler  JTAG Debug Link  (ahbjtag0)
+[SE0:sys]         001600260077  ff:4      AHB Master 4
+[SE0:sys]         001600260077  01:08c.00 Cobham Gaisler  EDCL master interface  (edcl0)
+[SE0:sys]         001600260077  ff:5      AHB Master 5
+[SE0:sys]         001600260077  01:04b.03 Cobham Gaisler  L2-Cache Controller  (l2cache0)
+[SE0:sys]         001600260077  ff:0      AHB: 40000000 - 80000000
+[SE0:sys]         001600260077            AHB: ff000000 - ff400000
+[SE0:sys]         001600260077            USR: 00000110
+[SE0:sys]         001600260077            L2C: 4-ways, cachesize: 256 kbytes, mtrr: 0, AHB SPLIT support
+[SE0:sys]         001600260077  01:01b.00 Cobham Gaisler  Generic AHB ROM  (ahbrom0)
+[SE0:sys]         001600260077  ff:1      AHB: 00000000 - 00100000
+[SE0:sys]         001600260077            32-bit ROM: 1 MB @ 0x00000000
+[SE0:sys]         001600260077  01:090.00 Cobham Gaisler  Xilinx MIG Controller  (mig0)
+[SE0:sys]         001600260077  ff:2      AHB: 40000000 - 80000000
+[SE0:sys]         001600260077            SDRAM: 1024 Mbyte
+[SE0:sys]         001600260077  0e:003.00 BSC  Unknown device  (adev9)
+[SE0:sys]         001600260077  ff:4      AHB: 80200000 - 80300000
+[SE0:sys]         001600260077            IRQ: 1
+[SE0:sys]         001600260077  01:006.01 Cobham Gaisler  AHB/APB Bridge  (apbmst0)
+[SE0:sys]         001600260077  ff:5      AHB: 80000000 - 80100000
+[SE0:sys]         001600260077  01:0c3.00 Cobham Gaisler  RISC-V CLINT  (clint0)
+[SE0:sys]         001600260077  ff:6      AHB: e0100000 - e0200000
+[SE0:sys]         001600260077  01:0c2.00 Cobham Gaisler  RISC-V PLIC  (plic0)
+[SE0:sys]         001600260077  ff:7      AHB: 84000000 - 88000000
+[SE0:sys]         001600260077            4 contexts, 32 interrupt sources
+[SE0:sys]         001600260077  01:0be.01 Cobham Gaisler  RISC-V Debug Module  (dm0)
+[SE0:sys]         001600260077  ff:8      AHB: 90000000 - a0000000
+[SE0:sys]         001600260077            hart0: DXLEN 64, MXLEN 64, SXLEN 64, UXLEN 64
+[SE0:sys]         001600260077                   ISA A D F I M,  Modes M S U
+[SE0:sys]         001600260077                   Stack pointer 0x7ffffff0
+[SE0:sys]         001600260077                   icache 4 * 4 kB, 32 B/line, rnd
+[SE0:sys]         001600260077                   dcache 4 * 4 kB, 32 B/line, rnd
+[SE0:sys]         001600260077                   2 triggers
+[SE0:sys]         001600260077            hart1: DXLEN 64, MXLEN 64, SXLEN 64, UXLEN 64
+[SE0:sys]         001600260077                   ISA A D F I M,  Modes M S U
+[SE0:sys]         001600260077                   Stack pointer 0x7ffffff0
+[SE0:sys]         001600260077                   icache 4 * 4 kB, 32 B/line, rnd
+[SE0:sys]         001600260077                   dcache 4 * 4 kB, 32 B/line, rnd
+[SE0:sys]         001600260077                   2 triggers
+[SE0:sys]         001600260077  01:017.00 Cobham Gaisler  AMBA Trace Buffer  (ahbtrace0)
+[SE0:sys]         001600260077  ff:b      AHB: fff00000 - fff20000
+[SE0:sys]         001600260077            Trace buffer size: 128 lines
+[SE0:sys]         001600260077  01:052.00 Cobham Gaisler  AHB Status Register  (ahbstat0)
+[SE0:sys]         001600260077   0:2      APB: 80000f00 - 80001000
+[SE0:sys]         001600260077            IRQ: 4
+[SE0:sys]         001600260077  01:01a.03 Cobham Gaisler  General Purpose I/O port  (gpio0)
+[SE0:sys]         001600260077   0:3      APB: 80000400 - 80000500
+[SE0:sys]         001600260077  0e:002.00 BSC  Core 2  (adev17)
+[SE0:sys]         001600260077   0:5      APB: 80000600 - 80000700
+[SE0:sys]         001600260077  01:00c.01 Cobham Gaisler  Generic UART  (uart0)
+[SE0:sys]         001600260077   0:6      APB: 80000100 - 80000200
+[SE0:sys]         001600260077            IRQ: 1
+[SE0:sys]         001600260077            Baudrate 114678, FIFO debug mode available
+[SE0:sys]         001600260077  01:03a.00 Cobham Gaisler  Version and Revision Register  (version0)
+[SE0:sys]         001600260077   0:7      APB: 80000200 - 80000300
+[SE0:sys]         001600260077            Version 3, Revision 0
+[SE0:sys]         001600260077  01:011.01 Cobham Gaisler  Modular Timer Unit  (gptimer0)
+[SE0:sys]         001600260077   0:8      APB: 80000300 - 80000400
+[SE0:sys]         001600260077            IRQ: 2
+[SE0:sys]         001600260077            16-bit scalar, 2 * 32-bit timers, divisor 100
+[SE0:sys]         001600260077  NOEL-V RISC-V Processor
+[SE0:sys]         001600260077                  ISA and extensions                      0x8000000000141129
+[SE0:sys]         001600260077                  Machine status register (mstatus)       0x0000000a00000000
+[SE0:sys]         001600260077                  Machine interrupt pending (mip)         0x0000000000000000
+[SE0:sys]         001600260077  NOEL-V RISC-V Processor
+[SE0:sys]         001600260077                  ISA and extensions                      0x8000000000141129
+[SE0:sys]         001600260077                  Machine status register (mstatus)       0x0000000a00000000
+[SE0:sys]         001600260077                  Machine interrupt pending (mip)         0x0000000000000000
+[SE0:sys]         001600260077  GR Ethernet MAC
+[SE0:sys]         001600260077      0x80000500  Control register                        0x94000000
+[SE0:sys]         001600260077      0x80000504  Status register                         0x00000000
+[SE0:sys]         001600260077      0x80000508  MAC address MSB                         0x00000000
+[SE0:sys]         001600260077      0x8000050c  MAC address LSB                         0x00000000
+[SE0:sys]         001600260077      0x80000510  MDIO register                           0x7949384a
+[SE0:sys]         001600260077      0x80000514  Tx descriptor register                  0x00000000
+[SE0:sys]         001600260077      0x80000518  Rx descriptor register                  0x00000000
+[SE0:sys]         001600260077      0x8000051c  EDCL IP register                        0xc0a80033
+[SE0:sys]         001600260077      0x80000520  Hash table MSB register                 0x00000000
+[SE0:sys]         001600260077      0x80000524  Hash table LSB register                 0x00000000
+[SE0:sys]         001600260077      0x80000528  ECDL MAC address MSB                    0x00000200
+[SE0:sys]         001600260077      0x8000052c  ECDL MAC address LSB                    0x00000000
+[SE0:sys]         001600260077  L2-Cache Controller
+[SE0:sys]         001600260077      0xff000000  L2C Control register                    0x80040000
+[SE0:sys]         001600260077      0xff000004  L2C Status register                     0x46002103
+[SE0:sys]         001600260077      0xff000020  L2C Error status/control                0x02000000
+[SE0:sys]         001600260077  RISC-V CLINT
+[SE0:sys]         001600260077      0xe0100000  hart0 msip                              0x00000000
+[SE0:sys]         001600260077      0xe0104000  hart0 mtimecmp lo                       0xffffffff
+[SE0:sys]         001600260077      0xe0104004  hart0 mtimecmp hi                       0xffffffff
+[SE0:sys]         001600260077      0xe0100004  hart1 msip                              0x00000000
+[SE0:sys]         001600260077      0xe0104008  hart1 mtimecmp lo                       0xffffffff
+[SE0:sys]         001600260077      0xe010400c  hart1 mtimecmp hi                       0xffffffff
+[SE0:sys]         001600260077      0xe0100008  hart2 msip                              0x00000000
+[SE0:sys]         001600260077      0xe0104010  hart2 mtimecmp lo                       0x00000000
+[SE0:sys]         001600260077      0xe0104014  hart2 mtimecmp hi                       0x00000000
+[SE0:sys]         001600260077      0xe010000c  hart3 msip                              0x00000000
+[SE0:sys]         001600260077      0xe0104018  hart3 mtimecmp lo                       0x00000000
+[SE0:sys]         001600260077      0xe010401c  hart3 mtimecmp hi                       0x00000000
+[SE0:sys]         001600260077      0xe010bff8  mtime lo                                0x00000000
+[SE0:sys]         001600260077      0xe010bffc  mtime hi                                0x00000000
+[SE0:sys]         001600260077  RISC-V PLIC
+[SE0:sys]         001600260077      0x84000004  Interrupt source  1 priority            0x00000000
+[SE0:sys]         001600260077      0x84000008  Interrupt source  2 priority            0x00000000
+[SE0:sys]         001600260077      0x8400000c  Interrupt source  3 priority            0x00000000
+[SE0:sys]         001600260077      0x84000010  Interrupt source  4 priority            0x00000000
+[SE0:sys]         001600260077      0x84000014  Interrupt source  5 priority            0x00000000
+[SE0:sys]         001600260077      0x84000018  Interrupt source  6 priority            0x00000000
+[SE0:sys]         001600260077      0x8400001c  Interrupt source  7 priority            0x00000000
+[SE0:sys]         001600260077      0x84000020  Interrupt source  8 priority            0x00000000
+[SE0:sys]         001600260077      0x84000024  Interrupt source  9 priority            0x00000000
+[SE0:sys]         001600260077      0x84000028  Interrupt source 10 priority            0x00000000
+[SE0:sys]         001600260077      0x8400002c  Interrupt source 11 priority            0x00000000
+[SE0:sys]         001600260077      0x84000030  Interrupt source 12 priority            0x00000000
+[SE0:sys]         001600260077      0x84000034  Interrupt source 13 priority            0x00000000
+[SE0:sys]         001600260077      0x84000038  Interrupt source 14 priority            0x00000000
+[SE0:sys]         001600260077      0x8400003c  Interrupt source 15 priority            0x00000000
+[SE0:sys]         001600260077      0x84000040  Interrupt source 16 priority            0x00000000
+[SE0:sys]         001600260077      0x84000044  Interrupt source 17 priority            0x00000000
+[SE0:sys]         001600260077      0x84000048  Interrupt source 18 priority            0x00000000
+[SE0:sys]         001600260077      0x8400004c  Interrupt source 19 priority            0x00000000
+[SE0:sys]         001600260077      0x84000050  Interrupt source 20 priority            0x00000000
+[SE0:sys]         001600260077      0x84000054  Interrupt source 21 priority            0x00000000
+[SE0:sys]         001600260077      0x84000058  Interrupt source 22 priority            0x00000000
+[SE0:sys]         001600260077      0x8400005c  Interrupt source 23 priority            0x00000000
+[SE0:sys]         001600260077      0x84000060  Interrupt source 24 priority            0x00000000
+[SE0:sys]         001600260077      0x84000064  Interrupt source 25 priority            0x00000000
+[SE0:sys]         001600260077      0x84000068  Interrupt source 26 priority            0x00000000
+[SE0:sys]         001600260077      0x8400006c  Interrupt source 27 priority            0x00000000
+[SE0:sys]         001600260077      0x84000070  Interrupt source 28 priority            0x00000000
+[SE0:sys]         001600260077      0x84000074  Interrupt source 29 priority            0x00000000
+[SE0:sys]         001600260077      0x84000078  Interrupt source 30 priority            0x00000000
+[SE0:sys]         001600260077      0x8400007c  Interrupt source 31 priority            0x00000000
+[SE0:sys]         001600260077      0x84000080  Interrupt source 32 priority            0x00000000
+[SE0:sys]         001600260077      0x84001000  Interrupt Pending bit  0-31             0x00000890
+[SE0:sys]         001600260077      0x84001004  Interrupt Pending bit 32-63             0x00000000
+[SE0:sys]         001600260077      0x84002000  context  0 enable source  0-31          0x00000000
+[SE0:sys]         001600260077      0x84002004  context  0 enable source 32-63          0x00000000
+[SE0:sys]         001600260077      0x84002080  context  1 enable source  0-31          0x00000000
+[SE0:sys]         001600260077      0x84002084  context  1 enable source 32-63          0x00000000
+[SE0:sys]         001600260077      0x84002100  context  2 enable source  0-31          0x00000000
+[SE0:sys]         001600260077      0x84002104  context  2 enable source 32-63          0x00000000
+[SE0:sys]         001600260077      0x84002180  context  3 enable source  0-31          0x00000000
+[SE0:sys]         001600260077      0x84002184  context  3 enable source 32-63          0x00000000
+[SE0:sys]         001600260077      0x84200000  context  0 priority threshold           0x00000001
+[SE0:sys]         001600260077      0x84201000  context  1 priority threshold           0x00000001
+[SE0:sys]         001600260077      0x84202000  context  2 priority threshold           0x00000001
+[SE0:sys]         001600260077      0x84203000  context  3 priority threshold           0x00000001
+[SE0:sys]         001600260077  AMBA Trace Buffer
+[SE0:sys]         001600260077      0xfff00000  Trace buffer control register           0x00008080
+[SE0:sys]         001600260077      0xfff00004  Trace buffer index register             0x000007f0
+[SE0:sys]         001600260077      0xfff00008  Trace buffer time tag counter           0x00000000
+[SE0:sys]         001600260077      0xfff0000c  Trace buffer mst/slv filter register    0x00000000
+[SE0:sys]         001600260077      0xfff00010  Trace buffer bp 1 address               0x00000000
+[SE0:sys]         001600260077      0xfff00014  Trace buffer bp 1 mask                  0x00000000
+[SE0:sys]         001600260077      0xfff00018  Trace buffer bp 2 address               0x00000000
+[SE0:sys]         001600260077      0xfff0001c  Trace buffer bp 2 mask                  0x00000000
+[SE0:sys]         001600260077  AHB Status Register
+[SE0:sys]         001600260077      0x80000f00  Status register                         0x00000022
+[SE0:sys]         001600260077      0x80000f04  Failing address register                0x80000f04
+[SE0:sys]         001600260077  General Purpose I/O port
+[SE0:sys]         001600260077      0x80000400  I/O port data register                  0x0000ff00
+[SE0:sys]         001600260077      0x80000404  I/O port output register                0x00000000
+[SE0:sys]         001600260077      0x80000408  I/O port direction register             0x00000000
+[SE0:sys]         001600260077      0x8000040c  I/O interrupt mask register             0x00000000
+[SE0:sys]         001600260077      0x80000410  I/O interrupt polarity register         0x00000000
+[SE0:sys]         001600260077      0x80000414  I/O interrupt edge register             0x00000000
+[SE0:sys]         001600260077      0x8000041c  Capability register                     0x00000013
+[SE0:sys]         001600260077  Generic UART
+[SE0:sys]         001600260077      0x80000104  UART Status register                    0x00000086
+[SE0:sys]         001600260077      0x80000108  UART Control register                   0x80000003
+[SE0:sys]         001600260077      0x8000010c  UART Scaler register                    0x0000006c
+[SE0:sys]         001600260077  Version and Revision Register
+[SE0:sys]         001600260077      0x80000200  Configuration register                  0x00030000
+[SE0:sys]         001600260077  Modular Timer Unit
+[SE0:sys]         001600260077      0x80000300  Scalar value register                   0x00000063
+[SE0:sys]         001600260077      0x80000304  Scalar reload value register            0x00000063
+[SE0:sys]         001600260077      0x80000308  Configuration register                  0x00000112
+[SE0:sys]         001600260077      0x80000310  Timer 0 Value register                  0xffffffff
+[SE0:sys]         001600260077      0x80000314  Timer 0 Reload value register           0xffffffff
+[SE0:sys]         001600260077      0x80000318  Timer 0 Control register                0x00000043
+[SE0:sys]         001600260077      0x80000320  Timer 1 Value register                  0x00000000
+[SE0:sys]         001600260077      0x80000324  Timer 1 Reload value register           0x00000000
+[SE0:sys]         001600260077      0x80000328  Timer 1 Control register                0x00000040
+[SE0:cli]         001600260077  grmon3> ::source [file normalize {grmon_scripts/active_cores_2.grmon}]
+[SE0:cli]         001600260077  
+[SE0:cli]         001600260077          40000000 .text.init           0B              [>               ]   0%
+[SE0:cli]         001600260077          40000000 .text.init         592B              [===============>] 100%
+[SE0:cli]         001600260077  
+[SE0:cli]         001600260077          40001000 .tohost              0B              [>               ]   0%
+[SE0:cli]         001600260077          40001000 .tohost             72B              [===============>] 100%
+[SE0:cli]         001600260077  
+[SE0:cli]         001600260077          40002000 .text                0B              [>               ]   0%
+[SE0:cli]         001600260077          40002000 .text              8.0kB /  48.4kB   [==>             ]  16%
+[SE0:cli]         001600260077          40002000 .text             16.0kB /  48.4kB   [====>           ]  33%
+[SE0:cli]         001600260077          40002000 .text             24.0kB /  48.4kB   [=======>        ]  49%
+[SE0:cli]         001600260077          40002000 .text             32.0kB /  48.4kB   [=========>      ]  66%
+[SE0:cli]         001600260077          40002000 .text             40.0kB /  48.4kB   [============>   ]  82%
+[SE0:cli]         001600260078          40002000 .text             48.0kB /  48.4kB   [==============> ]  99%
+[SE0:cli]         001600260078          40002000 .text             48.4kB /  48.4kB   [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          4000E180 .data                0B              [>               ]   0%
+[SE0:cli]         001600260078          4000E180 .data               48B              [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          4000E1B0 .sdata               0B              [>               ]   0%
+[SE0:cli]         001600260078          4000E1B0 .sdata             104B              [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          4000E218 .rodata              0B              [>               ]   0%
+[SE0:cli]         001600260078          4000E218 .rodata            840B              [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          4000E560 .rodata.str1.8       0B              [>               ]   0%
+[SE0:cli]         001600260078          4000E560 .rodata.str1.8     3.2kB /   3.2kB   [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          40017B00 .tdata               0B              [>               ]   0%
+[SE0:cli]         001600260078          40017B00 .tdata               8B              [===============>] 100%
+[SE0:cli]         001600260078  Total size: 53.16kB (599.88kbit/s)
+[SE0:cli]         001600260078  Entry point 0x40000000
+[SE0:cli]         001600260078  Image /home/fbasjalo/BSC_tests/multicore_tests/mccu_tests.riscv/mccu_tests-1.riscv loaded
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          41000000 .text.init           0B              [>               ]   0%
+[SE0:cli]         001600260078          41000000 .text.init         592B              [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          41001000 .tohost              0B              [>               ]   0%
+[SE0:cli]         001600260078          41001000 .tohost             72B              [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          41002000 .text                0B              [>               ]   0%
+[SE0:cli]         001600260078          41002000 .text              8.0kB /  48.4kB   [==>             ]  16%
+[SE0:cli]         001600260078          41002000 .text             16.0kB /  48.4kB   [====>           ]  33%
+[SE0:cli]         001600260078          41002000 .text             24.0kB /  48.4kB   [=======>        ]  49%
+[SE0:cli]         001600260078          41002000 .text             32.0kB /  48.4kB   [=========>      ]  66%
+[SE0:cli]         001600260078          41002000 .text             40.0kB /  48.4kB   [============>   ]  82%
+[SE0:cli]         001600260078          41002000 .text             48.0kB /  48.4kB   [==============> ]  99%
+[SE0:cli]         001600260078          41002000 .text             48.4kB /  48.4kB   [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          4100E1C0 .data                0B              [>               ]   0%
+[SE0:cli]         001600260078          4100E1C0 .data               48B              [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          4100E1F0 .sdata               0B              [>               ]   0%
+[SE0:cli]         001600260078          4100E1F0 .sdata             104B              [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          4100E258 .rodata              0B              [>               ]   0%
+[SE0:cli]         001600260078          4100E258 .rodata            840B              [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          4100E5A0 .rodata.str1.8       0B              [>               ]   0%
+[SE0:cli]         001600260078          4100E5A0 .rodata.str1.8     3.3kB /   3.3kB   [===============>] 100%
+[SE0:cli]         001600260078  
+[SE0:cli]         001600260078          41017B00 .tdata               0B              [>               ]   0%
+[SE0:cli]         001600260078          41017B00 .tdata               8B              [===============>] 100%
+[SE0:cli]         001600260078  Total size: 53.34kB (575.74kbit/s)
+[SE0:cli]         001600260078  Entry point 0x41000000
+[SE0:cli]         001600260078  Image /home/fbasjalo/BSC_tests/multicore_tests/mccu_tests.riscv/mccu_tests-2.riscv loaded
+[SE0:cli]         001600260078  Cpu 0 entry point: 0x0000000040000000
+[SE0:cli]         001600260078   CPU 0 stack pointer: 0x00000000400fff00
+[SE0:cli]         001600260078  Cpu 1 entry point: 0x0000000041000000
+[SE0:cli]         001600260078   CPU 1 stack pointer: 0x00000000410fff00
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  ppeennddiinngg  bbiittss::  889900
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  CO
+[SE0:term0]       001600260079   R*E*:* *1
+[SE0:term0]       001600260079  *
+[SE0:term0]       001600260079  **
+[SE0:term0]       001600260079  *m*c aTuESseT:B E1N1CH
+[SE0:term0]       001600260079   
+[SE0:term0]       001600260079  B
+[SE0:term0]       001600260079  I
+[SE0:term0]       001600260079  mNAiRp:YS 2EA04RC8H
+[SE0:term0]       001600260079   
+[SE0:term0]       001600260079  *
+[SE0:term0]       001600260079  **m*ip*:* *0*
+[SE0:term0]       001600260079  *
+[SE0:term0]       001600260079   
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  p
+[SE0:term0]       001600260079  e
+[SE0:term0]       001600260079  Sndofitnrge sbeitts R: D8C9
+[SE0:term0]       001600260079  0
+[SE0:term0]       001600260079  S
+[SE0:term0]       001600260079  o
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  ft
+[SE0:term0]       001600260079  Irnesteetr rcuoput nsteorursc
+[SE0:term0]       001600260079  e
+[SE0:term0]       001600260079  :
+[SE0:term0]       001600260079   
+[SE0:term0]       001600260079  Q0
+[SE0:term0]       001600260079  u
+[SE0:term0]       001600260079  o
+[SE0:term0]       001600260079  t
+[SE0:term0]       001600260079  a hloleaf td4:es d42e 9e4l96 p7l2i9c5
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  pQeuondtain gle bftit1s: : 0
+[SE0:term0]       001600260079  89
+[SE0:term0]       001600260079  0
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  Q
+[SE0:term0]       001600260079  u
+[SE0:term0]       001600260079  ot *a *l* efStta2r:t  42r9e4p9o6r7t 2R95D
+[SE0:term0]       001600260079  C
+[SE0:term0]       001600260079   *
+[SE0:term0]       001600260079  *
+[SE0:term0]       001600260079  Q*
+[SE0:term0]       001600260079  uo
+[SE0:term0]       001600260079  t
+[SE0:term0]       001600260079  a
+[SE0:term0]       001600260079  a dldefret3ss:: 482092409060a7249 5,
+[SE0:term0]       001600260079   
+[SE0:term0]       001600260079  *
+[SE0:term0]       001600260079  **
+[SE0:term0]       001600260079  Q**uo*t* a  lWeatfte3rm:a r4k29_r49e6g7_21 9(5c
+[SE0:term0]       001600260079  o
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  r
+[SE0:term0]       001600260079  e Qu0o)t a** *le**ft*4*::  4326294709160712
+[SE0:term0]       001600260079  9
+[SE0:term0]       001600260079  5
+[SE0:term0]       001600260079  a
+[SE0:term0]       001600260079  dd
+[SE0:term0]       001600260079  r
+[SE0:term0]       001600260079  epsensd:i80n2g0 0b0itas4:  ,8 9w0at
+[SE0:term0]       001600260079  e
+[SE0:term0]       001600260079  Irmmparlke_me0 nt-- >ma  in  ( ),   fcooroe!
+[SE0:term0]       001600260079  0
+[SE0:term0]       001600260079  _tImotplalem_elantt emncayi:n (1)
+[SE0:term0]       001600260079  ,
+[SE0:term0]       001600260079   fadood!r
+[SE0:term0]       001600260079  es
+[SE0:term0]       001600260079  sIm:8pl0e2m00e0nta5  m,a iwn(at)e, rmfoaro!k
+[SE0:term0]       001600260079  _
+[SE0:term0]       001600260079  1I -mp->l em e n t   mcoarine0()_d, cmfioso!s
+[SE0:term0]       001600260079  _
+[SE0:term0]       001600260079  lIamtpenlcemye: nt1 
+[SE0:term0]       001600260079  maaidnd(re),s s:fo80o!20
+[SE0:term0]       001600260079  0
+[SE0:term0]       001600260079  I0amp6l e,m ewnatte rmmaairnk(_)2,  -f-oo> ! 
+[SE0:term0]       001600260079   
+[SE0:term0]       001600260079  I m  plcoermee0n_ti cmamiinss(_),l atfeonoc!
+[SE0:term0]       001600260079  y
+[SE0:term0]       001600260079  : Im3p9
+[SE0:term0]       001600260079  le
+[SE0:term0]       001600260079  amdendrt esmsai:n80()2,0 0f0aoo7! ,
+[SE0:term0]       001600260079   
+[SE0:term0]       001600260079  Iwmaptleremmearntk_ 3ma -i-n(>) ,    fo  o !
+[SE0:term0]       001600260079  c
+[SE0:term0]       001600260079  oIremp0l_ewrmietnte_ mlaaitne(n)c,y : f5oo4
+[SE0:term0]       001600260079  !
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  I
+[SE0:term0]       001600260079  amdpdlremesesnt: 8m0a20in00()a8,  f, o*o!**
+[SE0:term0]       001600260079  *I*m*p*l e Wmaetnter mmaairkn_(r)e, g_fo2 o(!
+[SE0:term0]       001600260079  c
+[SE0:term0]       001600260079  orIemp l1e) m*en**t* *ma**i:n ()3,a 2f01oof!1c
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  Iampddlreemessnt:8 0m2a0i0n(0)a,8  f,o ow!a
+[SE0:term0]       001600260079  t
+[SE0:term0]       001600260079  erImmparlkem_e4 n-t- m> ai n  ( ) ,  cfooroe!1
+[SE0:term0]       001600260079  _Itmoptlaelm_leantt enmaciy:n( 2)8,
+[SE0:term0]       001600260079   
+[SE0:term0]       001600260079  foaodd!
+[SE0:term0]       001600260079  r
+[SE0:term0]       001600260079  eIsmsp:8l0em2e00n0t a9ma ,i nw(a)t, erfmooar!
+[SE0:term0]       001600260079  k
+[SE0:term0]       001600260079  _I5m p-l-e>m e  n t   maciorn(e1)_, dcfomoi!s
+[SE0:term0]       001600260079  s
+[SE0:term0]       001600260079  _lImatpelencmey:n t 31m
+[SE0:term0]       001600260079  ai
+[SE0:term0]       001600260079  na(dd),r efssoo:8!
+[SE0:term0]       001600260079  02
+[SE0:term0]       001600260079  I0m00plaaem e, nwt atmaerinma(r),k _f6o o--!>
+[SE0:term0]       001600260079    Im  pl e mceornet1 m_iacinmi()ss,_ lfaotoe!
+[SE0:term0]       001600260079  nc
+[SE0:term0]       001600260079  yI:mp l3e2
+[SE0:term0]       001600260079  m
+[SE0:term0]       001600260079  enadtd rmeaisns:(8)0,2 0f0oo0!ab
+[SE0:term0]       001600260079   I,m wpaltemeremnatr mk_a7in -()-,>  f o o ! 
+[SE0:term0]       001600260079    
+[SE0:term0]       001600260079  Icmoprel1em_wernit tme_alian(te),nc yfo:o 5!8
+[SE0:term0]       001600260079  
+[SE0:term0]       001600260079  I
+[SE0:term0]       001600260079  m
+[SE0:term0]       001600260079  p
+[SE0:term0]       001600260079   le*m*e* ntS tmaaritn r()e,po rfto o!C
+[SE0:term0]       001600260079  O
+[SE0:term0]       001600260079  RIE m0p*l*em*
+[SE0:term0]       001600260079  e
+[SE0:term0]       001600260079  n
+[SE0:term0]       001600260079  t
+[SE0:term0]       001600260079   madadinr(e)s,s :f80oo2!0
+[SE0:term0]       001600260079  00
+[SE0:term0]       001600260079  I04m p,l em  en t   m  ai n  () ,   fColoo!ck
+[SE0:term0]       001600260079  _Icmypclleesm:en t    ma2i1n02()25,3 
+[SE0:term0]       001600260079  f
+[SE0:term0]       001600260079  ooad!
+[SE0:term0]       001600260079  d
+[SE0:term0]       001600260079  rIesmsp:le8m0e20n0t0 m08ai n, ( )I, nfsotoru!
+[SE0:term0]       001600260079  c
+[SE0:term0]       001600260079  tIiompn_lecomuenntt_ lmaainne(_)1,:  f o  o !6
+[SE0:term0]       001600260079  0I03m8p3l
+[SE0:term0]       001600260079  em
+[SE0:term0]       001600260079  eandtdr emsaisn:(8)0,20 0f0oo0!c 
+[SE0:term0]       001600260079  ,I m pInlestmernutc tmioainn_c(o)u, ntfo_lo!a
+[SE0:term0]       001600260079  n
+[SE0:term0]       001600260079  e_I2m:pl e m  e nt3 0m03ai6n1(
+[SE0:term0]       001600260079  ),   f  o o ! 
+[SE0:term0]       001600260079   I  m p l em e  nt   m a  inTo(t)a, lf_oions!
+[SE0:term0]       001600260079  t
+[SE0:term0]       001600260080  rIucmtplieonm_ecnot unmta:in  () ,   9f0oo0!74
+[SE0:term0]       001600260080  4
+[SE0:term0]       001600260080  
+[SE0:term0]       001600260080  Im
+[SE0:term0]       001600260080  padledrmeensts :8ma02in00(0),10 f o,o ! 
+[SE0:term0]       001600260080   
+[SE0:term0]       001600260080   IInmpstlreumcetnit onma_cina(ch),e _fmoios!s
+[SE0:term0]       001600260080  :
+[SE0:term0]       001600260080    I mp  l e m e n1t 8m
+[SE0:term0]       001600260080  a
+[SE0:term0]       001600260080  iandd()r,e sfso:o80!2
+[SE0:term0]       001600260080  0
+[SE0:term0]       001600260080  I00mp14le m,e n t    m a i n ( ), D afotoa!_
+[SE0:term0]       001600260080  c
+[SE0:term0]       001600260080  aIcmhpel_memiessnt:   m a i n () ,    fo5o
+[SE0:term0]       001600260080  !
+[SE0:term0]       001600260080  a
+[SE0:term0]       001600260080  dIdmrpelsesm:8en0t20 0m0ai18n (,),   f o o !B
+[SE0:term0]       001600260080  r
+[SE0:term0]       001600260080  aInmcphl_permeenditc tmoarin_m(i)s,s :f o o! 
+[SE0:term0]       001600260080    
+[SE0:term0]       001600260080   I m p le2m7e
+[SE0:term0]       001600260080  n
+[SE0:term0]       001600260080  t 
+[SE0:term0]       001600260080  m *ai*n*( S)t,a rfto or!
+[SE0:term0]       001600260080  e
+[SE0:term0]       001600260080  pIomrtpl eCOmRenE t 1m*a**in
+[SE0:term0]       001600260080  ()
+[SE0:term0]       001600260080  ,
+[SE0:term0]       001600260080   adfdoor!e
+[SE0:term0]       001600260080  s
+[SE0:term0]       001600260080  sI:m8p02le0m00e1nct  ,ma i n ( )I,n stfrouo!c
+[SE0:term0]       001600260080  ti
+[SE0:term0]       001600260080  Iomnp_lceamcehne_t mimsasin: ()  ,   fo o !  
+[SE0:term0]       001600260080   2Im
+[SE0:term0]       001600260080  p
+[SE0:term0]       001600260080  laeddmrenets sm:a8i02n(0)0,0 20f oo,! 
+[SE0:term0]       001600260080   
+[SE0:term0]       001600260080   I  m pl e  m e nDta tmaa_icna()c,h ef_moios!
+[SE0:term0]       001600260080  s
+[SE0:term0]       001600260080  :I  mp l  e m e n t  m1
+[SE0:term0]       001600260080  ai
+[SE0:term0]       001600260080  na(dd),r efsos:o8!
+[SE0:term0]       001600260080  0
+[SE0:term0]       001600260080  2I00m0p2le4 m,e n t  m  aiBnra()nc, h_foproe!
+[SE0:term0]       001600260080  d
+[SE0:term0]       001600260080  iIcmtoprl_emmeinsst:  m ai n (  ) ,   fo12o
+[SE0:term0]       001600260080  !
+[SE0:term0]       001600260080  
+[SE0:term0]       001600260080  
+[SE0:term0]       001600260080  Im p*l*e* meenndt  rmaepion(r)t ,* f**oo
+[SE0:term0]       001600260080  !
+[SE0:term0]       001600260080  
+[SE0:term0]       001600260080  
+[SE0:term0]       001600260080  
+[SE0:term0]       001600260080  I
+[SE0:term0]       001600260080  m
+[SE0:term0]       001600260080  p--l-em--en-t T EmaSTin P()A,S SfEoDo -!
+[SE0:term0]       001600260080  --
+[SE0:term0]       001600260080  I-m--pl
+[SE0:term0]       001600260080  e
+[SE0:term0]       001600260080  ment main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260080  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), foo!
+[SE0:term0]       001600260081  Implement main(), 
+[SE0:exec]        001600260081  
+[SE0:exec]        001600260081  CPU 0:  Interrupted!
+[SE0:exec]        001600260081          0x4000a9f0: 00c12783  lw      a5, 12(sp)
+[SE0:exec]        001600260081  CPU 1:  Interrupted!
+[SE0:exec]        001600260081          0x4100e188: 0000006f  j       0x4100e188  <main+132>
+[SE0:cli]         001600260081  SIGINT SIGINT
+[SE0:cli]         001600260081  
+[SE0:cli]         001600260124  grmon3> exit
+[SE0:cli]         001600260124  

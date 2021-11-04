@@ -1,0 +1,4 @@
+# JTAG Configuration file
+# Name 	  Id		Mask	 Irlength	DebugI/F	Instr.1 	Instr.2
+xcvu9p    0x14B31093  0x0fffffff 18             1 		0x2924		0x3924
+

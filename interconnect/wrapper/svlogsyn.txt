@@ -1,0 +1,16 @@
+#../common_cells/src/cf_math_pkg.sv
+../common_cells/src/id_queue.sv
+../common_cells/src/onehot_to_bin.sv
+../common_cells/src/addr_decode.sv
+../common_cells/src/fifo_v3.sv
+../common_cells/src/counter.sv
+../common_cells/src/delta_counter.sv
+../common_cells/src/rr_arb_tree.sv
+../common_cells/src/spill_register.sv
+../common_cells/src/stream_register.sv
+../common_cells/src/deprecated/fifo_v2.sv
+../common_cells/src/lzc.sv
+axi_xbar_typedef_pkg.sv
+width_converter_wrapper.sv
+xbar_wrapper.sv
+xbar_lite_wrapper.sv

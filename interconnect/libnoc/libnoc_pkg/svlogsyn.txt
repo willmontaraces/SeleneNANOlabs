@@ -1,0 +1,16 @@
+../../common_cells/src/cf_math_pkg.sv
+../../axi/src/axi_pkg.sv
+../../axi/src/axi_xbar.sv
+../../axi/src/axi_lite_xbar.sv
+../../axi/src/axi_demux.sv
+../../axi/src/axi_mux.sv
+../../axi/src/axi_dw_converter.sv
+../../axi/src/axi_dw_downsizer.sv
+../../axi/src/axi_dw_upsizer.sv
+../../axi/src/axi_err_slv.sv
+../../axi/src/axi_id_prepend.sv
+../../axi/src/axi_atop_filter.sv
+../../axi/src/axi_lite_demux.sv
+../../axi/src/axi_lite_mux.sv
+../../axi/src/axi_lite_to_axi.sv
+

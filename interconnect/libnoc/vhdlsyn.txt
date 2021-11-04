@@ -1,0 +1,4 @@
+libnoc.vhd vhdlstd=2008
+axi_noc.vhd
+axi_lite_noc.vhd
+axi_width_converter.vhd

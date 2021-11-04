@@ -1,0 +1,4 @@
+interconnect/libnoc/libnoc.vhd
+interconnect/libnoc/libnoc_pkg/libnoc_pkg.vhd
+interconnect/wrapper/axi_xbar_typedef_pkg.sv
+ci-scripts
