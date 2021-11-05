@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#define UART_BASE 0x80000100
+#define UART_BASE 0xfc0e0000
 
 extern volatile uint32_t* uart;
 

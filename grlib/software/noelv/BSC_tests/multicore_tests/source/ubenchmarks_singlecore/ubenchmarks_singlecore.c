@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "util.h"
 
-#include "pmu_test.h"
+#include "pmu_hw.h"
 
 #include "asm.h"
 
@@ -66,8 +66,6 @@ __attribute__((always_inline)) inline void end_test_RDC(void)
 
 int main(void)
 {
-
-
 #ifdef __CORE__
     switch (__CORE__) {
         case 1: ;

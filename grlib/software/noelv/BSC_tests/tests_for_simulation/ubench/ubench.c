@@ -2,7 +2,7 @@
 #include "util.h"
 #include <stdint.h>
 #include <stdio.h>
-#include <pmu_test.h>
+#include <pmu_hw.h>
 
 
 int main( void ) {

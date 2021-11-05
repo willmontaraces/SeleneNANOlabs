@@ -35,8 +35,7 @@ library unisim;
 use unisim.all;
 -- pragma translate_on
 
--- BSC library is added
--- BSC library is now under safety
+-- BSC library
 library safety;
 use safety.pmu_module.all;
 
@@ -102,7 +101,6 @@ architecture rtl of gpp_sys is
   -- AHB masters
   constant nextmst                 : integer := ahbmstart;
 
-
   -- AHB slaves
   --constant hsidx_iommu : integer := 0;
   constant hsidx_l2c    : integer := 1;
@@ -131,6 +129,9 @@ architecture rtl of gpp_sys is
   --constant pidx_spw(2)  : integer := 7;
   --constant pidx_spw(3)  : integer := 8;
   constant nextapb : integer := apbstart_gpp;
+  
+  -- BSC PMU
+  constant nev : integer := 128; --max number of events
 
 
   -----------------------------------------------------
@@ -164,6 +165,8 @@ architecture rtl of gpp_sys is
   ---------------------------------------------------------------------------------------------------------
   -- BSC signals
   ---------------------------------------------------------------------------------------------------------
+  --signals between signal generator and unit
+  signal pmue: std_logic_vector(nev-1 downto 0);
   -- Signals of the PMU
   signal pmu_events : nv_counter_out_vector(ncpu-1 downto 0);
   signal one_hmaster : std_logic_vector (ncpu-1 downto 0); -- one hot encoded hmaster signal
@@ -429,116 +432,26 @@ begin
 ----------------------------------------------------------------------
 ---  BSC Instances ---------------------------------------------------
 ----------------------------------------------------------------------
-  -- FINITE-STATE MACHINE
-  -- 1.- hbusreq=1 and hgrant -> 2
-  -- 2.- htrans=3 or (htrans=0 and hready=0) -> 3 ; htrans=0 and hready ->1 
-  -- 3.- hready=1 -> 1
-  process(clkm)
-  begin
-      if rising_edge(clkm) then
-          if (rstn = '0') then
-              latency_state <= (others => (others => '0'));
-              latency_cause_state <= (others => (others => '0'));
-          else
-              latency_state <= n_latency_state;
-              latency_cause_state <= n_latency_cause_state;
-          end if;
-      end if;
-  end process;
-
-  latency: for n in 0 to ncpu-1 generate
-      process(cpus_ahbmo, latency_state, ahbmi)
-      begin
-              n_latency_state(n) <= latency_state(n);
-              ccs_latency(n).total <= '0';
-              case latency_state(n) is
-                  when "00" =>
-                      if cpus_ahbmo(n).hbusreq = '1' then
-                          if cpus_ahbmo(n).hbusreq = '1' and ahbmi.hgrant(n) = '1' then
-                              n_latency_state(n) <= "01";
-                          end if;
-                          ccs_latency(n).total <= '1';
-                      end if;
-                  when "01" =>
-                      ccs_latency(n).total <= '1';
-                      if cpus_ahbmo(n).htrans = "11" or (cpus_ahbmo(n).htrans = "00" and ahbmi.hready = '0') then
-                          n_latency_state(n) <= "10";
-                      elsif cpus_ahbmo(n).htrans = "00" and ahbmi.hready = '1' then
-                          n_latency_state(n) <= "00";
-                          ccs_latency(n).total <= '0';
-                      end if;
-                  when "10" => 
-                      if ahbmi.hready = '1' then
-                          n_latency_state(n) <= "00";
-                      else 
-                          ccs_latency(n).total <= '1';
-                      end if;
-                  when others =>
-
-              end case;
-      end process;
-
-      process(cpus_ahbmo, pmu_events, latency_cause_state)
-      begin
-              n_latency_cause_state(n) <= latency_cause_state(n);
-              case latency_cause_state(n) is
-                  when "00" => --dcmiss
-                      if pmu_events(n).icmiss = '1' then
-                          n_latency_cause_state(n) <= "01"; --icmiss
-                      elsif cpus_ahbmo(n).hwrite = '1' then
-                          n_latency_cause_state(n) <= "10"; --write
-                      end if;
-                  when "01" => --icmiss
-                      if pmu_events(n).dcmiss = '1' then
-                          n_latency_cause_state(n) <= "00"; --dcmiss
-                      elsif cpus_ahbmo(n).hwrite = '1' then
-                          n_latency_cause_state(n) <= "10"; --write
-                      end if;
-                  when "10" => --write
-                      if pmu_events(n).icmiss = '1' then
-                          n_latency_cause_state(n) <= "01"; --icmiss
-                      elsif pmu_events(n).dcmiss = '1' then
-                          n_latency_cause_state(n) <= "00"; --dcmiss
-                      end if;
-                  when others =>
-
-              end case;
-      end process;
-
-      ccs_latency(n).dcmiss <= ccs_latency(n).total and (not n_latency_cause_state(n)(0) and not n_latency_cause_state(n)(1));
-      ccs_latency(n).icmiss <= ccs_latency(n).total and n_latency_cause_state(n)(0);
-      ccs_latency(n).write  <= ccs_latency(n).total and n_latency_cause_state(n)(1);
-  end generate latency;
-  -- get ahbsi.hmaster to one-hot. TODO: limited to 4 cores
-  process(ahbsi.hmaster) begin
-	  if ahbsi.hmaster = "0000" then
-		  one_hmaster <= "0001"; 
-	  elsif ahbsi.hmaster = "0001" then
-		  one_hmaster <= "0010"; 
-	  elsif ahbsi.hmaster = "0010" then
-		  one_hmaster <= "0100"; 
-	  elsif ahbsi.hmaster = "0011" then
-		  one_hmaster <= "1000"; 
-	  else 
-		  one_hmaster <= "0000";
-	  end if; 
-  end process;
-
-
-  -- 4 CORES --
- --Core 0 contention due to core 1 access 
-  ccs_contention(0).r_and_w <= cpus_ahbmo(0).hbusreq and one_hmaster(1);
-  ccs_contention(0).read <= ccs_contention(0).r_and_w and not cpus_ahbmo(0).hwrite;
-  ccs_contention(0).write <= ccs_contention(0).r_and_w and cpus_ahbmo(0).hwrite;
- --Core 0 contention due to core 2 
-  ccs_contention(1).r_and_w <= cpus_ahbmo(0).hbusreq and one_hmaster(2);
-  ccs_contention(1).read <= ccs_contention(0).r_and_w and not cpus_ahbmo(0).hwrite;
-  ccs_contention(1).write <= ccs_contention(0).r_and_w and cpus_ahbmo(0).hwrite;
- --Core 0 contention due to core 3 access 
-  ccs_contention(2).r_and_w <= cpus_ahbmo(0).hbusreq and one_hmaster(3);
-  ccs_contention(2).read <= ccs_contention(0).r_and_w and not cpus_ahbmo(0).hwrite;
-  ccs_contention(2).write <= ccs_contention(0).r_and_w and cpus_ahbmo(0).hwrite;
-
+  -----------------------------------------------------------------------
+  ---  Signal Generator -------------------------------------
+  -----------------------------------------------------------------------
+  ahb_latency_and_contention_inst : ahb_latency_and_contention
+  generic map(
+      ncpu => ncpu,  -- active cores
+      nout => nev --number of outputs to crossbar
+      )
+  port map(
+      rstn           => rstn,
+      clk            => clkm,
+      -- AHB bus signals
+      ahbmi          => ahbmi,
+      cpus_ahbmo     => ahbmo(ncpu - 1 downto 0),    -- cpu ahb master signals
+      ahbsi_hmaster  => ahbsi.hmaster,
+      pmu_events     => pmu_events,    -- Pulse signals for different events such dcmiss, icmiss, bpmiss an insturction count
+      dcl2_events    => (others => '0'), -- TODO: Do we need it for GLP? 
+      -- PMU input
+      pmu_input      => pmue
+  );
   -----------------------------------------------------------------------
   ---  PMU  -----------------------------------------------
   -----------------------------------------------------------------------
@@ -547,17 +460,14 @@ begin
   generic map(
     ncpu   => CFG_NCPU,
     hindex => hsidx_pmu,
+    nev => nev,
     haddr  => 16#801#,
     hmask  => 16#FFF#
     )
   port map(
     rst                => rstn,
     clk                => clkm,
-    pmu_events         => pmu_events,
-    ccs_contention     => ccs_contention,
-    ccs_latency        => ccs_latency,
+    events_vector      => pmue,
     ahbsi              => ahbsi,
     ahbso              => ahbso(hsidx_pmu));
-
 end;
-

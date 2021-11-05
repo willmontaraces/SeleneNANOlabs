@@ -1,24 +1,23 @@
+# Set variables from environment or constants
 set benchmark $::env(MULTICORE_BENCHMARK)
-
-# SINGLE CORE
-#cpu act 0         
-#load $benchmark.riscv/$benchmark-1.riscv
-#cpu act 0
-#ep 0x40000000     
-#stack 0x400fff00 
-#run 
-
-# DUAL CORE
-cpu act 0         
-load $benchmark.riscv/$benchmark-1.riscv
-cpu act 1
-load $benchmark.riscv/$benchmark-2.riscv
-cpu act 0
-ep 0x40000000     
-stack 0x400fff00 
-cpu act 1
-ep 0x41000000     
-stack 0x410fff00 
-cpu act 0
+set n_cores $::env(MULTICORE_BENCHMARK_NC)
+# WARNING this depends onf HW configuration
+set mem_base 0x00000000
+for {set i 0} {$i < $n_cores} {incr i} {
+    # Set entry point, stack pointer and binary paths
+    set entryp [expr $i*0x1000000+$mem_base]
+    set stackp [expr $entryp+0xfff00]
+    set binix [expr $i+1]
+    set binp $benchmark.riscv/$benchmark-$binix.riscv
+    # configure current CPU
+    cpu act $i
+    load $binp
+    ep $entryp 
+    stack $stackp
+}
+# Step command needed due to a bug
+# Run without a step fails with unknown error
+step 10
+#launch execution
 run
 quit

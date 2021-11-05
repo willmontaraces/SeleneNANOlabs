@@ -3,7 +3,7 @@
 #include "util.h"
 #include "binarysearch.h"
 //#include <time.h> 
-#include "pmu_test.h"
+#include "pmu_hw.h"
 #include <lockstep.h>
 
 //#define __UART__

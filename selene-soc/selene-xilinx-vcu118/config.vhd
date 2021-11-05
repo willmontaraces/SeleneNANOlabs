@@ -36,7 +36,7 @@ package config is
   constant CFG_CLK_NOFB : integer := 0;
 -- NOELV processor core
   constant CFG_NOELV : integer := 1;
-  constant CFG_NCPU : integer := (4);
+  constant CFG_NCPU : integer := (6);
   constant CFG_CFG : integer := (0);
   constant CFG_NODBUS : integer := 1;
   constant CFG_DISAS : integer := 0;
@@ -297,10 +297,25 @@ package config is
 -- AXI LITE xbar configuration
   constant CFG_AXI_LITE_N_INITIATORS : integer := 1;
   constant CFG_AXI_LITE_N_TARGETS : integer := CFG_AXI_N_ACCELERATORS;
--- RootVoter Cells
-  constant MAX_DADASETS_RVC_0 : integer := 3;
-  constant MAX_DADASETS_RVC_1 : integer := 3;
-  constant MAX_DADASETS_RVC_2 : integer := 7;
-  constant MAX_DADASETS_RVC_3 : integer := 9;
+-- RootVoter Cells  
+  constant RVC_0_MAX_DATASETS  : integer := 9;
+  constant RVC_0_COUNT_MATCHES : integer := 1;
+  constant RVC_0_LIST_MATCHES  : integer := 0;
+  constant RVC_0_LIST_FAILURES : integer := 1;  
+
+  constant RVC_1_MAX_DATASETS  : integer := 9;
+  constant RVC_1_COUNT_MATCHES : integer := 1;
+  constant RVC_1_LIST_MATCHES  : integer := 0;
+  constant RVC_1_LIST_FAILURES : integer := 1;  
+
+  constant RVC_2_MAX_DATASETS  : integer := 9;
+  constant RVC_2_COUNT_MATCHES : integer := 1;
+  constant RVC_2_LIST_MATCHES  : integer := 0;
+  constant RVC_2_LIST_FAILURES : integer := 1;  
+
+  constant RVC_3_MAX_DATASETS  : integer := 9;
+  constant RVC_3_COUNT_MATCHES : integer := 1;
+  constant RVC_3_LIST_MATCHES  : integer := 0;
+  constant RVC_3_LIST_FAILURES : integer := 1;  
   
 end;

@@ -1,6 +1,6 @@
 //DEFINES 
 #include <util.h>
-#include <pmu_test.h>
+#include <pmu_hw.h>
 #include <lockstep.h>
 #include <stdio.h>
 //END OF DEFINES

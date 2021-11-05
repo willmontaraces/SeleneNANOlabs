@@ -462,7 +462,11 @@ begin
 
     rootvoter_0 : rv_wrapper
     generic map (
-      MAX_DATASETS => MAX_DADASETS_RVC_0
+      RVC_ID              => 0,
+      MAX_DATASETS        => RVC_0_MAX_DATASETS,
+      COUNT_MATCHES       => RVC_0_COUNT_MATCHES,
+      LIST_MATCHES        => RVC_0_LIST_MATCHES,
+      LIST_FAILURES       => RVC_0_LIST_FAILURES
     )
     port map (
       clk       => clkm,
@@ -474,7 +478,11 @@ begin
 
     rootvoter_1 : rv_wrapper
     generic map (
-      MAX_DATASETS => MAX_DADASETS_RVC_1
+      RVC_ID              => 1,
+      MAX_DATASETS        => RVC_1_MAX_DATASETS,
+      COUNT_MATCHES       => RVC_1_COUNT_MATCHES,
+      LIST_MATCHES        => RVC_1_LIST_MATCHES,
+      LIST_FAILURES       => RVC_1_LIST_FAILURES
     )    
     port map (
       clk       => clkm,
@@ -487,7 +495,11 @@ begin
 	
     rootvoter_2 : rv_wrapper
     generic map (
-      MAX_DATASETS => MAX_DADASETS_RVC_2
+      RVC_ID              => 2,
+      MAX_DATASETS        => RVC_2_MAX_DATASETS,
+      COUNT_MATCHES       => RVC_2_COUNT_MATCHES,
+      LIST_MATCHES        => RVC_2_LIST_MATCHES,
+      LIST_FAILURES       => RVC_2_LIST_FAILURES
     )    
     port map (
       clk       => clkm,
@@ -500,7 +512,11 @@ begin
 
     rootvoter_3 : rv_wrapper
     generic map (
-      MAX_DATASETS => MAX_DADASETS_RVC_3
+      RVC_ID              => 3,
+      MAX_DATASETS        => RVC_3_MAX_DATASETS,
+      COUNT_MATCHES       => RVC_3_COUNT_MATCHES,
+      LIST_MATCHES        => RVC_3_LIST_MATCHES,
+      LIST_FAILURES       => RVC_3_LIST_FAILURES
     )    
     port map (
       clk       => clkm,

@@ -40,7 +40,7 @@
 #include "util.h"
 #include "asm.h"
 //#include <time.h> 
-#include "pmu_test.h"
+#include "pmu_hw.h"
 
 #include "binarysearch.h"
 //#include "bitonic.h"

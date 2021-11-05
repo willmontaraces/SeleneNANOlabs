@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "util.h"
 
-#include "pmu_test.h"
+#include "pmu_hw.h"
 
 #include "asm.h"
 

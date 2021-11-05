@@ -20,6 +20,15 @@ instbasedir = $(UCB_VLSI_HOME)/install
 
 bmarks := $(shell ls --hide=Makefile --hide=*.dump --hide=*.riscv --hide=common)
 
+
+#--
+# Chech for drivers
+#--
+ifeq ($(PMU_DRIVER),)
+PMU_DRIVER := ./../BSC_libraries/safeSU/6-core
+$(warning Undefined envar PMU_DRIVER, fallback to default path)
+endif
+
 #--------------------------------------------------------------------
 # Build rules
 #--------------------------------------------------------------------
@@ -32,8 +41,9 @@ RISCV_LINK_OPTS ?= -static -nostdlib -nostartfiles -lm -lgcc -T $(src_dir)/commo
 RISCV_OBJDUMP ?= $(RISCV_PREFIX)objdump --disassemble-all --disassemble-zeroes --section=.text --section=.text.startup --section=.data
 RISCV_SIM ?= spike --isa=rv$(XLEN)gc
 
-incs  += -I$(src_dir)/../uart -I$(src_dir)/../env -I$(src_dir)/common -I$(src_dir)/../BSC_libraries/PMU -I$(src_dir)/../BSC_libraries/lockstep $(addprefix -I$(src_dir)/, $(bmarks))
+incs  += -I$(src_dir)/../uart -I$(src_dir)/../env -I$(src_dir)/common -I$(src_dir) -I$(PMU_DRIVER) -I$(src_dir)/../BSC_libraries/lockstep $(addprefix -I$(src_dir)/, $(bmarks))
 objs  :=
+
 
 #--
 # Bench Extra Build Rules
@@ -45,7 +55,10 @@ dhrystone.riscv: EXTRA_GCC_OPTS := -mexplicit-relocs -O3 -Wno-implicit -falign-f
 
 define compile_template
 $(1).riscv: $(wildcard $(src_dir)/$(1)/*) $(wildcard $(src_dir)/common/*) $(wildcard $(src_dir)/../uart/*)
-	$$(RISCV_GCC) $$(incs) $$(RISCV_GCC_OPTS) $$(EXTRA_GCC_OPTS) -o $$@ $(wildcard $(src_dir)/$(1)/*.c) $(wildcard $(src_dir)/common/*.c) $(wildcard $(src_dir)/../uart/*.c) $(wildcard $(src_dir)/../BSC_libraries/PMU/*.c) $(wildcard $(src_dir)/../BSC_libraries/lockstep/*.c) $(wildcard $(src_dir)/common/*.S) $$(RISCV_LINK_OPTS)
+	$$(RISCV_GCC) $$(incs) $$(RISCV_GCC_OPTS) $$(EXTRA_GCC_OPTS) -o $$@ $(wildcard $(src_dir)/$(1)/*.c) \
+	$(wildcard $(src_dir)/common/*.c) $(wildcard $(src_dir)/../uart/*.c) \
+	$(wildcard $(PMU_DRIVER)/*.c) $(wildcard $(src_dir)/../BSC_libraries/lockstep/*.c) \
+	$(wildcard $(src_dir)/common/*.S) $$(RISCV_LINK_OPTS)
 endef
 
 $(foreach bmark,$(bmarks),$(eval $(call compile_template,$(bmark))))
