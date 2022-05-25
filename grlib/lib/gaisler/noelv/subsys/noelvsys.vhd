@@ -2,7 +2,7 @@
 --  This file is a part of the GRLIB VHDL IP LIBRARY
 --  Copyright (C) 2003 - 2008, Gaisler Research
 --  Copyright (C) 2008 - 2014, Aeroflex Gaisler
---  Copyright (C) 2015 - 2021, Cobham Gaisler
+--  Copyright (C) 2015 - 2022, Cobham Gaisler
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ entity noelvsys is
     rfconf   : integer;
     fpuconf  : integer;
     tcmconf  : integer;
+    mulconf  : integer;
     disas    : integer;
     ahbtrace : integer;
     cfg      : integer;
@@ -86,9 +87,6 @@ entity noelvsys is
     uarto    : out uart_out_type;
     -- Perf counter
     cnt      : out nv_counter_out_vector(ncpu-1 downto 0);
-    -- BSC ------------------------------------------------------
-    -- Bus ahbmo from all cores (PMU RDC)
-    cpus_ahbmo     : out ahb_mst_out_vector_type(ncpu-1 downto 0);
     -- DFT support
     testen  : in  std_ulogic := '0';
     testrst : in  std_ulogic := '1';
@@ -219,9 +217,6 @@ begin
 
   ahbmi <= cpumi;
   cpumo(ncpu+nextmst-1 downto ncpu) <= ahbmo;
-  -- BSC --------------------------------------------
-  cpus_ahbmo <= cpumo(ncpu-1 downto 0);    
-  --------------------------------------------------  
   dbgmst_to_dbg : if nodbus = 0 generate
     cpumo(cpumo'high downto ncpu+nextmst+1) <= (others => ahbm_none);
   end generate;
@@ -316,6 +311,7 @@ begin
         rfconf   => rfconf,
         fpuconf  => fpuconf,
         tcmconf  => tcmconf,
+        mulconf  => mulconf,
         disas    => disas,
         pbaddr   => 16#90000#,
         cfg      => cfg,

@@ -11,7 +11,8 @@
 #include "griommu.h"
 #include "greth.h"
 #include "l2c.h"
-#include "l2capi.h"
+//#include "l2capi.h"
+#include "grdmac2.h"
 
 #ifndef CONSOLE_DEBUG
 #define CONSOLE_DEBUG 1 // Set to 0 to disable the following printf statements
@@ -47,6 +48,10 @@
 #ifndef L2C_ADDR_SYSTEST
 #define L2C_ADDR_SYSTEST 0xff000000ULL // De-RISC: 0xff000000ULL
 #endif
+#ifndef DMAC2_ADDR_SYSTEST
+#define DMAC2_ADDR_SYSTEST 0xFC0A0000ULL // SELENE
+#endif
+
 // Default PIRQ
 #ifndef SPICTRL_PIRQ
 #define SPICTRL_PIRQ 6 // Generic: 8 | De-RISC: 6
@@ -69,9 +74,10 @@
 #define GRIOMMU_SYSTEST (1 << 8)
 #define GRETH_SYSTEST (1 << 9)
 #define L2C_SYSTEST (1 << 10)
+#define DMAC2_SYSTEST (1 << 11)
 
 #ifndef SYSTEST_TYPE
-#define SYSTEST_TYPE L2C_SYSTEST
+#define SYSTEST_TYPE DMAC2_SYSTEST
 #endif
 
 void print_test_result(int test_failed, char* dev_string) {
@@ -175,6 +181,11 @@ int main() {
     test_failed |= l2c_test(memaddr, (struct l2cregs*)l2c_addr);
     print_test_result(test_failed, "L2Cache");
   }
+  if ((SYSTEST_TYPE) & DMAC2_SYSTEST) {
+    test_failed |= grdmac2_test(DMAC2_ADDR_SYSTEST, 0);
+    print_test_result(test_failed, "GRDMAC2");
+  }
+
   print_test_result(test_failed, "All");
   report_end();
 	return 0;

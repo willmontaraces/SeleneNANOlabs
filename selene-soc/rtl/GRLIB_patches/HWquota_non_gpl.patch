@@ -1,0 +1,99 @@
+diff --git a/grlib_git/lib/gaisler/noelv/pkg/noelv.vhd b/grlib_git/lib/gaisler/noelv/pkg/noelv.vhd
+index 354fb60..b829aaa 100644
+--- a/grlib_git/lib/gaisler/noelv/pkg/noelv.vhd
++++ b/grlib_git/lib/gaisler/noelv/pkg/noelv.vhd
+@@ -536,7 +536,8 @@ package noelv is
+       testrst : in  std_ulogic := '1';
+       scanen  : in  std_ulogic := '0';
+       testoen : in  std_ulogic := '1';
+-      testsig : in  std_logic_vector(1+GRLIB_CONFIG_ARRAY(grlib_techmap_testin_extra) downto 0) := (others => '0')
++      testsig : in  std_logic_vector(1+GRLIB_CONFIG_ARRAY(grlib_techmap_testin_extra) downto 0) := (others => '0');
++      hq_mccu : in  std_logic_vector(ncpu-1 downto 0) := (others => '0') --Hardware quota exhausted signals comming from the MCCU
+       --GRLIB_INTERNAL_BEGIN
+       -- Debug
+ 
+diff --git a/grlib_git/lib/grlib/amba/ahbctrl.vhd b/grlib_git/lib/grlib/amba/ahbctrl.vhd
+index a889332..f7d1b33 100644
+--- a/grlib_git/lib/grlib/amba/ahbctrl.vhd
++++ b/grlib_git/lib/grlib/amba/ahbctrl.vhd
+@@ -72,7 +72,8 @@ entity ahbctrl is
+     fourgslv    : integer := 0;  --1=Single slave with single 4 GB bar
+     shadow      : integer range 0 to 1 := 0;  -- Allow memory area shadowing
+     unmapslv    : integer := 0;    -- to redirect unmapped areas to slave, set to 256+bar*32+slv
+-    ahbendian   : integer := GRLIB_ENDIAN
++    ahbendian   : integer := GRLIB_ENDIAN;
++    ncpu        : integer := 6
+   );
+   port (
+     rst     : in  std_ulogic;
+@@ -85,7 +86,8 @@ entity ahbctrl is
+     testrst : in  std_ulogic := '1';
+     scanen  : in  std_ulogic := '0';
+     testoen : in  std_ulogic := '1';
+-    testsig : in  std_logic_vector(1+GRLIB_CONFIG_ARRAY(grlib_techmap_testin_extra) downto 0) := (others => '0')
++    testsig : in  std_logic_vector(1+GRLIB_CONFIG_ARRAY(grlib_techmap_testin_extra) downto 0) := (others => '0');
++    HQ_MCCU : in  std_logic_vector(ncpu-1 downto 0) := (others => '0') --Hardware quota exhausted signals comming from the MCCU
+   );
+ end;
+ 
+@@ -279,7 +281,14 @@ constant RES_split : std_logic_vector(0 to nahbmx-1) := (others => '0');
+       for i in 0 to nahbmx-1 loop
+         --masters which have received split are not granted
+         if ((rsplit(i) = '0') or (split = 0)) then
+-          hpvec(i) := msto(i).hbusreq;
++          --If arbitered master is a core
++          if(i < ncpu) then
++            --Mask core AHB requests if quota is exhausted
++            hpvec(i) := msto(i).hbusreq and (not HQ_MCCU(i));
++          else
++            --Don't mask non-core petitions
++            hpvec(i) := msto(i).hbusreq;
++          end if;
+         end if;
+       end loop;
+       --check if any bus requests are active (nvalid(2) set to true)
+@@ -301,8 +310,18 @@ constant RES_split : std_logic_vector(0 to nahbmx-1) := (others => '0');
+       for i in 0 to nahbmx-1 loop
+         if ((rsplit(i) = '0') or (split = 0)) then
+           if (i <= r.hmaster) then rrvec(i) := '0';
+-          else rrvec(i) := msto(i).hbusreq; end if;
+-          rrvec(nahbmx+i) := msto(i).hbusreq;
++          else
++            if(i < ncpu) then   
++              rrvec(i) := msto(i).hbusreq and (not HQ_MCCU(i));
++            else
++              rrvec(i) := msto(i).hbusreq; 
++            end if;
++          end if;
++          if(i+nahbmx < ncpu+nahbmx) then   
++            rrvec(nahbmx+i) := msto(i).hbusreq and (not HQ_MCCU(i));
++          else
++            rrvec(nahbmx+i) := msto(i).hbusreq;
++          end if;
+         end if;
+       end loop;
+       --find the next master uzing tz which gives priority to lower
+diff --git a/grlib_git/lib/grlib/amba/amba.vhd b/grlib_git/lib/grlib/amba/amba.vhd
+index 040c2a2..7136eff 100644
+--- a/grlib_git/lib/grlib/amba/amba.vhd
++++ b/grlib_git/lib/grlib/amba/amba.vhd
+@@ -750,7 +750,8 @@ type apb_config_type is array (0 to NAPBCFG-1) of amba_config_word;
+     fourgslv    : integer := 0;
+     shadow      : integer range 0 to 1 := 0;  -- Allow overlapping memory areas
+     unmapslv    : integer := 0;
+-    ahbendian   : integer := GRLIB_ENDIAN
++    ahbendian   : integer := GRLIB_ENDIAN;
++    ncpu        : integer := 6
+   );
+   port (
+     rst     : in  std_ulogic;
+@@ -763,7 +764,8 @@ type apb_config_type is array (0 to NAPBCFG-1) of amba_config_word;
+     testrst : in  std_ulogic := '1';
+     scanen  : in  std_ulogic := '0';
+     testoen : in  std_ulogic := '1';
+-    testsig : in  std_logic_vector(1+GRLIB_CONFIG_ARRAY(grlib_techmap_testin_extra) downto 0) := (others => '0')
++    testsig : in  std_logic_vector(1+GRLIB_CONFIG_ARRAY(grlib_techmap_testin_extra) downto 0) := (others => '0');
++    HQ_MCCU : in  std_logic_vector(ncpu-1 downto 0) := (others => '0') --Hardware quota exhausted signals comming from the MCCU
+   );
+   end component;
+ 

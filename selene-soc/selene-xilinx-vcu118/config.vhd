@@ -131,6 +131,13 @@ package config is
   constant CFG_L2_MTRR : integer := (0);
   constant CFG_L2_EDAC : integer := 0;
   constant CFG_L2_AXI : integer := 1;
+  -- L2 Cache Lite
+  constant CFG_L2CL_EN : integer := 1;
+  constant CFG_L2CL_SIZE : integer := 128;
+  constant CFG_L2CL_WAYS : integer := 4;
+  constant CFG_L2CL_REPL : integer := 0;
+  constant CFG_L2CL_LSZ : integer := 32;
+  constant CFG_L2CL_MAP : integer := 16#00FF#;
 -- AMBA settings
   constant CFG_DEFMST : integer := (0);
   constant CFG_RROBIN : integer := 1;
@@ -208,7 +215,7 @@ package config is
 -- Gaisler Ethernet core
   constant CFG_GRETH : integer := 1;
   constant CFG_GRETH1G : integer := 0;
-  constant CFG_ETH_FIFO : integer := 8;
+  constant CFG_ETH_FIFO : integer := 512;
   constant CFG_GRETH_FMC : integer := 0;
 -- UART 1
   constant CFG_UART1_ENABLE : integer := 1;
@@ -234,6 +241,8 @@ package config is
   constant CFG_GRGPIO_WIDTH : integer := (16);
 -- I2C master
   constant CFG_I2C_ENABLE : integer := 0;
+-- DMA Controller
+  constant CFG_GRDMAC2    : integer := 1;
   -----------------------------------------------------------------------------
   -- IOMMU
   -----------------------------------------------------------------------------
@@ -287,35 +296,61 @@ package config is
   constant CFG_GRVERSION_VERSION : integer := 16#0003#;
   constant CFG_GRVERSION_REVISION : integer := 16#0000#;
 -- ACCELERATORS configuration
-  constant CFG_AXI_N_ACCELERATORS : integer := 5;
-  constant CFG_AXI_N_ACCELERATOR_PORTS : integer := CFG_AXI_N_ACCELERATORS + 3; -- CFG_AXI_N_ACCELERATORS + 3(conv_acc have 4 ports)
+  constant CFG_IN_SIMULATION : boolean := false
+  --pragma synthesis_off
+                                      or true
+  --pragma synthesis_on
+  ;
+  constant CFG_IN_SYNTHESIS : boolean := not CFG_IN_SIMULATION;
+  constant CFG_HLSINF_EN : integer := 0;            -- Enable HLSinf accelerator (only for bitstream)
+  constant CFG_HLSINF_VERSION : integer := 10;      -- 10:HLSINF_1_0, 11:HLSINF_1_1, 12:HLSINF_1_2, 13:HLSINF_1_3
+  
+  constant CFG_AXI_N_ACCELERATORS : integer := 6;
+  constant CFG_AXI_N_ACCELERATOR_PORTS : integer := CFG_AXI_N_ACCELERATORS + 5; -- CFG_AXI_N_ACCELERATORS + 3(conv_acc have 4 ports)
+-- safeSU
+  constant CFG_SAFESU_EN : integer := 1; -- Enable safeSU
+  constant CFG_SAFESU_FT : integer := 0; -- Fault tolerance
+  constant CFG_SAFESU_NEV : integer := 128; -- Crossbar inputs
+  constant CFG_SAFESU_NCNT : integer := 24 ; -- Counters
+  constant CFG_SAFESU_VERSION : integer := 0; -- 4 bits for version
+
 -- AXI xbar configuration
 --The following line "CFG_AXI_N_INITIATORS" must not contain labels, logic operations or comments due to preprocesor scripts
 --the current value "5" corresponds to 1(gpp) + CFG_AXI_N_ACCELERATORS + 3(conv_acc have 4 ports)
-  constant CFG_AXI_N_INITIATORS : integer := 2;
+  constant CFG_AXI_N_INITIATORS : integer := 7;
   constant CFG_AXI_N_TARGETS : integer := 1;
 -- AXI LITE xbar configuration
   constant CFG_AXI_LITE_N_INITIATORS : integer := 1;
   constant CFG_AXI_LITE_N_TARGETS : integer := CFG_AXI_N_ACCELERATORS;
 -- RootVoter Cells  
+  constant CFG_RVC_VERSION     : integer := 2;
+  
+  constant RVC_0_ENABLE        : integer := 1;
   constant RVC_0_MAX_DATASETS  : integer := 9;
   constant RVC_0_COUNT_MATCHES : integer := 1;
   constant RVC_0_LIST_MATCHES  : integer := 0;
   constant RVC_0_LIST_FAILURES : integer := 1;  
 
+  constant RVC_1_ENABLE        : integer := 1;
   constant RVC_1_MAX_DATASETS  : integer := 9;
   constant RVC_1_COUNT_MATCHES : integer := 1;
   constant RVC_1_LIST_MATCHES  : integer := 0;
   constant RVC_1_LIST_FAILURES : integer := 1;  
 
+  constant RVC_2_ENABLE        : integer := 1;
   constant RVC_2_MAX_DATASETS  : integer := 9;
   constant RVC_2_COUNT_MATCHES : integer := 1;
   constant RVC_2_LIST_MATCHES  : integer := 0;
   constant RVC_2_LIST_FAILURES : integer := 1;  
 
+  constant RVC_3_ENABLE        : integer := 1;
   constant RVC_3_MAX_DATASETS  : integer := 9;
   constant RVC_3_COUNT_MATCHES : integer := 1;
   constant RVC_3_LIST_MATCHES  : integer := 0;
   constant RVC_3_LIST_FAILURES : integer := 1;  
+  
+  constant FAULT_INJECTOR_ENABLE : integer := 0;
+  constant USE_FFI_CLOCK : integer := 0;
+  
   
 end;

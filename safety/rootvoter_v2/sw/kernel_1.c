@@ -1,3 +1,11 @@
+/*  Description:
+        A kernel to evalute the usage of RootVoter under the staggered redundant execution (multicore)
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
+
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "kernel.h"

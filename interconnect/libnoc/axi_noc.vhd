@@ -103,7 +103,7 @@ begin
   end generate fromInitiator;
   
   toTarget: for i in 0 to NoTargets-1 generate 
-    axi_to_target(i).aw.id     <=  mst_ports_req(i).aw.id; --NOTE WARNING
+    axi_to_target(i).aw.id(IdWidthInitiators-1 downto 0)     <=  mst_ports_req(i).aw.id(AxiIdWidthMasters-1 downto IdWidthInitiators); --NOTE WARNING
     axi_to_target(i).aw.addr   <=  mst_ports_req(i).aw.addr;
     axi_to_target(i).aw.len    <=  mst_ports_req(i).aw.len;
     axi_to_target(i).aw.size   <=  mst_ports_req(i).aw.size;
@@ -121,7 +121,7 @@ begin
     
     axi_to_target(i).b.ready   <=  mst_ports_req(i).b_ready;
 
-    axi_to_target(i).ar.id     <= mst_ports_req(i).ar.id;
+    axi_to_target(i).ar.id(IdWidthInitiators-1 downto 0)     <= mst_ports_req(i).ar.id(AxiIdWidthMasters-1 downto IdWidthInitiators);
     axi_to_target(i).ar.addr   <= mst_ports_req(i).ar.addr;
     axi_to_target(i).ar.len    <= mst_ports_req(i).ar.len;
     axi_to_target(i).ar.size   <= mst_ports_req(i).ar.size;
@@ -143,14 +143,14 @@ begin
     axi_to_initiator(i).w.ready   <= slv_ports_resp(i).w_ready;
    
     axi_to_initiator(i).b.id (IdWidthInitiators-1 downto 0) <= slv_ports_resp(i).b.id;
-    axi_to_initiator(i).b.id (3 downto IdWidthInitiators)<= (others => '0'); 
+    axi_to_initiator(i).b.id (AXI_ID_WIDTH-1 downto IdWidthInitiators)<= (others => '0'); 
     axi_to_initiator(i).b.resp    <= slv_ports_resp(i).b.resp;
     axi_to_initiator(i).b.valid   <= slv_ports_resp(i).b_valid;
     
     axi_to_initiator(i).ar.ready  <= slv_ports_resp(i).ar_ready;
 
     axi_to_initiator(i).r.id(IdWidthInitiators-1 downto 0) <= slv_ports_resp(i).r.id;
-    axi_to_initiator(i).r.id (3 downto IdWidthInitiators)  <= (others => '0');
+    axi_to_initiator(i).r.id (AXI_ID_WIDTH-1 downto IdWidthInitiators)  <= (others => '0');
     axi_to_initiator(i).r.data    <= slv_ports_resp(i).r.data;
     axi_to_initiator(i).r.resp    <= slv_ports_resp(i).r.resp;
     axi_to_initiator(i).r.last    <= slv_ports_resp(i).r.last;
@@ -163,12 +163,14 @@ begin
     mst_ports_resp(i).w_ready         <= axi_from_target(i).w.ready;
 
     mst_ports_resp(i).b_valid         <= axi_from_target(i).b.valid;
-    mst_ports_resp(i).b.id            <= axi_from_target(i).b.id;
+    mst_ports_resp(i).b.id(AxiIdWidthMasters-1 downto IdWidthInitiators)            <= axi_from_target(i).b.id(IdWidthInitiators-1 downto 0);
+    mst_ports_resp(i).b.id(IdWidthInitiators-1 downto 0)  <= (others => '0');
     mst_ports_resp(i).b.resp          <= axi_from_target(i).b.resp;
     mst_ports_resp(i).b.user          <= (others => '0');
     
     mst_ports_resp(i).r_valid         <= axi_from_target(i).r.valid;
-    mst_ports_resp(i).r.id            <= axi_from_target(i).r.id;
+    mst_ports_resp(i).r.id(AxiIdWidthMasters-1 downto IdWidthInitiators)            <= axi_from_target(i).r.id(IdWidthInitiators-1 downto 0);
+    mst_ports_resp(i).r.id(IdWidthInitiators-1 downto 0)  <= (others => '0');
     mst_ports_resp(i).r.data          <= axi_from_target(i).r.data;
     mst_ports_resp(i).r.resp          <= axi_from_target(i).r.resp;
     mst_ports_resp(i).r.last          <= axi_from_target(i).r.last;
@@ -178,6 +180,7 @@ begin
 
   axi_noc : axi_xbar_wrapper
     generic map (
+      
       NoMasters         => NoInitiators,         
       NoSlaves          => NoTargets,        
       AxiIdWidthMasters => AxiIdWidthMasters,

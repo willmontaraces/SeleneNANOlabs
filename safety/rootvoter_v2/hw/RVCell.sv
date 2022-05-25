@@ -1,3 +1,13 @@
+/*  Description:
+        Configurable RootVoter cell 
+        Used for the detection of data corruption and timeout/hang failures in multicore SoC
+        
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
+
+*/
+
 `include "Counter.sv"
 `include "CompareUnit.sv"
 
@@ -20,19 +30,20 @@ module RVCell #(
     output logic [3:0] match_cnt [MAX_DATASETS],
     output logic [119:0] match_vector,    
     output reg [39:0] status,
-    output reg [19:0] state_internal);
+    output reg [23:0] state_internal);
 
+    localparam int unsigned VERSION = 2;
 
     typedef enum logic[4:0] {
-        state_idle                = 5'b00001,
-        state_wait_datasets        = 5'b00010,
+        state_idle               = 5'b00001,
+        state_wait_datasets      = 5'b00010,
         state_voting             = 5'b00100, 
         state_timeout            = 5'b01000,
-        state_result               = 5'b10000} state_enc_t;
+        state_result             = 5'b10000} state_enc_t;
 
     state_enc_t state_reg, state_next;   // FSM state register and next (comb) state
 
-    logic [11:0] RVC_info;
+    logic [15:0] RVC_info;
     logic config_ok;
     logic [3:0] dataset_cnt;
     logic all_datasets_loaded;    
@@ -59,6 +70,8 @@ module RVCell #(
     assign RVC_info[9]      = LIST_FAILURES;
     assign RVC_info[10]     = LIST_MATCHES;
     assign RVC_info[11]     = COUNT_MATCHES;
+    assign RVC_info[15:12]  = VERSION;
+    
     
 
     assign status           = { {(16-MAX_DATASETS){1'b0}}, failvec_res,  

@@ -42,6 +42,7 @@ use gaisler.axi.all;
 use gaisler.plic.all;
 use gaisler.noelv.all;
 use gaisler.l2cache.all;
+use gaisler.grdmac2_pkg.all;
 --use gaisler.noelv_pkg.all;
 
 -- pragma translate_off
@@ -53,6 +54,7 @@ use unisim.all;
 -- pragma translate_on
 
 use work.config.all;
+use work.selene.all;
 
 entity selene_soc is
   generic(

@@ -6,4 +6,4 @@
 	url = https://github.com/pulp-platform/common_cells.git
 [submodule "safety/ahb_pmu/bsc_pmu"]
 	path = safety/ahb_pmu/bsc_pmu
-	url = https://gitlab.bsc.es/caos_hw/hdl_ip/bsc_pmu.git
+	url =  ../../caos_hw/hdl_ip/bsc_pmu.git 

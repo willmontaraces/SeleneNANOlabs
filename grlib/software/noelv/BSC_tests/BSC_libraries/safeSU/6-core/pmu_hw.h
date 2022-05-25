@@ -17,7 +17,7 @@
 // ========================
 
 //base addres for PMU on SoC
-#define PMU_ADDR 0x80200000
+#define PMU_ADDR 0x80100000
 
 // ========================
 // General pourpose functions

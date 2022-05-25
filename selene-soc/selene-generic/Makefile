@@ -64,7 +64,7 @@ ifeq ($(CONFIG_MIG_7SERIES),y)
 VIVADO_MIG_AXI=1
 AXI_128=1
 endif
-VIVADO_IMPL_STRATEGY = Performance_ExplorePostRoutePhysOpt
+VIVADO_IMPL_STRATEGY = Performance_SpreadSLLs
 
 # Simulator switches
 ifeq ("$(GRLIB_SIMULATOR)","ALDEC")

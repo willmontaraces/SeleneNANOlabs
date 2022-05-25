@@ -1,6 +1,10 @@
-/* 
-    RootVoter test application (baremetal single core)
- */
+/*  Description:
+        RootVoter test application (baremetal multicore)
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
+
+*/ 
  
 #include <stdint.h>
 #include <stdlib.h>
@@ -18,7 +22,8 @@ int main()
 
     RootVoterDescriptor RVC0;
     RVC_sync(&RVC0, RVC0_BASE);
-    printf("Features of RootVoter Cell at base address %08x:\n\tid=%2d\n\tMaxDatasets=%2d\n\tcount_matches=%2s\n\tlist_matches=%2s\n\tlist_failures=%2s\n",
+    printf("Features of RootVoter Cell version %d:\n\tBase address %08x:\n\tid=%2d\n\tMaxDatasets=%2d\n\tcount_matches=%2s\n\tlist_matches=%2s\n\tlist_failures=%2s\n",
+            RVC0.inf.version,
             RVC0.base_adr,
             RVC0.inf.id,
             RVC0.inf.max_sets,

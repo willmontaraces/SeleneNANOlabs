@@ -1,0 +1,32 @@
+diff --git a/grlib/bin/scriptgen/filebuild/xlnx_vivado.tcl b/grlib/bin/scriptgen/filebuild/xlnx_vivado.tcl
+index 6b2284f..f4d8f5c 100644
+--- a/grlib/bin/scriptgen/filebuild/xlnx_vivado.tcl
++++ b/grlib/bin/scriptgen/filebuild/xlnx_vivado.tcl
+@@ -239,22 +239,23 @@ proc eof_xlnx_vivado {} {
+ 	close $vivfile
+ 
+ 	if {![string equal $VIVADO_INCL_DIRS ""]} {
+-		set vc "synth_design -include_dirs {$VIVADO_INCL_DIRS} -directive runtimeoptimized -resource_sharing off -keep_equivalent_registers -no_lc -rtl -name rtl_1"
++		set vc "synth_design -include_dirs {$VIVADO_INCL_DIRS} -directive PerformanceOptimized -resource_sharing off -keep_equivalent_registers -no_lc -rtl -name rtl_1"
+ 	} else {
+-		set vc "synth_design -directive runtimeoptimized -resource_sharing off -keep_equivalent_registers -no_lc -rtl -name rtl_1"
++		set vc "synth_design -directive PerformanceOptimized -resource_sharing off -keep_equivalent_registers -no_lc -rtl -name rtl_1"
+ 	}
+ 
+ 	append vc "\nset_property flow {$VIVADO_SYNTH_FLOW} \[get_runs synth_1\]"
+ 	append vc "\nset_property strategy {$VIVADO_SYNTH_STRATEGY} \[get_runs synth_1\]"
++	append vc "\nset_property STEPS.SYNTH_DESIGN.ARGS.DIRECTIVE PerformanceOptimized \[get_runs synth_1\]"
+ 	append vc "\nlaunch_runs synth_1"
+-	append vc "\nwait_on_run -timeout 360 synth_1"
++	append vc "\nwait_on_run -timeout 1200 synth_1"
+ 	append vc "\nget_ips"
+ 	append vc "\n# Launch place and route"
+ 	append vc "\nset_property strategy {$VIVADO_IMPL_STRATEGY} \[get_runs impl_1\]"
+ 	append vc "\nset_property steps.write_bitstream.args.mask_file true \[get_runs impl_1\]"
+ 	append vc "\nset_msg_config -suppress -id {Drc 23-20}"
+ 	append vc "\nlaunch_runs impl_1 -to_step write_bitstream"
+-	append vc "\nwait_on_run -timeout 360 impl_1"
++	append vc "\nwait_on_run -timeout 1200 impl_1"
+ 	append vc "\n#report_timing_summary -delay_type min_max -path_type full_clock_expanded -report_unconstrained -check_timing_verbose -max_paths 10 -nworst 1 -significant_digits 3 -input_pins -name timing_1 -file ./vivado/$TOP\_post_timing.rpt"
+ 	append vc "\n#report_drc -file $TOP\_drc_route.rpt"
+ 

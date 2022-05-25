@@ -27,6 +27,7 @@ use gaisler.axi.all;
 use gaisler.plic.all;
 use gaisler.noelv.all;
 use gaisler.l2cache.all;
+use gaisler.l2c_lite.all;
 --use gaisler.noelv_pkg.all;
 -- pragma translate_off
 use gaisler.sim.all;
@@ -106,14 +107,15 @@ architecture rtl of gpp_sys is
   constant hsidx_l2c    : integer := 1;
   --constant hsidx_ram_sim : integer := 2;
   --constant hsidx_ahbram : integer := 2;
-  --constant hsidx_mig : integer := 3; 
-  constant hsidx_accel  : integer := 5;
+  --constant hsidx_fake-mig1 : integer := 2; 
+  --constant hsidx_fake-mig2 : integer := 3; 
   constant hsidx_ahbrom : integer := 4;
+  constant hsidx_accel  : integer := 5;
   constant hsidx_ahbrep : integer := 6;
   constant hsidx_pmu : integer := 6  
 
 -- pragma translate_off
-  + 1
+  + CFG_SAFESU_EN
 -- pragma translate_on
 ;
   constant nextslv      : integer := hsidx_pmu + 1;
@@ -131,7 +133,7 @@ architecture rtl of gpp_sys is
   constant nextapb : integer := apbstart_gpp;
   
   -- BSC PMU
-  constant nev : integer := 128; --max number of events
+  constant nev : integer := CFG_SAFESU_NEV ; --max number of events
 
 
   -----------------------------------------------------
@@ -141,8 +143,6 @@ architecture rtl of gpp_sys is
   -- Misc
   signal vcc        : std_ulogic;
   signal clkm       : std_ulogic;
-  signal axi3_aximo : axi3_mosi_type;
-  signal axi_aximo : axi_mosi_type;
 
   -- APB
   signal apbo : apb_slv_out_vector := (others => apb_none);
@@ -185,6 +185,7 @@ architecture rtl of gpp_sys is
   signal latency_cause_state, n_latency_cause_state : ccs_latency_cause_state(ncpu-1 downto 0);
   
   signal ccs_latency : ccs_latency_vector_type(ncpu-1 downto 0);
+  signal hq_mccu :  std_logic_vector(ncpu-1 downto 0);
 
 begin
 
@@ -212,8 +213,8 @@ begin
 
   ahbso(0) <= io_ahbso(0);              -- IOMMU + GRSPFI(TODO)
   --ahbso(1)                -- L2cache/ahb2axi3b
-  ahbso(2) <= mem_ahbso(0);             -- ahbram/ahbram_sim
-  ahbso(3) <= mem_ahbso(1);             -- MIG
+  ahbso(2) <= mem_ahbso(0);             -- ahbram/ahbram_sim if (CFG_MIG_7SERIES = 0); first fake mig else
+  ahbso(3) <= mem_ahbso(1);             -- second fake mig
   --ahbso(4)                -- AHBROM
   --ahbso(5)                -- AHBREP
 
@@ -240,7 +241,7 @@ begin
   ----------------------------------------------------------------------
   ---  NOEL-V SUBSYSTEM ------------------------------------------------
   ----------------------------------------------------------------------
-  noelv0 : noelvsys
+  noelv0 : entity work.noelvsys
     generic map (
       fabtech  => fabtech,
       memtech  => memtech,
@@ -254,8 +255,9 @@ begin
       busw     => AHBDW,
       cmemconf => 0,
       fpuconf  => 0,
+      mulconf => 0,
       disas    => disas,
-      ahbtrace => 0,
+      ahbtrace => 1,
       cfg      => CFG_CFG,
       devid    => 0,
       --version  => CFG_GRVERSION_VERSION,
@@ -288,66 +290,99 @@ begin
       -- Perf counter
       cnt       => pmu_events, -- signals for PMU
       -- Bus ahbmo from all cores 
-      cpus_ahbmo => cpus_ahbmo
+      cpus_ahbmo => cpus_ahbmo,
+
+      hq_mccu    => hq_mccu
       );
 
   -----------------------------------------------------------------------------
   -- L2 cache -----------------------------------------------------------------
   -----------------------------------------------------------------------------
-  -- L2C generation enabled
-  gen_l2 : if CFG_L2_EN /= 0 generate
-    l2c0 : l2c_axi_be generic map (
-      hslvidx  => hsidx_l2c,
-      axiid    => 0,
-      cen      => CFG_L2_PEN,
-      haddr    => 16#000#,
-      hmask    => 16#C00#,
-      ioaddr   => 16#FF0#,
-      cached   => CFG_L2_MAP,
-      repl     => CFG_L2_RAN,
-      ways     => CFG_L2_WAYS,
-      linesize => CFG_L2_LSZ,
-      waysize  => CFG_L2_SIZE,
-      memtech  => memtech,
-      sbus     => 0,
-      mbus     => 0,
-      arch     => CFG_L2_SHARE,
-      ft       => CFG_L2_EDAC,
-      stat     => 2)
-    port map (
-      rst         => rstn,
-      clk         => clkm,
-      ahbsi       => ahbsi,
-      ahbso       => ahbso(hsidx_l2c),  --ahbso(1)
-      aximi       => mem_aximi,
-      aximo       => axi_aximo, -- TODO: Need to change L2 backend to AXI4 and then use mem_aximo here
-      sto         => open);
-  end generate gen_l2;
-
-  -- L2C generation disabled
-  nogen_l2c : if CFG_L2_EN = 0 generate
-
-    bridge : ahb2axi4b
-      generic map  (
-        hindex          => hsidx_l2c,
-        aximid          => 0,
-        wbuffer_num     => 8,
-        rprefetch_num   => 8,
-        endianness_mode => 0,
-        narrow_acc_mode => 0,
-        vendor          => VENDOR_GAISLER,
-        device          => GAISLER_AHB2AXI,
-        bar0            => ahb2ahb_membar(16#000#, '1', '1', 16#C00#),
-        ncpu            => ncpu
-        )
+  mig_7series_gen : if CFG_MIG_7SERIES /= 0 generate 
+   -- L2C generation enabled
+    gen_l2 : if CFG_L2_EN /= 0 generate
+      l2c0 : l2c_axi4_be generic map (
+        hslvidx  => hsidx_l2c,
+        axiid    => 0,
+        cen      => CFG_L2_PEN,
+        haddr    => 16#000#,
+        hmask    => 16#800#,
+        ioaddr   => 16#FF0#,
+        cached   => CFG_L2_MAP,
+        repl     => CFG_L2_RAN,
+        ways     => CFG_L2_WAYS,
+        linesize => CFG_L2_LSZ,
+        waysize  => CFG_L2_SIZE,
+        memtech  => memtech,
+        sbus     => 0,
+        mbus     => 0,
+        arch     => CFG_L2_SHARE,
+        ft       => CFG_L2_EDAC,
+        stat     => 2)
       port map (
-        rstn  => rstn, -- in  std_logic;
-        clk   => clkm, -- in  std_logic;
-        ahbsi => ahbsi, -- in  ahb_slv_in_type;
-        ahbso => ahbso(hsidx_l2c),-- out ahb_slv_out_type;  ahbso(1) 
-        aximi => mem_aximi, -- in  axi_somi_type;
-        aximo => mem_aximo ); --out axi4_mosi_type 
-  end generate;
+        rst         => rstn,
+        clk         => clkm,
+        ahbsi       => ahbsi,
+        ahbso       => ahbso(hsidx_l2c),  --ahbso(1)
+        aximi       => mem_aximi,
+        aximo       => mem_aximo,
+        sto         => open);
+    end generate gen_l2;
+
+      -- L2C Lite generation enabled
+      gen_l2c_l : if (CFG_L2_EN = 0) and (CFG_L2CL_EN /= 0) generate
+      l2c0 : l2c_lite_axi
+      generic map (
+        tech     => memtech,
+        hmindex  => 0,
+        hsindex  => hsidx_l2c,
+        ways     => CFG_L2CL_WAYS,
+        waysize  => CFG_L2CL_SIZE,
+        linesize => CFG_L2CL_LSZ,
+        repl     => CFG_L2CL_REPL,
+        haddr    => 16#000#,
+        hmask    => 16#800#,
+        ioaddr   => 16#F00#,
+        cached   => conv_std_logic_vector(CFG_L2CL_MAP, 16),
+        be_dw    => 128)
+      port map (
+        rstn         => rstn,
+        clk         => clkm,
+        ahbsi       => ahbsi,
+        ahbso       => ahbso(hsidx_l2c),  --ahbso(1)
+        aximi       => mem_aximi,
+        aximo       => mem_aximo);
+      end generate;
+    
+    -- L2C generation disabled
+    nogen_l2c : if (CFG_L2_EN = 0) and (CFG_L2CL_EN = 0) generate
+      bridge : entity work.ahb2axi4b
+        generic map  (
+          hindex          => hsidx_l2c,
+          aximid          => 0,
+          wbuffer_num     => 8,
+          rprefetch_num   => 8,
+          endianness_mode => 0,
+          narrow_acc_mode => 0,
+          vendor          => VENDOR_GAISLER,
+          device          => GAISLER_AHB2AXI,
+          bar0            => ahb2ahb_membar(16#000#, '1', '1', 16#800#),
+          ncpu            => ncpu
+          )
+        port map (
+          rstn  => rstn, -- in  std_logic;
+          clk   => clkm, -- in  std_logic;
+          ahbsi => ahbsi, -- in  ahb_slv_in_type;
+          ahbso => ahbso(hsidx_l2c),-- out ahb_slv_out_type;  ahbso(1) 
+          aximi => mem_aximi, -- in  axi_somi_type;
+          aximo => mem_aximo ); --out axi4_mosi_type 
+    end generate;
+  end generate mig_7series_gen;
+
+  no_mig_7series: if CFG_MIG_7SERIES = 0 generate
+    ahbso(hsidx_l2c) <= ahbs_none;
+    mem_aximo <= axi4mo_none;
+  end generate no_mig_7series;
 
   -----------------------------------------------------------------------
   ---  AHB to AXI -------------------------------------------------------
@@ -392,7 +427,6 @@ begin
     generic map (
       hindex => hsidx_ahbrom,
       haddr  => 16#C00#,
-      cfg_7series => CFG_MIG_7SERIES,
       pipe   => 0)
     port map (
       rst   => rstn,
@@ -435,6 +469,7 @@ begin
   -----------------------------------------------------------------------
   ---  Signal Generator -------------------------------------
   -----------------------------------------------------------------------
+gen_safeSU : if CFG_SAFESU_EN /= 0 generate
   ahb_latency_and_contention_inst : ahb_latency_and_contention
   generic map(
       ncpu => ncpu,  -- active cores
@@ -445,7 +480,7 @@ begin
       clk            => clkm,
       -- AHB bus signals
       ahbmi          => ahbmi,
-      cpus_ahbmo     => ahbmo(ncpu - 1 downto 0),    -- cpu ahb master signals
+      cpus_ahbmo     => cpus_ahbmo,    -- cpu ahb master signals
       ahbsi_hmaster  => ahbsi.hmaster,
       pmu_events     => pmu_events,    -- Pulse signals for different events such dcmiss, icmiss, bpmiss an insturction count
       dcl2_events    => (others => '0'), -- TODO: Do we need it for GLP? 
@@ -461,6 +496,8 @@ begin
     ncpu   => CFG_NCPU,
     hindex => hsidx_pmu,
     nev => nev,
+    ft => CFG_SAFESU_FT,
+    ncounters => CFG_SAFESU_NCNT,
     haddr  => 16#801#,
     hmask  => 16#FFF#
     )
@@ -469,5 +506,7 @@ begin
     clk                => clkm,
     events_vector      => pmue,
     ahbsi              => ahbsi,
-    ahbso              => ahbso(hsidx_pmu));
+    ahbso              => ahbso(hsidx_pmu),
+    HQ_MCCU            => hq_mccu);
+    end generate gen_safeSU;
 end;

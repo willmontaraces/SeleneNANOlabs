@@ -4,6 +4,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 library grlib, techmap;
 use grlib.amba.all;
@@ -19,7 +20,7 @@ use gaisler.noelv.all;
 use gaisler.uart.all;
 use gaisler.misc.all;
 --use gaisler.spi.all;
-use gaisler.net.all;
+use gaisler.net.all; -- Modification for sgmii fix
 use gaisler.jtag.all;
 --use gaisler.i2c.all;
 use gaisler.subsys.all;
@@ -36,15 +37,19 @@ use gaisler.ahbtbp.all;
 
 library interconnect;
 use interconnect.libnoc.all;
+use interconnect.libaxirom.all;
 --library accelerators;
 --use accelerators.libaccel.all;
 --use accelerators.librtlacc.all;
 --use accelerators.vcopy_pkg.all;
 --use accelerators.vcopy64_pkg.all;
 --use accelerators.vcopy512_pkg.all;
+--use accelerators.conv_pkg.all;
 library safety; 
 use safety.librv.all;
 
+
+use work.selene.all;
 use work.config.all;
 
 entity selene_core is
@@ -120,6 +125,7 @@ entity selene_core is
     ddr4_ten     : out   std_ulogic;    -- Connectivity Test Mode
     ddr4_cs_n    : out   std_logic_vector(0 downto 0);  -- Chip Select
     ddr4_reset_n : out   std_ulogic     -- Asynchronous Reset
+
   --FOR TESTING
     -- pragma translate_off
 ;
@@ -137,13 +143,22 @@ architecture rtl of selene_core is
   -- Components----------------------------------------
   -----------------------------------------------------
 
+  component FFICTR is
+  port (
+    clk_in : in STD_LOGIC;
+    reset : in STD_LOGIC;
+    CLK_O_0 : out STD_LOGIC;
+    RST_O_0 : out STD_LOGIC;
+    GPIO_EXT : in STD_LOGIC_VECTOR ( 31 downto 0 )    
+  );
+  end component FFICTR;
 
   -----------------------------------------------------
   -- Constants ----------------------------------------
   -----------------------------------------------------
   -- System AHB master indexes ----
   constant ahbmstart_io  : integer := CFG_NCPU;  -- GRETH
-  constant ahbmstart_gpp : integer := CFG_IOMMU + (((CFG_SPW_NUM * CFG_SPW_EN) + (CFG_GRCANFD1 + CFG_GRCANFD2) + 1 )*(1-CFG_IOMMU));  -- GRETH + SPW cores if no IOMMU; if IOMMU is enabled,then it will be only IOMMU
+  constant ahbmstart_gpp : integer := CFG_IOMMU + (((CFG_SPW_NUM * CFG_SPW_EN) + (CFG_GRCANFD1 + CFG_GRCANFD2) + 1 + CFG_GRDMAC2 )*(1-CFG_IOMMU));  -- GRETH + SPW cores if no IOMMU; if IOMMU is enabled,then it will be only IOMMU
 
   -- System debug bus indexes ----  
   constant ndbgmst : integer := 3       -- AHBUART + AHBJTAG + EDCL
@@ -162,7 +177,7 @@ architecture rtl of selene_core is
 
   --System APB slave indexes
   constant apbstart_io  : integer := 0;  --AHBUART+GRETH+SGMII+GPIO+GRVERSION+AHBSTAT+(CFG_SPW_NUM * CFG_SPW_EN)
-  constant apbstart_mem : integer := apbstart_io + 6 + (CFG_SPW_NUM * CFG_SPW_EN) + (CFG_GRCANFD1 + CFG_GRCANFD2) + CFG_UART2_ENABLE*2;  --No APB slaves in mem_sys now
+  constant apbstart_mem : integer := apbstart_io + 6 + (CFG_SPW_NUM * CFG_SPW_EN) + (CFG_GRCANFD1 + CFG_GRCANFD2) + CFG_UART2_ENABLE*2 + CFG_GRDMAC2;  --No APB slaves in mem_sys now
   constant apbstart_gpp : integer := apbstart_mem;
   
   -----------------------------------------------------
@@ -189,7 +204,7 @@ architecture rtl of selene_core is
   signal io_dbgmi      : ahb_mst_in_vector_type(ndbgmst-1 downto 0);
   signal io_dbgmo      : ahb_mst_out_vector_type(ndbgmst-1 downto 0);
   signal io_ahbmi      : ahb_mst_in_type;
-  signal io_ahbmo      : ahb_mst_out_vector_type(((CFG_SPW_EN * CFG_SPW_NUM + CFG_GRCANFD1 + CFG_GRCANFD2)* (1-CFG_IOMMU)) downto 0);
+  signal io_ahbmo      : ahb_mst_out_vector_type(((CFG_SPW_EN * CFG_SPW_NUM + CFG_GRCANFD1 + CFG_GRCANFD2 + CFG_GRDMAC2)* (1-CFG_IOMMU)) downto 0);
   signal io_ahbsi      : ahb_slv_in_type;
   signal io_ahbso      : ahb_slv_out_vector_type(0 downto 0);
   signal io_ahbsov_pnp : ahb_slv_out_vector;
@@ -220,9 +235,90 @@ architecture rtl of selene_core is
   signal acc_control_aximo : axi_mosi_type;   
   signal acc_mem_aximo     : axi4_mosi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);
   signal acc_mem_aximi     : axi_somi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);
-  --signal acc_mem_aximo_wide : axi4wide_mosi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);
-  --signal acc_mem_aximi_wide : axiwide_somi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);
+  signal acc_mem_aximo_wide : axi4wide_mosi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);
+  signal acc_mem_aximi_wide : axiwide_somi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);
 
+    signal ffi_clk : STD_LOGIC;
+    signal ffi_rst : STD_LOGIC;
+    signal ffi_gpio_in : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal rstboardn      : std_ulogic;
+
+
+    
+    --| XXXX XXXX    XXXX XX      X        X         X
+    --| ---------    -------    ------   ------    ------
+    --| 32 bits      20 bits    4 bits   4 bits    4 bits
+    --| ---------    -------    ------   ------    ------
+    --| Base         Device     Device   Device    Device
+    --| Address      Features     ID     Version   Type
+    --
+    --| Device Types:
+    --      0x0 - None (empty slot)
+    --      0xA - RootVoter
+    --      0xB - HSL accelerator     
+    --      0xC - SafeSU 
+    function format_HWInfo(
+            Enabled : integer;
+            BaseAddress: std_logic_vector;
+            Features: std_logic_vector;
+            ID: integer;
+            Version: integer;
+            DeviceType: integer 
+        ) return std_logic_vector is        
+            
+            variable result: std_logic_vector(63 downto 0) := X"0000000000000000";
+        begin
+        
+        if(Enabled > 0) then
+            result :=   BaseAddress & 
+                        Features & 
+                        std_logic_vector(to_unsigned(ID, 4)) &
+                        std_logic_vector(to_unsigned(Version, 4)) &
+                        std_logic_vector(to_unsigned(DeviceType, 4));
+        end if;
+        return result;
+    end format_HWInfo;
+
+
+    function format_RVC_Features(
+            Enabled : integer;
+            MAX_DATASETS : integer;
+            LIST_FAILURES: integer;
+            LIST_MATCHES: integer;
+            COUNT_MATCHES: integer 
+        ) return std_logic_vector is        
+            
+            variable result: std_logic_vector(19 downto 0) := X"00000";
+        begin
+        
+        if(Enabled > 0) then
+            result :=   X"000" & 
+                        std_logic_vector(to_unsigned(COUNT_MATCHES, 1)) &            
+                        std_logic_vector(to_unsigned(LIST_MATCHES,  1)) &
+                        std_logic_vector(to_unsigned(LIST_FAILURES, 1)) &
+                        std_logic_vector(to_unsigned(MAX_DATASETS,  5));
+        end if;
+        return result;
+    end format_RVC_Features;
+    
+    function format_safeSU_Features(
+            Enabled : integer;
+            Crossbar_in: integer; 
+            Counters: integer 
+        ) return std_logic_vector is        
+            
+            variable result: std_logic_vector(19 downto 0) := X"00000";
+        begin
+        
+        if(Enabled > 0) then
+            result :=   B"000" & 
+                        std_logic_vector(to_unsigned(Crossbar_in, 9)) &            
+                        std_logic_vector(to_unsigned(Counters,  8)); 
+        end if;
+        return result;
+    end format_safeSU_Features;
+    
+  
 begin
 
   ----------------------------------------------------------------------
@@ -244,8 +340,17 @@ begin
       generic map (clktech, CFG_CLKMUL, CFG_CLKDIV, CFG_MCTRL_SDEN,
                    CFG_CLK_NOFB, 0, 0, 0, board_freq)
       port map (lclk, lclk, gen_clk, open, open, open, open, cgi, cgo, open, open, open);
+      
+      clkm <= ffi_clk when USE_FFI_CLOCK = 1 else gen_clk;  
   end generate;
-  clkm     <= gen_clk when (CFG_MIG_7SERIES = 0 and simulation = false) else mig_clkout;
+  
+  
+  def_clk_gen : if (CFG_MIG_7SERIES = 1) generate
+    clkm    <= mig_clkout;
+    gen_clk <= mig_clkout;
+  end generate;
+  
+  
   clk_lock <= cgo.clklock when (CFG_MIG_7SERIES = 0 and simulation = false) else ddr_calib_done;
   lock     <= clk_lock;
   ----------------------------------------------------------------------
@@ -254,8 +359,33 @@ begin
 
   rst0 : rstgen                         -- reset generator
     generic map (acthigh => 1, syncin => 0)
-    port map (rst, clkm, clk_lock, rstn, rstraw);
+    port map (rst, clkm, clk_lock, rstboardn, rstraw);
+
+  rstn <= not ffi_rst when (USE_FFI_CLOCK = 1 and FAULT_INJECTOR_ENABLE = 1) else
+        rstboardn;
+  
   rstn_out <= rstn;
+
+  ----------------------------------------------------------------------
+  ---  Fault Injector --------------------------------------------------
+  ----------------------------------------------------------------------  
+
+FFI_GEN: if (FAULT_INJECTOR_ENABLE = 1) generate
+    FFICORE: component FFICTR
+         port map (
+            clk_in => gen_clk,
+            reset => rst,
+            CLK_O_0 => ffi_clk,
+            RST_O_0 => ffi_rst,
+            GPIO_EXT(31 downto 0) => ffi_gpio_in
+        );
+        
+end generate;
+
+
+
+
+  
   ----------------------------------------------------------------------
   --- SYSTEMS CONNECTIONS ----------------------------------------------
   ----------------------------------------------------------------------
@@ -448,181 +578,176 @@ begin
     );  
 
     --Rtl accelerator created by vivado HLS
---    axi_acc_instance0 : vcopy_kernel 
---      port map (
---        clk                 => clkm,
---        rst_n               => rstn,
---        axi_control_in      => accel_l_aximo(0), --address is 0xfffc0010 
---        axi_control_out     => accel_l_aximi(0),
---        axi_to_mem          => acc_mem_aximo(0),
---        axi_from_mem        => acc_mem_aximi(0),
---        interrupt           => acc_interrupt  
---      );
+    -- axi_acc_instance0 : vcopy_kernel 
+     -- port map (
+       -- clk                 => clkm,
+       -- rst_n               => rstn,
+       -- axi_control_in      => accel_l_aximo(5), --address is 0xfffc0010 
+       -- axi_control_out     => accel_l_aximi(5),
+       -- axi_to_mem          => acc_mem_aximo(0),
+       -- axi_from_mem        => acc_mem_aximi(0),
+       -- interrupt           => acc_interrupt  
+     -- );
+    
+    -- acc_mem_aximi(0)      <= initiator_aximi(1); 
+    -- initiator_aximo(1) <= acc_mem_aximo(0);
 
 
-    rootvoter_0 : rv_wrapper
+
+
+
+    RVC_0_GEN: if(RVC_0_ENABLE = 1) generate
+        rootvoter_0 : rv_wrapper
+        generic map (
+          RVC_ID              => 1,
+          MAX_DATASETS        => RVC_0_MAX_DATASETS,
+          COUNT_MATCHES       => RVC_0_COUNT_MATCHES,
+          LIST_MATCHES        => RVC_0_LIST_MATCHES,
+          LIST_FAILURES       => RVC_0_LIST_FAILURES
+        )
+        port map (
+          clk       => clkm,
+          rst_n     => rstn, 
+          axi_in    => accel_l_aximo(1), 
+          axi_out   => accel_l_aximi(1), 
+          interrupt => rv_interrupt(0) -- not used yet
+        );  
+    end generate;
+
+
+    RVC_1_GEN: if(RVC_1_ENABLE = 1) generate	
+        rootvoter_1 : rv_wrapper
+        generic map (
+          RVC_ID              => 2,
+          MAX_DATASETS        => RVC_1_MAX_DATASETS,
+          COUNT_MATCHES       => RVC_1_COUNT_MATCHES,
+          LIST_MATCHES        => RVC_1_LIST_MATCHES,
+          LIST_FAILURES       => RVC_1_LIST_FAILURES
+        )    
+        port map (
+          clk       => clkm,
+          rst_n     => rstn, 
+          axi_in    => accel_l_aximo(2), 
+          axi_out   => accel_l_aximi(2), 
+          interrupt => rv_interrupt(1) -- not used yet
+        );  
+	end generate;
+    
+    
+    RVC_2_GEN: if(RVC_2_ENABLE = 1) generate	
+        rootvoter_2 : rv_wrapper
+        generic map (
+          RVC_ID              => 3,
+          MAX_DATASETS        => RVC_2_MAX_DATASETS,
+          COUNT_MATCHES       => RVC_2_COUNT_MATCHES,
+          LIST_MATCHES        => RVC_2_LIST_MATCHES,
+          LIST_FAILURES       => RVC_2_LIST_FAILURES
+        )    
+        port map (
+          clk       => clkm,
+          rst_n     => rstn, 
+          axi_in    => accel_l_aximo(3), 
+          axi_out   => accel_l_aximi(3), 
+          interrupt => rv_interrupt(2) -- not used yet
+        );  
+    end generate;
+
+
+    RVC_3_GEN: if(RVC_3_ENABLE = 1) generate
+        rootvoter_3 : rv_wrapper
+        generic map (
+          RVC_ID              => 4,
+          MAX_DATASETS        => RVC_3_MAX_DATASETS,
+          COUNT_MATCHES       => RVC_3_COUNT_MATCHES,
+          LIST_MATCHES        => RVC_3_LIST_MATCHES,
+          LIST_FAILURES       => RVC_3_LIST_FAILURES
+        )    
+        port map (
+          clk       => clkm,
+          rst_n     => rstn, 
+          axi_in    => accel_l_aximo(4), 
+          axi_out   => accel_l_aximi(4), 
+          interrupt => rv_interrupt(3) -- not used yet
+        );  	
+    end generate;
+
+    target_aximi(0)    <= mem_aximi; 
+    mem_aximo          <= target_aximo(0); 
+
+    gpp_aximi          <= initiator_aximi(0);
+    initiator_aximo(0) <= gpp_aximo; 
+     
+
+    --HWInf descriptors for SELENE-specific modules
+    --AxiRom is present in the design if sync word (0xFFFC0000) equals 0xAACC5577
+    --Each descriptor comprises one 64 bit word starting from 0xFFFC0008
+    AxiRom_0 : AxiRom_wrapper
     generic map (
-      RVC_ID              => 0,
-      MAX_DATASETS        => RVC_0_MAX_DATASETS,
-      COUNT_MATCHES       => RVC_0_COUNT_MATCHES,
-      LIST_MATCHES        => RVC_0_LIST_MATCHES,
-      LIST_FAILURES       => RVC_0_LIST_FAILURES
+      REG_DATA_WIDTH      => 64,
+      REGNUM              => 16,
+      INIT                => (
+        x"0000000000000000" &
+        x"0000000000000000" &
+        x"0000000000000000" &
+        x"0000000000000000" &
+        x"0000000000000000" &
+        x"0000000000000000" &
+        x"0000000000000000" &
+        x"0000000000000000" &
+        x"0000000000000000" &
+        
+        -- Template for appenging HWInfo descriptors for new cores
+        -- format_HWInfo(
+                    -- CORE_ENABLE_FLAG (1/0 - core is present/absent in this SoC),
+                    -- CORE_BASE_ADDRESS (std_logic_vector: 32 bits: X"00000000"),
+                    -- CORE_FEATURES (std_logic_vector: 20 bits: core-specific, optional (may be kept uninitialized X"00000"),
+                    -- CORE_ID (integer: 4 bits),
+                    -- CORE_VERSION (integer: 4 bits),
+                    -- CORE_DEVICE_TYPE (integer: 4 bits)
+        -- )
+       
+        --HWInfo for SafeSU 
+        format_HWInfo(CFG_SAFESU_EN,X"80100000", 
+                        format_safeSU_Features(CFG_SAFESU_EN, CFG_SAFESU_NEV,CFG_SAFESU_NCNT),
+                        16#5#, CFG_SAFESU_VERSION,16#3#)& 
+        --HWInfo for RootVoter 3        
+        format_HWInfo(RVC_3_ENABLE, X"FFFC0400", 
+                        format_RVC_Features(RVC_3_ENABLE,  RVC_3_MAX_DATASETS, RVC_3_LIST_FAILURES, RVC_3_LIST_MATCHES, RVC_3_COUNT_MATCHES ), 
+                        16#4#,  CFG_RVC_VERSION,    16#2#) &
+
+        --HWInfo for RootVoter 2                        
+        format_HWInfo(RVC_2_ENABLE, X"FFFC0300", 
+                        format_RVC_Features(RVC_2_ENABLE,  RVC_2_MAX_DATASETS, RVC_2_LIST_FAILURES, RVC_2_LIST_MATCHES, RVC_2_COUNT_MATCHES ), 
+                        16#3#,  CFG_RVC_VERSION,    16#2#) &
+                        
+        --HWInfo for RootVoter 1                        
+        format_HWInfo(RVC_1_ENABLE, X"FFFC0200", 
+                        format_RVC_Features(RVC_1_ENABLE,  RVC_1_MAX_DATASETS, RVC_1_LIST_FAILURES, RVC_1_LIST_MATCHES, RVC_1_COUNT_MATCHES ), 
+                        16#2#,  CFG_RVC_VERSION,    16#2#) &
+                        
+        --HWInfo for RootVoter 0
+        format_HWInfo(RVC_0_ENABLE, X"FFFC0100", 
+                        format_RVC_Features(RVC_0_ENABLE,  RVC_0_MAX_DATASETS, RVC_0_LIST_FAILURES, RVC_0_LIST_MATCHES, RVC_0_COUNT_MATCHES ), 
+                        16#1#,  CFG_RVC_VERSION,    16#2#) &
+                        
+        --HWInfo for HLSinf accelerator
+        format_HWInfo(CFG_HLSINF_EN, X"FFFC0000", 
+                        X"00000", 
+                        16#0#,  CFG_HLSINF_VERSION, 16#1#) &
+      
+        --SYNC Word to detect AxiRom
+        X"00000000AACC5577" 
+                              )
     )
     port map (
       clk       => clkm,
       rst_n     => rstn, 
-      axi_in    => accel_l_aximo(1), 
-      axi_out   => accel_l_aximi(1), 
-      interrupt => rv_interrupt(0) -- not used yet
-    );  
+      axi_in    => accel_l_aximo(5), 
+      axi_out   => accel_l_aximi(5), 
+      interrupt => open
+    ); 
 
-    rootvoter_1 : rv_wrapper
-    generic map (
-      RVC_ID              => 1,
-      MAX_DATASETS        => RVC_1_MAX_DATASETS,
-      COUNT_MATCHES       => RVC_1_COUNT_MATCHES,
-      LIST_MATCHES        => RVC_1_LIST_MATCHES,
-      LIST_FAILURES       => RVC_1_LIST_FAILURES
-    )    
-    port map (
-      clk       => clkm,
-      rst_n     => rstn, 
-      axi_in    => accel_l_aximo(2), 
-      axi_out   => accel_l_aximi(2), 
-      interrupt => rv_interrupt(1) -- not used yet
-    );  
-	
-	
-    rootvoter_2 : rv_wrapper
-    generic map (
-      RVC_ID              => 2,
-      MAX_DATASETS        => RVC_2_MAX_DATASETS,
-      COUNT_MATCHES       => RVC_2_COUNT_MATCHES,
-      LIST_MATCHES        => RVC_2_LIST_MATCHES,
-      LIST_FAILURES       => RVC_2_LIST_FAILURES
-    )    
-    port map (
-      clk       => clkm,
-      rst_n     => rstn, 
-      axi_in    => accel_l_aximo(3), 
-      axi_out   => accel_l_aximi(3), 
-      interrupt => rv_interrupt(2) -- not used yet
-    );  
-
-
-    rootvoter_3 : rv_wrapper
-    generic map (
-      RVC_ID              => 3,
-      MAX_DATASETS        => RVC_3_MAX_DATASETS,
-      COUNT_MATCHES       => RVC_3_COUNT_MATCHES,
-      LIST_MATCHES        => RVC_3_LIST_MATCHES,
-      LIST_FAILURES       => RVC_3_LIST_FAILURES
-    )    
-    port map (
-      clk       => clkm,
-      rst_n     => rstn, 
-      axi_in    => accel_l_aximo(4), 
-      axi_out   => accel_l_aximi(4), 
-      interrupt => rv_interrupt(3) -- not used yet
-    );  	
-
-
-    ----Rtl accelerator HLSinf created by vivado HLS
-    --axi_acc_instance2 : conv_kernel 
-    --  port map (
-    --    clk                 => clkm,
-    --    rst_n               => rstn,
-    --    axi_control_in      => accel_l_aximo(0), --address is
-    --    axi_control_out     => accel_l_aximi(0),
-    --    axi_to_mem          => acc_mem_aximo_wide(0),
-    --    axi_from_mem        => acc_mem_aximi_wide(0),
-    --    axi_to_mem_1        => acc_mem_aximo_wide(1),
-    --    axi_from_mem_1      => acc_mem_aximi_wide(1),
-    --    axi_to_mem_2        => acc_mem_aximo_wide(2),
-    --    axi_from_mem_2      => acc_mem_aximi_wide(2),
-    --    axi_to_mem_3        => acc_mem_aximo_wide(3),
-    --    axi_from_mem_3      => acc_mem_aximi_wide(3),
-    --    interrupt           => acc_interrupt  
-    --  );
-
-    --width_converter_conv_mem0: axi_dw_wrapper 
-    -- generic map(
-    --   AxiMaxReads =>    1,     
-    --   AxiSlvPortDataWidth => 128,
-    --   AxiMstPortDataWidth => AXIDW
-    -- )
-    -- port map (
-    --   clk               => clkm, 
-    --   rst               => rstn, 
-    --   axi_component_in  => acc_mem_aximo_wide(0),
-    --   axi_component_out => acc_mem_aximi_wide(0),
-    --   axi_from_noc      => acc_mem_aximi(0),
-    --   axi_to_noc        => acc_mem_aximo(0)
-    --);
-
-    --width_converter_conv_mem1: axi_dw_wrapper 
-    -- generic map(
-    --   AxiMaxReads =>    1,     
-    --   AxiSlvPortDataWidth => 32,
-    --   AxiMstPortDataWidth => AXIDW
-    -- )
-    -- port map (
-    --   clk               => clkm, 
-    --   rst               => rstn, 
-    --   axi_component_in  => acc_mem_aximo_wide(1),
-    --   axi_component_out => acc_mem_aximi_wide(1),
-    --   axi_from_noc      => acc_mem_aximi(1),
-    --   axi_to_noc        => acc_mem_aximo(1)
-    --);
-
-    ----Not necesary convert from 128 to 128
-    --width_converter_conv_mem2: axi_dw_wrapper 
-    -- generic map(
-    --   AxiMaxReads =>    1,     
-    --   AxiSlvPortDataWidth => 128,
-    --   AxiMstPortDataWidth => AXIDW
-    -- )
-    -- port map (
-    --   clk               => clkm, 
-    --   rst               => rstn, 
-    --   axi_component_in  => acc_mem_aximo_wide(2),
-    --   axi_component_out => acc_mem_aximi_wide(2),
-    --   axi_from_noc      => acc_mem_aximi(2),
-    --   axi_to_noc        => acc_mem_aximo(2)
-    --);
-
-    --width_converter_conv_mem3: axi_dw_wrapper 
-    -- generic map(
-    --   AxiMaxReads =>    1,     
-    --   AxiSlvPortDataWidth => 128,
-    --   AxiMstPortDataWidth => AXIDW
-    -- )
-    -- port map (
-    --   clk               => clkm, 
-    --   rst               => rstn, 
-    --   axi_component_in  => acc_mem_aximo_wide(3),
-    --   axi_component_out => acc_mem_aximi_wide(3),
-    --   axi_from_noc      => acc_mem_aximi(3),
-    --   axi_to_noc        => acc_mem_aximo(3)
-    --);
-
-     target_aximi(0)    <= mem_aximi; 
-     mem_aximo          <= target_aximo(0); 
     
-     gpp_aximi          <= initiator_aximi(0);
-     initiator_aximo(0) <= gpp_aximo; 
      
-     acc_mem_aximi(0)      <= initiator_aximi(1); 
-     initiator_aximo(1) <= acc_mem_aximo(0);
-
-     --acc_mem_aximi(1)      <= initiator_aximi(2); 
-     --initiator_aximo(2) <= acc_mem_aximo(1); 
-
-     --acc_mem_aximi(2)      <= initiator_aximi(3); 
-     --initiator_aximo(3) <= acc_mem_aximo(2); 
-
-     --acc_mem_aximi(3)      <= initiator_aximi(4); 
-     --initiator_aximo(4) <= acc_mem_aximo(3);      
-
 end;
 

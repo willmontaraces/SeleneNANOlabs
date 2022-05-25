@@ -69,7 +69,7 @@ module axi_xbar_wrapper #(
   };
 
   localparam rule_t [xbar_cfg.NoAddrRules-1:0] AddrMap = '{
-    '{idx: 32'd0, start_addr: 32'h0000_0000, end_addr: 32'h3fff_ffff}
+    '{idx: 32'd0, start_addr: 32'h0000_0000, end_addr: 32'h7fff_ffff}
   };
 
   localparam int unsigned AxiIdWidthMstPorts = xbar_cfg.AxiIdWidthSlvPorts + $clog2(xbar_cfg.NoSlvPorts);

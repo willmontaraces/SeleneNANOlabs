@@ -1,3 +1,11 @@
+/*  Description:
+        A self-contained testbench to test the RootVoter cell 
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
+
+*/
+
 
 interface cnt_inf #(NSETS)();
 	logic clk, reset;

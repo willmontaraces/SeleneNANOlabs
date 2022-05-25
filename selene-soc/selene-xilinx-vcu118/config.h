@@ -82,14 +82,14 @@
 #define CONFIG_CLK_CLKPLLE2 1
 #undef  CONFIG_CLK_CLKDLL
 #undef  CONFIG_CLK_DCM
-#define CONFIG_CLK_MUL (2)
-#define CONFIG_CLK_DIV (6)
+#define CONFIG_CLK_MUL (4)
+#define CONFIG_CLK_DIV (10)
 #undef  CONFIG_PCI_SYSCLK
 /*
  * Processor            
  */
 #define CONFIG_NOELV 1
-#define CONFIG_PROC_NUM (4)
+#define CONFIG_PROC_NUM (6)
 #undef  CONFIG_NOELV_MIN
 #undef  CONFIG_NOELV_GP
 #undef  CONFIG_NOELV_HP

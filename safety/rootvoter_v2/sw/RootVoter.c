@@ -1,3 +1,12 @@
+/*  Description:
+        Implementation of the RootVoter v.2 API for baremetal applications
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
+
+*/
+
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,7 +33,7 @@ int RVC_sync(RootVoterDescriptor* RVC, uint64_t BASEADR){
     RVC->inf.list_failures = (state_reg >> 17) & 0x1;
     RVC->inf.list_matches  = (state_reg >> 18) & 0x1;
     RVC->inf.count_matches = (state_reg >> 19) & 0x1;
-        
+    RVC->inf.version       = (state_reg >> 20) & 0xF;
     return(0);
 }
 

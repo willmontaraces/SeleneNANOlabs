@@ -1,3 +1,13 @@
+/*  Description:
+        Configurable downcounter
+        Used for timeout detection (watchdog timer) 
+        
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
+
+*/
+
 module  Counter
     #(parameter DWIDTH = 16)
     (input logic [DWIDTH-1:0] d, 

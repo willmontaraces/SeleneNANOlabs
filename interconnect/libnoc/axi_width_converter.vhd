@@ -58,9 +58,11 @@ architecture RTL of axi_dw_wrapper is
   signal mst_port_req  : slv_req_t;
   signal mst_port_resp : slv_resp_t;
 
+  constant IdWidthInitiators : integer := AxiIdWidthSlaves;
+
 begin
 
-    slv_port_req.aw.id    <= axi_component_in.aw.id(AxiIdWidthSlaves-1 downto 0);-- NOTE WARNING
+    slv_port_req.aw.id    <= axi_component_in.aw.id(IdWidthInitiators-1 downto 0);-- NOTE WARNING
     slv_port_req.aw.addr  <= axi_component_in.aw.addr;
     slv_port_req.aw.len   <= axi_component_in.aw.len;
     slv_port_req.aw.size  <= axi_component_in.aw.size;
@@ -82,7 +84,7 @@ begin
     
     slv_port_req.b_ready  <= axi_component_in.b.ready;
 
-    slv_port_req.ar.id    <= axi_component_in.ar.id(AxiIdWidthSlaves-1 downto 0); -- NOTE WARNING
+    slv_port_req.ar.id    <= axi_component_in.ar.id(IdWidthInitiators-1 downto 0); -- NOTE WARNING
     slv_port_req.ar.addr  <= axi_component_in.ar.addr;
     slv_port_req.ar.len   <= axi_component_in.ar.len;
     slv_port_req.ar.size  <= axi_component_in.ar.size;
@@ -97,8 +99,7 @@ begin
     
     slv_port_req.r_ready  <= axi_component_in.r.ready; 
 
-    axi_to_noc.aw.id(AxiIdWidthSlaves-1 downto 0)    <=  mst_port_req.aw.id; --NOTE WARNING
-    axi_to_noc.aw.id(3 downto AxiIdWidthSlaves)      <= (others => '0');
+    axi_to_noc.aw.id(IdWidthInitiators-1 downto 0)    <=  mst_port_req.aw.id(IdWidthInitiators-1 downto 0); --NOTE WARNING
     axi_to_noc.aw.addr   <=  mst_port_req.aw.addr;
     axi_to_noc.aw.len    <=  mst_port_req.aw.len;
     axi_to_noc.aw.size   <=  mst_port_req.aw.size;
@@ -116,8 +117,7 @@ begin
     
     axi_to_noc.b.ready   <=  mst_port_req.b_ready;
 
-    axi_to_noc.ar.id(AxiIdWidthSlaves-1 downto 0)    <= mst_port_req.ar.id;
-    axi_to_noc.ar.id(3 downto AxiIdWidthSlaves)      <= (others => '0');
+    axi_to_noc.ar.id(IdWidthInitiators-1 downto 0)    <= mst_port_req.ar.id(IdWidthInitiators-1 downto 0);
     axi_to_noc.ar.addr   <= mst_port_req.ar.addr;
     axi_to_noc.ar.len    <= mst_port_req.ar.len;
     axi_to_noc.ar.size   <= mst_port_req.ar.size;
@@ -135,15 +135,15 @@ begin
     axi_component_out.aw.ready  <= slv_port_resp.aw_ready;
     axi_component_out.w.ready   <= slv_port_resp.w_ready;
     
-    axi_component_out.b.id(AxiIdWidthSlaves-1 downto 0)    <= slv_port_resp.b.id;
-    axi_component_out.b.id(3 downto AxiIdWidthSlaves)      <= (others => '0');
+    axi_component_out.b.id(IdWidthInitiators-1 downto 0)    <= slv_port_resp.b.id;
+    axi_component_out.b.id(AXI_ID_WIDTH-1 downto IdWidthInitiators)<= (others => '0'); 
     axi_component_out.b.resp    <= slv_port_resp.b.resp;
     axi_component_out.b.valid   <= slv_port_resp.b_valid;
     
     axi_component_out.ar.ready  <= slv_port_resp.ar_ready;
 
-    axi_component_out.r.id(AxiIdWidthSlaves-1 downto 0)    <= slv_port_resp.r.id;
-    axi_component_out.r.id(3 downto AxiIdWidthSlaves)      <= (others => '0');
+    axi_component_out.r.id(IdWidthInitiators-1 downto 0)    <= slv_port_resp.r.id;
+    axi_component_out.r.id(AXI_ID_WIDTH-1 downto IdWidthInitiators)<= (others => '0'); 
     axi_component_out.r.data    <= slv_port_resp.r.data;
     axi_component_out.r.resp    <= slv_port_resp.r.resp;
     axi_component_out.r.last    <= slv_port_resp.r.last;
@@ -154,12 +154,12 @@ begin
     mst_port_resp.w_ready         <= axi_from_noc.w.ready;
 
     mst_port_resp.b_valid         <= axi_from_noc.b.valid;
-    mst_port_resp.b.id            <= axi_from_noc.b.id(AxiIdWidthSlaves-1 downto 0);
+    mst_port_resp.b.id            <= axi_from_noc.b.id(IdWidthInitiators-1 downto 0);
     mst_port_resp.b.resp          <= axi_from_noc.b.resp;
     mst_port_resp.b.user          <= (others => '0');
     
     mst_port_resp.r_valid         <= axi_from_noc.r.valid;
-    mst_port_resp.r.id            <= axi_from_noc.r.id(AxiIdWidthSlaves-1 downto 0);
+    mst_port_resp.r.id            <= axi_from_noc.r.id(IdWidthInitiators-1 downto 0);
     mst_port_resp.r.data          <= axi_from_noc.r.data;
     mst_port_resp.r.resp          <= axi_from_noc.r.resp;
     mst_port_resp.r.last          <= axi_from_noc.r.last;
@@ -171,7 +171,7 @@ begin
      AxiSlvPortDataWidth => AxiSlvPortDataWidth, --AxiSlvPortDataWidth, 
      AxiMstPortDataWidth => AxiMstPortDataWidth,  --AxiSlvPortDataWidth,    
      AxiAddrWidth => AxiAddrWidth, 
-     AxiIdWidth => AxiIdWidthSlaves
+     AxiIdWidth => IdWidthInitiators
     ) 
    port map(
     clk_i => clk,

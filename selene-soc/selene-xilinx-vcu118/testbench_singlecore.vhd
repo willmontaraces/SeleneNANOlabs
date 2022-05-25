@@ -10,7 +10,7 @@
 --  but WITHOUT ANY WARRANTY; without even the implied warranty of
 --  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 --  GNU General Public License for more details.
---------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -40,6 +40,7 @@ use techmap.gencomp.all;
 library work;
 use work.debug.all;
 use work.config.all;
+use work.selene.all;
 
 entity testbench is
   generic(
@@ -185,6 +186,7 @@ architecture behav of testbench is
   signal ddr4_ten       : std_logic;
   signal ddr4_cs_n      : std_logic_vector(0 downto 0);
   signal ddr4_reset_n   : std_logic;
+
   -- Signals to STAR-Dundee mezzanine
   signal spw_dout_p : std_logic_vector(1 to CFG_SPW_PORTS*CFG_SPW_NUM);
   signal spw_dout_n : std_logic_vector(1 to CFG_SPW_PORTS*CFG_SPW_NUM);
@@ -214,7 +216,7 @@ begin
 
   -----------------------------------------------------
   -- Clocks and Reset ---------------------------------
-  -----------------------------------------------------
+  ----------------------------------------------------
 
   clk250p <= not clk250p after 2 ns;
   clk250n <= not clk250n after 2 ns;
@@ -226,6 +228,7 @@ begin
   system_rst    <= not dsurst;
 
   ddr4_ck       <= clk250n & clk250p;
+
 
   -----------------------------------------------------
   -- Misc ---------------------------------------------
@@ -351,39 +354,38 @@ begin
   -- Memory model instantiation- MIG IP is being simulated in SoC. Connecting micron DDR4_if interface module.
   gen_mem_model : if (USE_MIG_INTERFACE_MODEL = false) generate
     ddr4mem : if (CFG_MIG_7SERIES = 1) generate
-      u1 : ddr4_wrap
-       generic map (
-        CONFIGURED_DQ_BITS        => 8
-        )
-      port map (
-        ck          => ddr4_ck,
-        act_n       => ddr4_act_n,
-        ras_n_a16   => ddr4_ras_n,
-        cas_n_a15   => ddr4_cas_n,
-        we_n_a14    => ddr4_we_n,
-        alert_n     => open,
-        parity      => ddr4_par,
-        reset_n     => ddr4_reset_n,
-        ten         => ddr4_ten,
-        cs_n        => ddr4_cs_n(0),
-        cke         => ddr4_cke(0),
-        odt         => ddr4_odt(0),
-        c           => "000",
-        bg          => ddr4_bg,
-        ba          => ddr4_ba,
-        addr        => ddr4_addr,
-        addr_17     => '0',
-        dm_n        => ddr4_dm_n,
-        dq          => ddr4_dq,
-        dqs_t       => ddr4_dqs_t,
-        dqs_c       => ddr4_dqs_c,
-        zq          => '0',
-        pwr         => '0',
-        vref_ca     => '0',
-        vref_dq     => '0'
-        );
+    u1 : ddr4_wrap
+    generic map (
+      CONFIGURED_DQ_BITS        => 8
+      )
+    port map (
+      ck          => ddr4_ck,
+      act_n       => ddr4_act_n,
+      ras_n_a16   => ddr4_ras_n,
+      cas_n_a15   => ddr4_cas_n,
+      we_n_a14    => ddr4_we_n,
+      alert_n     => open,
+      parity      => ddr4_par,
+      reset_n     => ddr4_reset_n,
+      ten         => ddr4_ten,
+      cs_n        => ddr4_cs_n(0),
+      cke         => ddr4_cke(0),
+      odt         => ddr4_odt(0),
+      c           => "000",
+      bg          => ddr4_bg,
+      ba          => ddr4_ba,
+      addr        => ddr4_addr,
+      addr_17     => '0',
+      dm_n        => ddr4_dm_n,
+      dq          => ddr4_dq,
+      dqs_t       => ddr4_dqs_t,
+      dqs_c       => ddr4_dqs_c,
+      zq          => '0',
+      pwr         => '0',
+      vref_ca     => '0',
+      vref_dq     => '0'
+      );
     end generate ddr4mem;
-
   end generate gen_mem_model;
 
   -- MIG IP is not being simulated. AXI memory simulation model is being used.
@@ -538,13 +540,12 @@ begin
 
     begin
 
-      if (CFG_MIG_7SERIES = 1) then
         -- Read old value:
         print("[DUART] Reading old value from 0x00000100");
         txc(dsutx, 16#80#, txp);
         txa(dsutx, 16#00#, 16#00#, 16#01#, 16#00#, txp);
         rxi(dsurx, w32_l, txp, lresp);
-        print("[DUSRT] Value at [0x00000100]: " & tost(w32_l));
+        print("[DUART] Value at [0x00000100]: " & tost(w32_l));
 
         -- Write: 
         print("[DUART] Write 0x00AAAAAA to 0x00000100");
@@ -557,7 +558,7 @@ begin
         txc(dsutx, 16#80#, txp);
         txa(dsutx, 16#00#, 16#00#, 16#01#, 16#00#, txp);
         rxi(dsurx, w32, txp, lresp);
-        print("[DUSRT] read[0x00000100]: " & tost(w32));
+        print("[DUART] read[0x00000100]: " & tost(w32));
 
         -- Write old value back
         print("[DUART] Writing old value back");
@@ -569,7 +570,7 @@ begin
         txc(dsutx, 16#80#, txp);
         txa(dsutx, 16#00#, 16#00#, 16#01#, 16#00#, txp);
         rxi(dsurx, w32, txp, lresp);
-        print("[DUSRT] Value written back at [0x00000100]: " & tost(w32));
+        print("[DUART] Value written back at [0x00000100]: " & tost(w32));
 
         -- Repeat the same for next address
         -- Read old value:
@@ -577,7 +578,7 @@ begin
         txc(dsutx, 16#80#, txp);
         txa(dsutx, 16#00#, 16#00#, 16#01#, 16#08#, txp);
         rxi(dsurx, w32_l, txp, lresp);
-        print("[DUSRT] Value at [0x00000108]: " & tost(w32_l));
+        print("[DUART] Value at [0x00000108]: " & tost(w32_l));
 
         -- Write: 
         print("[DUART] Write 0x00BBBBBB to 0x00000108");
@@ -590,7 +591,7 @@ begin
         txc(dsutx, 16#80#, txp);
         txa(dsutx, 16#00#, 16#00#, 16#01#, 16#08#, txp);
         rxi(dsurx, w32, txp, lresp);
-        print("[DUSRT] read[0x00000108]: " & tost(w32));
+        print("[DUART] read[0x00000108]: " & tost(w32));
 
         -- Write old value back
         print("[DUART] Writing old value back");
@@ -603,72 +604,6 @@ begin
         txa(dsutx, 16#00#, 16#00#, 16#01#, 16#08#, txp);
         rxi(dsurx, w32, txp, lresp);
         print("[DUART] Value written back at [0x00000108]: " & tost(w32));
-      else
-       -- Read old value:
-        print("[DUART] Reading old value from 0x40000100");
-        txc(dsutx, 16#80#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#00#, txp);
-        rxi(dsurx, w32_l, txp, lresp);
-        print("[DUSRT] Value at [0x40000100]: " & tost(w32_l));
-
-        -- Write: 
-        print("[DUART] Write 0x40AAAAAA to 0x40000100");
-        txc(dsutx, 16#c0#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#00#, txp);
-        txa(dsutx, 16#40#, 16#AA#, 16#AA#, 16#AA#, txp);
-
-        -- Read:
-        print("[DUART] Read sequence check");
-        txc(dsutx, 16#80#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#00#, txp);
-        rxi(dsurx, w32, txp, lresp);
-        print("[DUSRT] read[0x40000100]: " & tost(w32));
-
-        -- Write old value back
-        print("[DUART] Writing old value back");
-        txc(dsutx, 16#c0#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#00#, txp);
-        txa(dsutx,  conv_integer(w32_l(31 downto 24)), conv_integer(w32_l(23 downto 16)), 
-                    conv_integer(w32_l(15 downto 8)) , conv_integer(w32_l(7 downto 0)), txp);
-
-        txc(dsutx, 16#80#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#00#, txp);
-        rxi(dsurx, w32, txp, lresp);
-        print("[DUSRT] Value written back at [0x40000100]: " & tost(w32));
-
-        -- Repeat the same for next address
-        -- Read old value:
-        print("[DUART] Reading old value from 0x40000108");
-        txc(dsutx, 16#80#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#08#, txp);
-        rxi(dsurx, w32_l, txp, lresp);
-        print("[DUART] Value at [0x40000108]: " & tost(w32_l));
-
-        -- Write: 
-        print("[DUART] Write 0x40BBBBBB to 0x40000108");
-        txc(dsutx, 16#c0#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#08#, txp);
-        txa(dsutx, 16#40#, 16#BB#, 16#BB#, 16#BB#, txp);
-
-        -- Read:
-        print("[DUART] Read sequence check");
-        txc(dsutx, 16#80#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#08#, txp);
-        rxi(dsurx, w32, txp, lresp);
-        print("[DUART] read[0x40000108]: " & tost(w32));
-
-        -- Write old value back
-        print("[DUART] Writing old value back");
-        txc(dsutx, 16#c0#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#08#, txp);
-        txa(dsutx,  conv_integer(w32_l(31 downto 24)), conv_integer(w32_l(23 downto 16)), 
-                    conv_integer(w32_l(15 downto 8)) , conv_integer(w32_l(7 downto 0)), txp);
-
-        txc(dsutx, 16#80#, txp);
-        txa(dsutx, 16#40#, 16#00#, 16#01#, 16#08#, txp);
-        rxi(dsurx, w32, txp, lresp);
-        print("[DUART] Value written back at [0x40000108]: " & tost(w32));
-      end if;
 
       
       print("[DUSRT] End of UART Debug Communication Link Test");
@@ -818,6 +753,116 @@ begin
 
     end procedure iommu_conf;
 
+    -- MIGs test
+    procedure migs_test(signal dsurx : in std_ulogic; signal dsutx : out std_ulogic) is
+      variable w32        : std_logic_vector(31 downto 0);
+      variable w32_l      : std_logic_vector(31 downto 0);
+      constant lresp    : boolean := false;
+
+      constant txp : time := 160 * 1 ns;
+
+    begin
+
+      if (CFG_MIG_7SERIES = 1) then
+
+        print("----------------- [MIG 1] -----------------");
+
+        print("----------------- Beginning of [MIG 1] -----------------");
+
+        -- Read old value:
+        print("[MIG 1] Reading old value from 0x00000000");
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#00#, 16#00#, 16#00#, 16#00#, txp);
+        rxi(dsurx, w32_l, txp, lresp);
+        print("[MIG 1] Value at [0x00000000]: " & tost(w32_l));
+
+        -- Write: 
+        print("[MIG 1] Write 0x00AAAAAA to 0x00000000");
+        txc(dsutx, 16#c0#, txp);
+        txa(dsutx, 16#00#, 16#00#, 16#00#, 16#00#, txp);
+        txa(dsutx, 16#00#, 16#AA#, 16#AA#, 16#AA#, txp);
+
+        -- Read:
+        print("[MIG 1] Read sequence check");
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#00#, 16#00#, 16#00#, 16#00#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("[MIG 1] read[0x00000000]: " & tost(w32));
+
+        print("----------------- Ending of [MIG 1] -----------------");
+
+        -- Read old value:
+        print("[MIG 1] Reading old value from 0x3FFFFFE0");
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#3F#, 16#FF#, 16#FF#, 16#E0#, txp);
+        rxi(dsurx, w32_l, txp, lresp);
+        print("[MIG 1] Value at [0x3FFFFFE0]: " & tost(w32_l));
+
+        -- Write: 
+        print("[MIG 1] Write 0x00BBBBBB to 0x3FFFFFE0");
+        txc(dsutx, 16#c0#, txp);
+        txa(dsutx, 16#3F#, 16#FF#, 16#FF#, 16#E0#, txp);
+        txa(dsutx, 16#00#, 16#BB#, 16#BB#, 16#BB#, txp);
+
+        -- Read:
+        print("[MIG 1] Read sequence check");
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#3F#, 16#FF#, 16#FF#, 16#E0#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("[MIG 1] read[0x3FFFFFE0]: " & tost(w32));
+
+
+
+
+        print("----------------- [MIG 2] -----------------");
+
+        print("----------------- Beginning of [MIG 2] -----------------");
+
+        -- Read old value:
+        print("[MIG 2] Reading old value from 0x40000000");
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#40#, 16#00#, 16#00#, 16#00#, txp);
+        rxi(dsurx, w32_l, txp, lresp);
+        print("[MIG 2] Value at [0x40000000]: " & tost(w32_l));
+
+        -- Write: 
+        print("[MIG 2] Write 0x00AAAAAA to 0x40000000");
+        txc(dsutx, 16#c0#, txp);
+        txa(dsutx, 16#40#, 16#00#, 16#00#, 16#00#, txp);
+        txa(dsutx, 16#00#, 16#AA#, 16#AA#, 16#AA#, txp);
+
+        -- Read:
+        print("[MIG 2] Read sequence check");
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#40#, 16#00#, 16#00#, 16#00#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("[MIG 2] read[0x40000000]: " & tost(w32));
+
+        print("----------------- Ending of [MIG 2] -----------------");
+
+        -- Read old value:
+        print("[MIG 2] Reading old value from 0x7FFFFFE0");
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#7F#, 16#FF#, 16#FF#, 16#E0#, txp);
+        rxi(dsurx, w32_l, txp, lresp);
+        print("[MIG 2] Value at [0x7FFFFFE0]: " & tost(w32_l));
+
+        -- Write: 
+        print("[MIG 2] Write 0x00BBBBBB to 0x7FFFFFE0");
+        txc(dsutx, 16#c0#, txp);
+        txa(dsutx, 16#7F#, 16#FF#, 16#FF#, 16#E0#, txp);
+        txa(dsutx, 16#00#, 16#BB#, 16#BB#, 16#BB#, txp);
+
+        -- Read:
+        print("[MIG 2] Read sequence check");
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#7F#, 16#FF#, 16#FF#, 16#E0#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("[MIG 2] read[0x7FFFFFE0]: " & tost(w32));
+      end if;
+
+    end procedure migs_test;
+
     procedure riscvtb(signal dsurx : in std_ulogic; signal dsutx : out std_ulogic) is
       variable w32        : std_logic_vector(31 downto 0);
 
@@ -961,21 +1006,36 @@ begin
 
       print("-- Configure Stack Pointer");
       if (CFG_MIG_7SERIES = 1) then
-      -- Memory at 0x00000000, stack should be at 0x3FFFFFF0
+      -- MIG 1GB Memory at 0x00000000, stack should be at 0x3FFFFFF0
         w32 := conv_std_logic_vector(16#3ffffff0#, 32);
       else
-      -- Memory at 0x40000000 stack should be at 0x400FFFF0
-        w32 := conv_std_logic_vector(16#400FFFF0#, 32);
+      -- 1MB AHBRAM Memory at 0x00000000 stack should be at 0x000FFFF0
+        w32 := conv_std_logic_vector(16#000FFFF0#, 32);
       end if;
       reg := (12 => '1', others => '0'); reg(4 downto 0) := "00010"; --GPR_SP
       dm_reg_write(dsurx, dsutx, reg, w32);
 
       wait for 100 ns;
+      print("-- Trying to access address 0xFC0E0004");
+      txc(dsutx, 16#80#, txp); --read command
+      txa(dsutx, 16#FC#, 16#0E#, 16#00#, 16#04#, txp); --address to read
+      rxi(dsurx, w32, txp, lresp); -- wait for respone and save response
+                                   -- variable w32
+      print("-- READ from 0xFC0E0004: " & tost(w32));
+      
+      print("-- Trying to access address 0xFC0E0008");
+      txc(dsutx, 16#80#, txp); --read command
+      txa(dsutx, 16#FC#, 16#0E#, 16#00#, 16#08#, txp); --address to read
+      rxi(dsurx, w32, txp, lresp); -- wait for respone and save response
+                                   -- variable w32
+      print("-- READ from 0xFC0E0008: " & tost(w32));
+
+      wait for 100 ns;
       print("-- Remove halt for hart 0");
       -- Select only hart 0
-      txc(dsutx, 16#c0#, txp);
-      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#54#, txp);
-      txa(dsutx, 16#00#, 16#00#, 16#00#, 16#01#, txp);
+      txc(dsutx, 16#c0#, txp); --TX command
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#54#, txp); --address
+      txa(dsutx, 16#00#, 16#00#, 16#00#, 16#01#, txp); --data
 
       -- Remove halt for hart 0
       txc(dsutx, 16#c0#, txp);
@@ -1014,7 +1074,7 @@ begin
     dsucfg(dsutx, dsurx);
 
     -- Uncomment for AHBUART TEST
-    --duart_test(dsutx, dsurx);
+    duart_test(dsutx, dsurx);
 
     -- Uncomment for GRSPW TEST
     --spw_link_start(dsutx, dsurx);
@@ -1026,6 +1086,7 @@ begin
 
     -- RISCV Test
     riscvtb(dsutx, dsurx);
+    migs_test(dsutx, dsurx);
     wait for 10 ns;
     assert false
     report "Testbench execution completed successfully!"

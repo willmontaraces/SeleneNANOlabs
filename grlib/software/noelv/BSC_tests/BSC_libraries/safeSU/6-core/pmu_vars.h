@@ -69,7 +69,7 @@
 // PMU base address
 #define _PMUREG (_PMU_REG_TYPE(PMU_ADDR))
 // PMU counter base address
-#define _PMU_COUNTERS (_PMU_REG_TYPE(PMU_ADDR + R2A * BASE_CFG ))
+#define _PMU_COUNTERS (_PMU_REG_TYPE(PMU_ADDR + R2A * BASE_COUNTERS ))
 
 // PMU crossbar base address
 #define _PMU_CROSSBAR (_PMU_REG_TYPE(PMU_ADDR + R2A * BASE_CROSSBAR))

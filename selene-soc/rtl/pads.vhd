@@ -40,6 +40,7 @@ use gaisler.ahbtbp.all;
 -- pragma translate_on
 
 use work.config.all;
+use work.selene.all;
 
 entity pads is
   generic(
@@ -129,7 +130,7 @@ entity pads is
     ddr4_ten     : out   std_ulogic;    -- Connectivity Test Mode
     ddr4_cs_n    : out   std_logic_vector(0 downto 0);  -- Chip Select
     ddr4_reset_n : out   std_ulogic     -- Asynchronous Reset
-    --FOR TESTING
+      --FOR TESTING
     -- pragma translate_off
 ;
     io_atmi       : in  ahbtbm_ctrl_in_type;
@@ -171,7 +172,7 @@ architecture rtl of pads is
   signal lbtn                                : std_logic_vector(3 downto 0);
   signal lsw                                 : std_logic_vector(2 downto 0);
 
-  signal lclk : std_ulogic := '0';
+  signal lclk : std_ulogic;
   signal rst  : std_ulogic;
 
   -- APB UART
@@ -218,12 +219,12 @@ begin
   ----------------------------------------------------------------------
   ---Clock PAD ---------------------------------------------------------
   ----------------------------------------------------------------------
-  clk_check : if (CFG_MIG_7SERIES = 0) generate
-    clk_vup : if fabtech = virtexup generate
-      clk_pad : clkpad_ds
-        generic map (tech => padtech, level => sstl12_dci, voltage => x12v)
-        port map (clkinp, clkinn, lclk);
-    end generate clk_vup;
+  clk_check : if (CFG_MIG_7SERIES = 0) generate    
+      clk_vup : if fabtech = virtexup generate
+        clk_pad : clkpad_ds
+          generic map (tech => padtech, level => sstl12_dci, voltage => x12v)
+          port map (clkinp, clkinn, lclk);
+      end generate clk_vup;
   end generate clk_check;
   ----------------------------------------------------------------------
   ---RESET PAD ---------------------------------------------------------
@@ -598,7 +599,7 @@ begin
       -- RS-485 APBUART
       uart485_i      => uart485_i,
       uart485_o      => uart485_o,
-      -- DDR4 (MIG)
+      -- DDR4 (MIGs)
       ddr4_dq      => ddr4_dq,
       ddr4_dqs_c   => ddr4_dqs_c,
       ddr4_dqs_t   => ddr4_dqs_t,

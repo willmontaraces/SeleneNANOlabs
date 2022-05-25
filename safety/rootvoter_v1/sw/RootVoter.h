@@ -1,8 +1,10 @@
-#ifndef ROOTVOTER_DEFS
-#define ROOTVOTER_DEFS
+/*  Description:
+        RootVoter v.1 API for baremetal applications
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
 
-#define RVC0_BASE 0xfffc0000
-
+*/
 
 
 /* ---- RVC memory map ----------------------------------
@@ -32,6 +34,12 @@ base_adr    +0          (+0)            config (slv_reg[0] : write only)
             +248        (+31)           reset control (write 0xF to clear all registers)
 ---------------------------------------------------------        
 */
+
+#ifndef ROOTVOTER_DEFS
+#define ROOTVOTER_DEFS
+
+#define RVC0_BASE 0xfffc0000
+
 typedef struct {
     char         id;          //RVC identifier (index)
     uint64_t*    base_adr;    //RVC base address

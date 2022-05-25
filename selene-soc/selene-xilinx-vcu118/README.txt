@@ -15,7 +15,7 @@ https://www.gaisler.com/index.php/downloads/debug-tools
 
 ===========================================================================================================
 
-					Design specifics
+					1. Design specifics
 
 ===========================================================================================================
 
@@ -65,7 +65,7 @@ https://www.gaisler.com/index.php/downloads/debug-tools
   is configurable based on the value of 'CFG_GRETH1G' in config.vhd
 ===========================================================================================================
 
-					PREREQUISITE
+					2. PREREQUISITE
 
 ===========================================================================================================
 
@@ -79,7 +79,7 @@ from toplevel of the working tree, in SELENE hardware repository.
 
 ===========================================================================================================
 
-					SIMULATION
+					3. SIMULATION
 
 ===========================================================================================================
 To simulate using Questasim use different make targets, in specific order, in the project folder(selene-xilinx-vcu118)
@@ -135,9 +135,11 @@ to bring the directory to a clean state, before executing the above commands.
 
 ===========================================================================================================
 
-					BITSTREAM GENERATION
+					4. BITSTREAM GENERATION
 
 ===========================================================================================================
+The synthesys flow will include the HLSinf accelerator instance by default. (This accelerator is not included in simulation flow.)
+If HLSinf accelerator is not needed, the synthesys time can be improved by simply switching the CFG_HLSINF_EN label to '0' located at config.vhd file.
 
 
 To run synthesys and P&R:
@@ -192,10 +194,10 @@ to the system controller and the other is connected to the xcvu9p FPGA. User mus
 EDCL
 ---------
 Because of the MDIO writes needed to bring up the ethernet interface, at present user need to source 
-'eth_test.tcl' in GRMON, initially using any other debug link and then reconnect with edcl ip 192.168.0.51.
-This is a work around.
+'eth_config.tcl' in GRMON, initially using any other debug link and then reconnect with edcl ip 192.168.0.51
 
-grmon -u -uart /dev/ttyUSBX -c eth_test.tcl
+
+grmon -u -uart /dev/ttyUSBX -c eth_config.tcl
 grmon -u -eth 192.168.0.51
 
 There are two ways to have the HW set up for EDCL connection.
@@ -204,7 +206,7 @@ There are two ways to have the HW set up for EDCL connection.
   ---------------------------------
 You can connect the VCU118 board to the Local Area Network using an ethernet cable. Assuming that your PC is also connected to the LAN, 
 you can connect to the board using any unique IP address assigned to the board. The default EDCL IP address configured in the HW is 192.168.0.51. 
-You can change this to any unique IP address by editing the eth_test.tcl. 
+You can change this to any unique IP address by editing the eth_config.tcl. 
 
 The command is edcl <Unique IP address>.
 
@@ -237,11 +239,11 @@ enp0s20f0u4: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 	.
 	.
 
-c. eth_test.tcl is modified to have the EDCL IP address on the VCU118 board as 192.168.100.237
+c. eth_config.tcl is modified to have the EDCL IP address on the VCU118 board as 192.168.100.237
 	edcl 192.168.100.237
 
-d. Source eth_test.tcl for MDIO writes and EDCL IP modification.
-	grmon -u -uart /dev/ttyUSBX -c eth_test.tcl
+d. Source eth_config.tcl for MDIO writes and EDCL IP modification.
+	grmon -u -uart /dev/ttyUSBX -c eth_config.tcl
 
 e. Establish the grmon connection over EDCL
 
@@ -294,7 +296,115 @@ grmon3>
 
 ===========================================================================================================
 
-					GENERAL NOTES
+					6. Listing the details of SELENE-specific cores 
+
+===========================================================================================================
+
+SELENE SoC includes a small-footprint ROM that stores HW configuration of those SELENE cores that are not listed by “info sys” GRMON command. 
+ROM is connected to the SOC via the AXI4-lite interface, and mapped onto the address 0xFFFC0700. 
+HWInfo ROM contains 16 descriptors of the SELENE SoC cores, attending to the following format (64 bits per descriptor):
+
+    | XXXX XXXX    XXXX XX      X        X         X    |
+    | ---------    -------    ------   ------    ------ |
+    | 32 bits      20 bits    4 bits   4 bits    4 bits |
+    | ---------    -------    ------   ------    ------ |
+    | Core Base      Core      Core     Core      Core  |
+    | Address      Features     ID     Version    Type  |
+    
+
+Currently used device-IDs:
+    |---------------------------------|
+    | Core ID     Core description    |
+    |---------------------------------|
+    |   0:      HLS accelerator       |
+    |   1-4:    RootVoters            |
+    |   5:      SafeSu                |
+    |   6-15:   Not used              |
+    |---------------------------------|
+                                  
+Currently defined Device Types:
+    |---------------------------------|
+    | Core Type   Core description    |
+    |---------------------------------|
+    |   0:      Reserved for void slot|
+    |   1:      HLS accelerator       |
+    |   2:      RootVoter             |
+    |   3:      SafeSU                |
+    |   4-15:   Currently not used    |
+    |---------------------------------|
+
+
+When using GRMON this WH info can be parsed and listed in two ways:
+
+1. Using info_selene command:
+
+    1.1.  Run GRMON with the selene_defs.tcl on the input:
+            > grmon -u -uart /dev/ttyUSB1 -c selene_defs.tcl
+            Alternatively load this TCL file at runtime:
+            > source selene_defs.tcl
+
+    1.2. Use info_selene command (instead of info sys) to list the detailed HW info for all SoC components 
+        (including SELENE-specific cores)
+   
+   
+2. Using custom device driver:
+    2.1. Run GRMON as follows:
+    > grmon -u -uart /dev/ttyUSB1 -udrv selene_drv.tcl
+    
+    2.2. Use "info sys" command (as usual)
+
+In both cases HWInfo of SELENE cores will be printed to the terminal attending to following format:    
+     
+grmon3> info_selene
+    OR
+grmon3> info sys
+    .......................... ..........................
+  Device at ADR: 0xfffc0000
+    ID:      0
+    Type:    HLSinf Accelerator core
+    Version: 10
+    Features: U200, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
+  Device at ADR: 0xfffc0100
+    ID:      1
+    Type:    RootVoter
+    Version: 2
+    Max Datasets:             9
+    Detection of Data Errors: 1
+    Tracking of Match Pairs:  0
+    Count Matches:            1
+  Device at ADR: 0xfffc0200
+    ID:      2
+    Type:    RootVoter
+    Version: 2
+    Max Datasets:             9
+    Detection of Data Errors: 1
+    Tracking of Match Pairs:  0
+    Count Matches:            1
+  Device at ADR: 0xfffc0300
+    ID:      3
+    Type:    RootVoter
+    Version: 2
+    Max Datasets:             9
+    Detection of Data Errors: 1
+    Tracking of Match Pairs:  0
+    Count Matches:            1
+  Device at ADR: 0xfffc0400
+    ID:      4
+    Type:    RootVoter
+    Version: 2
+    Max Datasets:             9
+    Detection of Data Errors: 1
+    Tracking of Match Pairs:  0
+    Count Matches:            1
+
+  
+
+NOTE: for the old bitstreams (without HWInfo ROM) the output in both cases will be:
+ "HWInfo ROM not present in this SoC"
+
+===========================================================================================================
+
+					7. GENERAL NOTES
 
 ===========================================================================================================
 
@@ -371,9 +481,9 @@ download links:
 
 3. Connect to the SoC using the digilent or uart grmon debug link and issue the command : 
 
-	• source <selene_repo>/selene_soc/selene-xilinx-vcu118/eth_test.tcl
+	• source <selene_repo>/selene_soc/selene-xilinx-vcu118/eth_config.tcl
 
-4. Connect again to the SoC using digilent or uart grmon debug link and set the unique EDCL ip(you can edit the eth_test.tcl and add the edcl ip assignment command in the tcl script as well Then step 3 will cover EDCL ip assignment)
+4. Connect again to the SoC using digilent or uart grmon debug link and set the unique EDCL ip(you can edit the eth_config.tcl and add the edcl ip assignment command in the tcl script as well Then step 3 will cover EDCL ip assignment)
 5. Connect to SoC using EDCL. Command format
 
     	• grmon -eth 192.168.0.X
@@ -381,16 +491,15 @@ download links:
 6. Issue the following command in grmon to boot linux
 
 	• grmon3> forward enable uart2
-		Note: Instead of the 'forward enable uart2' command, you can otherwise connect to grmon with '-u 2' flag, for example grmon -u 2 -eth 192.168.0.X
-
-	• grmon3> cpu disable 1;cpu disable 2;cpu disable 3;
+        Note: Instead of the 'forward enable uart2' command, you can otherwise connect to grmon with '-u 2' flag, for example grmon -u 2 -eth 192.168.0.X
 
         a. Then, if you are testing non-gpl bitstream:
 
 		• grmon3> dtb <selene_repo>/selene_soc/selene-xilinx-vcu118/bitfiles/non-gpl/noel-selene-4CPUs_nfsroot_non-gpl.dtb
 
-        b. Elif you are testing gpl bitstream:
+        b. Elif you are testing gpl bitstream, which has been generated from commit 1bfa339 but with the add of a second MIG:
 
+		• grmon3> cpu disable 1;cpu disable 2;cpu disable 3;
 	        • grmon3> dtb <selene_repo>/selene_soc/selene-xilinx-vcu118/bitfiles/gpl/noel-selene-4CPUs_nfsroot_gpl.dtb
 
 	• grmon3> load selene-linux-sdk-20210611/linux-image.elf
@@ -404,7 +513,8 @@ Command format to create DTB file :
 	dtc file_name.dts > file_name.dtb
 Nota bene: the dts files of the previous dtb files (step 6.a. and 6.b.) are located in the same folders (non-gpl/ and gpl/)
 
-	
+
+
 	
 
 

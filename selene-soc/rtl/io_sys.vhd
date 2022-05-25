@@ -34,6 +34,7 @@ use gaisler.canfd.all;
 -- pragma translate_off
 use gaisler.sim.all;
 use gaisler.ahbtbp.all;
+use gaisler.grdmac2_pkg.all;
 
 library unisim;
 use unisim.all;
@@ -64,12 +65,12 @@ entity io_sys is
     dbgmo      : out ahb_mst_out_vector_type(ndbgmst-1 downto 0);
     --AMBA SYSTEM BUS
     ahbmi      : in  ahb_mst_in_type;
-    ahbmo      : out ahb_mst_out_vector_type(((CFG_SPW_EN * CFG_SPW_NUM + CFG_GRCANFD1 + CFG_GRCANFD2) *(1-CFG_IOMMU)) downto 0);
+    ahbmo      : out ahb_mst_out_vector_type(((CFG_SPW_EN * CFG_SPW_NUM + CFG_GRCANFD1 + CFG_GRCANFD2 + CFG_GRDMAC2) *(1-CFG_IOMMU)) downto 0);
     ahbsi      : in  ahb_slv_in_type;
     ahbso      : out ahb_slv_out_vector_type(0 downto 0);
     ahbsov_pnp : in  ahb_slv_out_vector;
     --APB BUS
-    apbi       : in  apb_slv_in_vector_type(5 + (CFG_SPW_NUM * CFG_SPW_EN) + CFG_GRCANFD1 + CFG_GRCANFD2 + CFG_UART2_ENABLE*2 downto 0);
+    apbi       : in  apb_slv_in_vector_type(5 + (CFG_SPW_NUM * CFG_SPW_EN) + CFG_GRCANFD1 + CFG_GRCANFD2 + CFG_UART2_ENABLE*2 + CFG_GRDMAC2 downto 0);
     apbo       : out apb_slv_out_vector;
     --AHBJTAG
     tck        : in  std_ulogic;
@@ -157,12 +158,13 @@ architecture rtl of io_sys is
   constant hmidx_spw   : integer := hmidx_greth + 1*CFG_SPW_EN;
   -- spw0     := hmidx_greth + 1;
   -- spw1     := hmidx_greth + 2;
-  constant hmidx_canfd1           : integer := hmidx_greth + (CFG_SPW_NUM * CFG_SPW_EN) + CFG_GRCANFD1;
-  -- hmidx_canfd2           : integer := hmidx_canfd1 + CFG_GRCANFD2;
-  constant hmidx_free  : integer := hmidx_greth + (CFG_SPW_NUM * CFG_SPW_EN) + (CFG_GRCANFD1 + CFG_GRCANFD2) + 1;
+  constant hmidx_canfd1: integer := hmidx_greth + (CFG_SPW_NUM * CFG_SPW_EN) + CFG_GRCANFD1;   
+  constant hmidx_canfd2: integer := hmidx_canfd1 + CFG_GRCANFD2;
+  constant hmidx_dma   : integer := hmidx_canfd2 + 1;      
+  constant hmidx_free  : integer := hmidx_greth + (CFG_SPW_NUM * CFG_SPW_EN) + (CFG_GRCANFD1 + CFG_GRCANFD2) + 1 + CFG_GRDMAC2;
 
   -- Number of AHB masters on master I/O bus
-  constant IO_NAHBM : integer := hmidx_free 
+  constant IO_NAHBM : integer := hmidx_free
   -- pragma translate_off
   + 1                                   --at_ahb_mst
   -- pragma translate_on
@@ -190,14 +192,15 @@ architecture rtl of io_sys is
   constant pidx_gpio    : integer := 3;
   constant pidx_version : integer := 4; 
   constant pidx_ahbstat : integer := 5;
-  constant pidx_spw     : integer := 6;
+  constant pidx_spw     : integer := pidx_ahbstat + CFG_SPW_EN ;
   -- pidx_spw0     := pidx_ahbstat + 1;
   -- pidx_spw1     := pidx_ahbstat + 2;
   constant pidx_canfd1  : integer := (CFG_SPW_NUM * CFG_SPW_EN) + pidx_spw;
-  -- pidx_canfd2  : integer := pidx_canfd1 + 1;
-  constant pidx_apbuart485_0    : integer := pidx_canfd1 + (CFG_GRCANFD1 + CFG_GRCANFD2);
-  -- pidx_apbuart485_1    : integer :=  pidx_apbuart485_0 + 1;  
-  constant pidx_total   : integer := pidx_apbuart485_0 + 2*CFG_UART2_ENABLE;
+  constant pidx_canfd2  : integer := pidx_canfd1 + CFG_GRCANFD2;
+  constant pidx_apbuart485_0    : integer := pidx_canfd2 + CFG_UART2_ENABLE;
+
+  constant pidx_dma     : integer := pidx_apbuart485_0 + CFG_UART2_ENABLE + CFG_GRDMAC2;
+  constant pidx_total   : integer := pidx_dma + 1;
 
   --IOMMU
   -- System burst length in 32-bit words
@@ -265,6 +268,11 @@ architecture rtl of io_sys is
   -- GPIOs
   signal gpioi : gpio_in_type;
   signal gpioo : gpio_out_type;
+
+  -- DMA Controller
+  signal dma_ahbmi         : ahb_mst_in_type;
+  signal dma_ahbmo         : ahb_mst_out_vector_type(0 downto 0);
+  signal trigger : std_logic_vector(63 downto 0);
 
 begin
 
@@ -424,6 +432,8 @@ begin
 
   end generate iommu;
 
+
+
   --IOMMU generation Disabled
   noiommu : if CFG_IOMMU = 0 generate
     -- GRETH
@@ -450,6 +460,11 @@ begin
     canfd2_ahbm_gen : if CFG_GRCANFD2 /= 0 generate
       ahbmo(CFG_SPW_EN * CFG_SPW_NUM + CFG_GRCANFD1 + CFG_GRCANFD2)          <= ahbmo_can2(0);
     end generate canfd2_ahbm_gen;
+
+    dma_ahbmi <= ahbmi;
+    dma_ahbm_gen : if CFG_GRDMAC2 /= 0 generate
+      ahbmo(CFG_SPW_EN * CFG_SPW_NUM + CFG_GRCANFD1 + CFG_GRCANFD2 + CFG_GRDMAC2) <= dma_ahbmo(0);
+    end generate dma_ahbm_gen;
 
     -- No IO AHB signals
     noiomst : for i in 0 to 15 generate
@@ -490,6 +505,47 @@ begin
     duo.rtsn             <= '0';
     dui.extclk           <= '0';
   end generate;
+
+  -----------------------------------------------------------------------------
+  -- DMA Controller -----------------------------------------------------------
+  -----------------------------------------------------------------------------
+
+  grdmac2gen : if CFG_GRDMAC2 = 1 generate
+    grdmac2_0 : entity gaisler.grdmac2_ahb
+     generic map (
+       tech             => memtech,
+       pindex           => pidx_dma,
+       paddr            => 16#a00#,
+       pmask            => 16#FF8#,
+       pirq             => pidx_dma,
+       dbits            => 128,
+       en_bm1           => 1,
+       hindex0          => hmidx_dma,
+       hindex1          => 0,
+       max_burst_length => 32,
+       ft               => 0,
+       abits            => 2,
+       en_timer         => 0,
+       en_acc           => 0
+       )
+     port map (
+       -- Clock and reset
+       rstn    => rstn,
+       clk     => clkm,
+       -- APB slave interface  input and output
+       apbi    => apbi(pidx_dma),
+       apbo    => apbo(pidx_dma),
+       -- AHB master input and output
+       ahbmi0  => dma_ahbmi,
+       ahbmo0  => dma_ahbmo(0),
+       ahbmi1  => ahbmi,
+       ahbmo1  => open,
+       -- System interrupt trigger
+       trigger => trigger
+       );
+  end generate;
+
+
 
   -----------------------------------------------------------------------------
   -- JTAG debug link ----------------------------------------------------------
@@ -554,7 +610,7 @@ begin
     sgmii0 : sgmii_vcu118
       generic map (
         pindex          => pidx_sgmii,
-        paddr           => 16#010#,
+        paddr           => 16#020#,
         pmask           => 16#ff0#,
         abits           => 8,
         autonegotiation => autonegotiation,
@@ -574,9 +630,17 @@ begin
         apb_clk  => clkm,
         apb_rstn => rstn,
         apbi     => apbi(pidx_sgmii),
-        apbo     => open
+        apbo     => apbo(pidx_sgmii)
       );
+    -- Generate EDCL based on CFG_DSU_GRETH
+    edcl0 : if (CFG_DSU_GRETH = 1) generate
+      greth_dbgmi       <= dbgmi(hdidx_edcl);
+      dbgmo(hdidx_edcl) <= greth_dbgmo;
+    end generate edcl0;
 
+    noecdl0 : if (CFG_DSU_GRETH = 0) generate
+      dbgmo(hdidx_edcl) <= ahbm_none;
+    end generate noecdl0;
   end generate eth0;
 
   -- Ethernet generation disabled
@@ -584,20 +648,13 @@ begin
     greth_dbgmo      <= ahbm_none;
     greth_ahbmo      <= ahbm_none;
     apbo(pidx_greth) <= apb_none;
+    dbgmo(hdidx_edcl) <= ahbm_none;
   end generate no_eth0;
 
-  -- Generate EDCL based on CFG_DSU_GRETH
-  edcl0 : if (CFG_DSU_GRETH = 1) generate
-    greth_dbgmi       <= dbgmi(hdidx_edcl);
-    dbgmo(hdidx_edcl) <= greth_dbgmo;
-  end generate edcl0;
 
-  noecdl0 : if (CFG_DSU_GRETH = 0) generate
-    dbgmo(hdidx_edcl) <= ahbm_none;
-  end generate noecdl0;
 
   -- APB slave out for sgmii is none.
-  apbo(pidx_sgmii) <= apb_none;
+  --apbo(pidx_sgmii) <= apb_none;
   -----------------------------------------------------------------------
   ---  SpaceWire --------------------------------------------------------
   -----------------------------------------------------------------------

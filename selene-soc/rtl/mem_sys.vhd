@@ -46,10 +46,10 @@ entity mem_sys is
     mig_clkout   : out   std_ulogic;  -- out clock from mig. This will be used as the system clock
     clkin        : in    std_ulogic;  -- input clock from the clock generator if the mig is not generated
     ahbsi        : in    ahb_slv_in_type;
-    ahbso        : out   ahb_slv_out_vector_type (1 downto 0);  -- 0- ahbram/ahbram_sim, 1- fake mig
+    ahbso        : out   ahb_slv_out_vector_type (1 downto 0);  -- 0- ahbram/ahbram_sim if (CFG_MIG_7SERIES = 0) or fake mig 1 elif, 1- fake mig 2
     apbo         : out   apb_slv_out_vector;
     apbi         : in    apb_slv_in_vector;
-    aximi        : out   axi_somi_type;
+    aximi        : out   axi_somi_type;   -- see ../rtl/selene.vhd package file
     aximo        : in    axi4_mosi_type;
     -- DDR4 (MIG)
     ddr4_dq      : inout std_logic_vector(63 downto 0);
@@ -121,8 +121,7 @@ architecture rtl of mem_sys is
   -----------------------------------------------------
   -- Constants ----------------------------------------
   -----------------------------------------------------
-  constant ramfile : string := "hello_ahbram.srec";  -- ram contents
-  constant ramfile_axi : string := "hello.srec";  -- ram contents
+  constant ramfile : string := "hello.srec";  -- ram contents
 
   -----------------------------------------------------
   -- Signals ------------------------------------------
@@ -147,8 +146,8 @@ architecture rtl of mem_sys is
   constant hsidx_mig     : integer := 3;
 
   -- memory AHB IO system bus indexes
-  -- AHB system with 1 AHBCTRL(TODO), L2C master, one MIG slave(TODOextended to two)
-  constant miosid_mig1 : integer := 0;
+  -- AHB system with 1 AHBCTRL(TODO), L2C master, two MIG slaves
+  --constant miosid_mig1 : integer := 0;
 
   -- APB slaves
   --constant pidx_mig1    : integer := apbstart;
@@ -157,8 +156,9 @@ architecture rtl of mem_sys is
 
   constant mig_hconfig : ahb_config_type := (
     0      => ahb_device_reg (VENDOR_GAISLER, GAISLER_MIG_7SERIES, 0, 0, 0),
-    4      => ahb_membar(16#000#, '1', '1', 16#C00#),
+    4      => ahb_membar(16#000#, '1', '1', 16#800#),
     others => zero32);
+
 
 begin
 
@@ -182,17 +182,16 @@ begin
   -- No APB interface on memory controller  
   --apbo(pidx_mig1)  <= apb_none;
   memapbo_none : for i in 0 to 15 generate
-    apbo(i) <= apb_none;
+      apbo(i) <= apb_none;
   end generate memapbo_none;
   -----------------------------------------------------------------------------
   -- DDR4 Memory Controller (MIG) ---------------------------------------------
-  -----------------------------------------------------------------------------
+  ----------------------------------------------------------------------------- 
 
-  mig_gen : if (CFG_MIG_7SERIES = 1) generate
-    
+  mig_gen : if (CFG_MIG_7SERIES = 1) generate 
     gen_ddr4c : if USE_MIG_INTERFACE_MODEL = false generate
 
-      ddr4c1 : axi_mig4_7series
+      ddr4c_0 : axi_mig4_7series
         generic map (
           mem_bits => 30
         )
@@ -227,14 +226,14 @@ begin
           ddr4_ui_clkout1      => clkm,
           clk_ref_i            => clkref
           );
-
     end generate gen_ddr4c;
 
     sim_ram_gen : if USE_MIG_INTERFACE_MODEL = true generate
-    -- pragma translate_off
+
+      -- pragma translate_off
       axi_mem : aximem 
         generic map (
-          fname   => ramfile_axi,
+          fname   => ramfile,
           axibits => AXIDW,
           rstmode => 0
           )
@@ -244,6 +243,7 @@ begin
           axisi=> aximo_l,
           axiso=> aximi
           );
+
       aximo_l.aw.id    <= aximo.aw.id;
       aximo_l.aw.addr  <= aximo.aw.addr;
       aximo_l.aw.len   <= aximo.aw.len(3 downto 0);
@@ -274,7 +274,6 @@ begin
       clkm <= not clkm after 5.0 ns;
 
       -- Drive signals when MIG is not instantiated
-
       -- Tie-Off DDR4 Signals
       ddr4_addr    <= (others => '0');
       ddr4_we_n    <= '0';
@@ -295,8 +294,7 @@ begin
       ddr4_act_n   <= '1';
       -- Drive caliberation done signal
       calib        <= '1';
-
-    -- pragma translate_on
+      -- pragma translate_on
     end generate sim_ram_gen;
 
     ahbso(0) <= ahbs_none; 
@@ -310,24 +308,22 @@ begin
     ahbso(1).hirq    <= (others => '0');
     ahbso(1).hrdata  <= (others => '0');
     ahbso(1).hsplit  <= (others => '0');
-
+    
   end generate mig_gen;
 
   no_mig_gen : if (CFG_MIG_7SERIES = 0) generate
-
     -- Simulation 
     sim_ram_gen : if (simulation = true) generate
     -- pragma translate_off
       sim_ram : ahbram_sim
         generic map (
           hindex     => hsidx_ram_sim,
-          haddr      => 16#400#,
-          hmask      => 16#FFF#,
+          haddr      => 16#000#,
+          hmask      => 16#800#,
           tech       => 0,
           kbytes     => 1000,
           pipe       => 0,
           maccsz     => AHBDW,
-          endianness => GRLIB_CONFIG_ARRAY(grlib_little_endian),
           fname      => ramfile
           )
         port map(
@@ -346,10 +342,10 @@ begin
       ahbram1 : ahbram
         generic map (
           hindex     => hsidx_ahbram,
-          haddr      => 16#400#,
+          haddr      => 16#000#,
+          hmask      => 16#800#,
           tech       => memtech,
-          kbytes     => 16,
-          endianness => GRLIB_CONFIG_ARRAY(grlib_little_endian))
+          kbytes     => 4096)
         port map (
           rstn,
           clkin,

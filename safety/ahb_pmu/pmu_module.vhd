@@ -63,6 +63,8 @@ package pmu_module is
         ncpu        : integer range 1 to 6 := 1;
         hindex : integer := 0;
         nev    : integer := 31;
+        ft     : integer := 0;
+        ncounters  : integer := 24;
         haddr  : integer := 0;
         hmask  : integer := 16#fff#);
     port (
@@ -70,46 +72,55 @@ package pmu_module is
         clk            : in  std_ulogic;
         events_vector  : in  std_logic_vector(CB_NSIG-1 downto 0);
         ahbsi          : in  ahb_slv_in_type;
-        ahbso          : out ahb_slv_out_type);
+        ahbso          : out ahb_slv_out_type;
+        --Hardware quota exhausted signals, all zeroes if hardware quota is disabled
+        HQ_MCCU        : out std_logic_vector(ncpu-1 downto 0) := (others => '0') 
+      );
   end component;
   -- Interface of pmu_ahb.sv 
-  component pmu_ahb  
-    generic (
-        haddr  : integer := 0;
-        hmask  : integer := 16#fff#;
-        N_REGS : integer := 43 ; 
-    	PMU_COUNTERS   : integer := 24;
-        MCCU_N_CORES : integer := 4;
-    	N_SOC_EV       : integer := 32;
-        REG_WIDTH : integer := CFG_AHBDW
-        );
-    port (
-        rstn_i   : in  std_ulogic;
-        clk_i   : in  std_ulogic;
-        -- AHB bus slave interface
-        hsel_i       : in  std_ulogic;                               -- slave select
-        haddr_i      : in  std_logic_vector(31 downto 0);            -- address bus 
-        hwrite_i     : in  std_ulogic;                               -- read/write 
-        htrans_i     : in  std_logic_vector(1 downto 0);             -- transfer type
-        hsize_i      : in  std_logic_vector(2 downto 0);             -- transfer size
-        hburst_i     : in  std_logic_vector(2 downto 0);             -- burst type
-        hwdata_i     : in  std_logic_vector(CFG_AHBDW-1 downto 0);   -- write data bus
-        hprot_i      : in  std_logic_vector(3 downto 0);             -- prtection control
-        hreadyi_i    : in  std_ulogic;                               -- transfer done 
---        hmaster_i    : in  std_logic_vector(3 downto 0);             -- current master
-        hmastlock_i  : in  std_ulogic;                               -- locked access 
-        hreadyo_o    : out std_ulogic;                               -- trasfer done 
-        hresp_o      : out std_logic_vector(1 downto 0);             -- response type
-        hrdata_o     : out std_logic_vector(CFG_AHBDW-1 downto 0);   -- read data bus
---      ;  hsplit_o     : out std_logic_vector(15 downto 0)          -- split completion
-        -- PMU signals
-        events_i    : in std_logic_vector(N_SOC_EV-1 downto 0); 
-        intr_overflow_o : out std_ulogic;
-        intr_quota_o : out std_ulogic; 
-        intr_MCCU_o : out std_logic_vector(3 downto 0);
-        intr_RDC_o : out std_ulogic 
-        );
+  component pmu_ahb
+    generic(
+      haddr          : integer := 0;
+      hmask          : integer := 16#fff#;
+      N_SOC_EV       : integer := 31;
+      MCCU_N_CORES   : integer := PMU_NCPU;
+      REG_WIDTH      : integer := 32;
+      --Updated parameters
+      N_COUNTERS  : integer := 24;
+      MCCU_WEIGHTS_WIDTH : integer := 8;
+      N_CONF_REGS : integer :=1;
+      MCCU_N_EVENTS : integer := 2;  
+      FT  : integer := 0   
+    );
+    port(
+      clk_i  : in std_logic;
+      rstn_i : in std_logic;
+      -- AHB bus slave interface
+      hsel_i       : in  std_ulogic;                               -- slave select
+      haddr_i      : in  std_logic_vector(31 downto 0);            -- address bus (byte)
+      hwrite_i     : in  std_ulogic;                               -- read/write
+      htrans_i     : in  std_logic_vector(1 downto 0);             -- transfer type
+      hsize_i      : in  std_logic_vector(2 downto 0);             -- transfer size
+      hburst_i     : in  std_logic_vector(2 downto 0);             -- burst type
+      hwdata_i     : in  std_logic_vector(31 downto 0);   -- write data bus
+      hprot_i      : in  std_logic_vector(3 downto 0);             -- prtection control
+      hreadyi_i    : in  std_ulogic;                               -- transfer done
+  --    hmaster_i    : in  std_logic_vector(3 downto 0);             -- current master
+      hmastlock_i  : in  std_ulogic;                               -- locked access
+      hreadyo_o    : out std_ulogic;                               -- trasfer done
+      hresp_o      : out std_logic_vector(1 downto 0);             -- response type
+      hrdata_o     : out std_logic_vector(31 downto 0);   -- read data bus
+  --  ;  hsplit_o     : out std_logic_vector(15 downto 0)             -- split completion
+      -- PMU signals
+      events_i    : in std_logic_vector(N_SOC_EV-1 downto 0); 
+      intr_overflow_o : out std_ulogic;
+      intr_quota_o : out std_ulogic; 
+      intr_MCCU_o : out std_logic_vector(MCCU_N_CORES-1 downto 0);
+      intr_RDC_o : out std_ulogic;
+      en_hwquota_o : out std_logic
+      );
   end component;
+
   -- Interface of dummy_ahb.sv 
   component dummy_ahb  
     generic (

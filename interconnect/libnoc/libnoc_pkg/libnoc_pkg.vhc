@@ -34,18 +34,20 @@ package libnoc_pkg is
   constant MaxSlvTrans : integer := 32; 
   constant FallThrough : std_logic := '0'; 
   constant LatencyMode : std_logic_vector(9 downto 0) := "0000000000"; --Not used overwritten by xbar_wrapper.sv
-  constant AxiIdWidthSlvPorts : integer := 4-integer(ceil(log2(real(CFG_AXI_N_INITIATORS)))); 
-  constant AxiIdUsedSlvPorts  : integer := 1;	
+  constant AxiIdWidthSlvPorts : integer := integer(ceil(log2(real(CFG_AXI_N_INITIATORS))));   
+  constant AxiIdUsedSlvPorts  : integer := 1;
   constant AxiAddrWidth       : integer := 32;
   constant AxiDataWidth       : integer := 128;
   constant AxiMaxDataWidth    : integer := 512;
   constant NoAddrRules        : integer := 1;	
 
   -- some more constant declaration for needed typedefs
-  constant AxiIdWidthMasters : integer :=  4; --AxiIdWidthSlvPorts + log2(NoSlvPorts)
+  constant AxiIdWidthMasters : integer :=  AxiIdWidthSlvPorts+AxiIdWidthSlvPorts;
   constant AxiIdUsed         : integer :=  AxiIdWidthSlvPorts; -- Has to be <= AxiIdWidthMasters
   constant AxiIdWidthSlaves  : integer :=  AxiIdWidthSlvPorts; --AxiIdWidthMasters + integer(ceil(ieee.math_real.log2(real(CFG_AXI_N_INITIATORS))));
   constant AxiStrbWidth      : integer :=  AxiDataWidth/8; --AxiDataWidth / 8;
   constant AxiMaxStrbWidth   : integer :=  AxiMaxDataWidth/8; --AxiDataWidth / 8;
-  constant AxiUserWidth      : integer :=  3;
+  constant AxiUserWidth      : integer :=  3; --3
 end package;
+
+

@@ -29,9 +29,11 @@ use safety.pmu_module.all;
 
 entity ahb_wrapper is
     generic (
-        ncpu        : integer range 1 to 16 := 1;
+        ncpu           : integer range 1 to 16 := 1;
         hindex         : integer := 0;
-        nev    : integer := 32;
+        nev            : integer := 32;
+        ft             : integer := 0;
+        ncounters      : integer := 24;
         haddr          : integer := 0;
         hmask          : integer := 16#fff#);
     port (
@@ -39,7 +41,9 @@ entity ahb_wrapper is
         clk           : in  std_ulogic;
         events_vector : in  std_logic_vector(nev-1 downto 0);
         ahbsi         : in  ahb_slv_in_type;   -- slave input
-        ahbso         : out ahb_slv_out_type); -- slave output
+        ahbso         : out ahb_slv_out_type;
+        hq_mccu       : out std_logic_vector(ncpu-1 downto 0) := (others => '0') 
+    ); -- slave output
 end;
 
 architecture rtl of ahb_wrapper is
@@ -48,47 +52,8 @@ signal events_i : std_logic_vector(nev-1 downto 0);
 signal irqvec : std_logic_vector(NAHBIRQ-1 downto 0);  
 signal dmiss_hold : std_logic;  
 signal pmu_32b_data_o : std_logic_vector(31 downto 0 );
-
-
--- PMU
-component pmu_ahb
-  generic(
-    haddr          : integer := 0;
-    hmask          : integer := 16#fff#;
-    N_REGS	   : integer := 43;
-    PMU_COUNTERS   : integer := 24;
-    N_SOC_EV       : integer := nev;
-    MCCU_N_CORES : integer := ncpu;
-    REG_WIDTH      : integer := 32
-	   );
-
-  port(
-    clk_i  : in std_logic;
-    rstn_i : in std_logic;
-    -- AHB bus slave interface
-    hsel_i       : in  std_ulogic;                               -- slave select
-    haddr_i      : in  std_logic_vector(31 downto 0);            -- address bus (byte)
-    hwrite_i     : in  std_ulogic;                               -- read/write
-    htrans_i     : in  std_logic_vector(1 downto 0);             -- transfer type
-    hsize_i      : in  std_logic_vector(2 downto 0);             -- transfer size
-    hburst_i     : in  std_logic_vector(2 downto 0);             -- burst type
-    hwdata_i     : in  std_logic_vector(31 downto 0);   -- write data bus
-    hprot_i      : in  std_logic_vector(3 downto 0);             -- prtection control
-    hreadyi_i    : in  std_ulogic;                               -- transfer done
---    hmaster_i    : in  std_logic_vector(3 downto 0);             -- current master
-    hmastlock_i  : in  std_ulogic;                               -- locked access
-    hreadyo_o    : out std_ulogic;                               -- trasfer done
-    hresp_o      : out std_logic_vector(1 downto 0);             -- response type
-    hrdata_o     : out std_logic_vector(31 downto 0);   -- read data bus
---  ;  hsplit_o     : out std_logic_vector(15 downto 0)             -- split completion
-    -- PMU signals
-    events_i    : in std_logic_vector(N_SOC_EV-1 downto 0); 
-    intr_overflow_o : out std_ulogic;
-    intr_quota_o : out std_ulogic; 
-    intr_MCCU_o : out std_logic_vector(ncpu-1 downto 0);
-    intr_RDC_o : out std_ulogic                    
-    );
-end component;
+signal intr_MCCU : std_logic_vector(ncpu-1 downto 0);
+signal hardware_quota_active : std_logic;
 
 constant REVISION : integer := 0;
 -- plug&play configuration:
@@ -127,18 +92,19 @@ ahbso.hindex  <= hindex;          -- For test porpuses
 -- TODO: make it change with the remaining parameters (N_SOC_EV,PMU_COUNTERS,etc..)
 -- change the number of registers based on current configurations
 gen_pmu6 : if (ncpu = 6) generate
-    constant N_REGS : integer := 55;
 begin
 -- counter component instantiation
 pmu_inst: pmu_ahb
     generic map(    haddr           => haddr,
-	            hmask           => hmask,
-                    N_REGS          => N_REGS,
+	                hmask           => hmask,
                     N_SOC_EV        => nev,
                     MCCU_N_CORES    => ncpu,
-                    PMU_COUNTERS    => 24,
-                    REG_WIDTH       => 32
-               )
+                    N_COUNTERS      => ncounters,
+                    REG_WIDTH       => 32,
+                    MCCU_WEIGHTS_WIDTH => 8,
+                    N_CONF_REGS     =>1,
+                    MCCU_N_EVENTS   =>2,  
+                    FT          =>ft) 
     port map(
         rstn_i  => rst,
         clk_i   => clk,
@@ -162,23 +128,26 @@ pmu_inst: pmu_ahb
         events_i => events_i,
         intr_overflow_o => irqvec(10),
         intr_quota_o => irqvec(12),
-        intr_MCCU_o => irqvec(9 downto (10-ncpu)),
-        intr_RDC_o => irqvec(11)
+        intr_MCCU_o => intr_MCCU,
+        intr_RDC_o => irqvec(11),
+        en_hwquota_o => hardware_quota_active
     );        
 end generate;
 
 gen_pmu : if (ncpu = 4) generate
-    constant N_REGS : integer := 49;
 begin
 -- counter component instantiation
 pmu_inst: pmu_ahb
     generic map(    haddr           => haddr,
-	            hmask           => hmask,
-                    N_REGS          => N_REGS,
+    	            hmask           => hmask,
                     N_SOC_EV        => nev,
+                    REG_WIDTH       => 32,
                     MCCU_N_CORES    => ncpu,
-                    PMU_COUNTERS    => 24,
-                    REG_WIDTH       => 32
+                    N_COUNTERS      => ncounters,
+                    MCCU_WEIGHTS_WIDTH => 8,
+                    N_CONF_REGS     =>1,
+                    MCCU_N_EVENTS   =>2,  
+                    FT          => ft 
                )
     port map(
         rstn_i  => rst,
@@ -203,10 +172,18 @@ pmu_inst: pmu_ahb
         events_i => events_i,
         intr_overflow_o => irqvec(10),
         intr_quota_o => irqvec(12),
-        intr_MCCU_o => irqvec(9 downto (10-ncpu)),
-        intr_RDC_o => irqvec(11)
+        intr_MCCU_o => intr_MCCU,
+        intr_RDC_o => irqvec(11),
+        en_hwquota_o => hardware_quota_active
     );        
 end generate;
+
+--Routes interrupts to plic if hardware quota is not active (IE: default)
+irqvec(9 downto (10-ncpu)) <= intr_MCCU when hardware_quota_active = '0'
+                                        else (others => '0');
+--When hardware quota is active routes PMU interrupt signals directly to AHBCTRL
+HQ_MCCU <= intr_MCCU when hardware_quota_active = '1'
+                     else (others => '0');
 
 --my slave doesn't support splits
 ahbso.hsplit <= (others => '0');

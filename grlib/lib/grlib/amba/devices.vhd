@@ -2,7 +2,7 @@
 --  This file is a part of the GRLIB VHDL IP LIBRARY
 --  Copyright (C) 2003 - 2008, Gaisler Research
 --  Copyright (C) 2008 - 2014, Aeroflex Gaisler
---  Copyright (C) 2015 - 2021, Cobham Gaisler
+--  Copyright (C) 2015 - 2022, Cobham Gaisler
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -276,6 +276,11 @@ package devices is
   constant GAISLER_CLINT         : amba_device_type := 16#0C3#;
   constant GAISLER_SOCBRIDGE     : amba_device_type := 16#0C4#;
   constant GAISLER_NANDFCTRL2    : amba_device_type := 16#0C5#;
+  constant GAISLER_GR765ESTHS    : amba_device_type := 16#0C6#;
+  constant GAISLER_WIZL          : amba_device_type := 16#0C7#;
+  constant GAISLER_HSSL          : amba_device_type := 16#0C8#;
+  constant GAISLER_GRWATCHDOG    : amba_device_type := 16#0C9#;
+  constant GAISLER_L2CL          : amba_device_type := 16#0D0#;
 
 -- Sun Microsystems
 
@@ -697,6 +702,10 @@ package devices is
     GAISLER_GRPLIC        => "RISC-V PLIC                     ",
     GAISLER_CLINT         => "RISC-V CLINT                    ",
     GAISLER_SOCBRIDGE     => "SoC to SoC bridge               ",
+    GAISLER_WIZL          => "GRWIZL WizardLink Serial Link   ",
+    GAISLER_HSSL          => "GRHSSL SpaceFibre + WizardLink  ",
+    GAISLER_GRWATCHDOG    => "Watchdog unit with sep clock    ",
+    GAISLER_L2CL          => "L2-Cache Controller - Lite      ",
     others                => "Unknown Device                  ");
 
   constant gaisler_lib : vendor_library_type := (
@@ -963,19 +972,19 @@ package devices is
     device_table => radionor_device_table
     );
 
-  constant BSC_DESC : vendor_description := "BSC                     ";
   constant bsc_device_table : device_table_type := (
-     BSC_CORE1 =>   " CORE1                          ",
-     BSC_CORE2 =>   " CORE2                          ",
-     BSC_PMU     => " AHB Performance Monitoring Unit",
-     others      => " Unknown Device                 ");
+    BSC_CORE1 => "Core 1                          ",
+    BSC_CORE2 => "Core 2                          ",
+    BSC_PMU   => "AHB Performance Monitoring Unit ",
+    others    => "Unknown Device                  ");
 
-   constant bsc_lib : vendor_library_type := (
-     vendorid     => VENDOR_BSC,
-     vendordesc   => BSC_DESC,
-     device_table => bsc_device_table
-     );
+  constant BSC_DESC : vendor_description := "BSC                     ";
 
+  constant bsc_lib : vendor_library_type := (
+    vendorid     => VENDOR_BSC,
+    vendordesc   => BSC_DESC,
+    device_table => bsc_device_table
+    );
 
   constant dtu_device_table : device_table_type := (
     DTU_IV        => "Instrument Virtualizer          ",

@@ -1,3 +1,13 @@
+/*  Description:
+        Configurable RootVoter with AXI4-lite interface
+        Used for the detection of data corruption and timeout/hang failures in multicore SoC
+        version: 1.0
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
+
+*/
+
 /*
 
 Voter communicates with the SoC via 32 memory-mapped registers:
@@ -26,7 +36,7 @@ BASE_ADR    +0          (+0)            config (slv_reg[0] : write only)
             +160        (+20)           status (slv_reg[20] : read only)
             +248        (+31)           reset control (write 0xF to clear all registers)
 
-IMPORTANT: Base Address should be aligned by 256 bytes, i.e. BASE_ADR = AXI_ADDR & 8'hFF
+NOTE: Base Address should be aligned by 256 bytes, i.e. BASE_ADR = AXI_ADDR & 12'hF00, LOCAL_ADR = AXI_ADR & 12'h0FF
 */
 
 `include "RVCell.sv"

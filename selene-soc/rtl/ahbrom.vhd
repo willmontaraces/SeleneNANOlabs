@@ -17,7 +17,6 @@ entity ahbrom is
     hmask  : integer := 16#fff#;
     pipe   : integer := 0;
     tech   : integer := 0;
-    cfg_7series : integer := 0;
     kbytes : integer := 1);
   port (
     rst   : in  std_ulogic;
@@ -91,12 +90,8 @@ begin
         when 16#00002# => romdata <= X"00000013000000130000001300000013";
         when 16#00003# => romdata <= X"00000013000000130000001300000013";
         -- text.start
-        when 16#00400# => 
-          if cfg_7series = 1 then
-            romdata <= X"FF85859300008597F140257300000437";
-          else
-            romdata <= X"FF85859300008597F140257340000437";
-          end if;
+        when 16#00400# => romdata <= X"FF85859300008597F140257300000437";
+
         when 16#00401# => romdata <= X"0000001310500073000400670000100F";
         -- Padding
         when 16#00402# => romdata <= X"00000013000000130000001300000013";
@@ -113,12 +108,8 @@ begin
         when 16#00002# => romdata <= X"00000013000000130000001300000013";
         when 16#00003# => romdata <= X"00000013000000130000001300000013";
         -- text.start
-        when 16#00400# => 
-          if cfg_7series = 1 then
-            romdata <= X"F140257300000437FF85859300008597";
-          else
-            romdata <= X"F140257340000437FF85859300008597";
-          end if;
+        when 16#00400# => romdata <= X"F140257300000437FF85859300008597";
+
         when 16#00401# => romdata <= X"000400670000100F0000001310500073";
         -- Padding
         when 16#00402# => romdata <= X"00000013000000130000001300000013";

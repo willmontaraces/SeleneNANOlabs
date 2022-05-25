@@ -1,12 +1,10 @@
-#ifndef ROOTVOTER_DEFS
-#define ROOTVOTER_DEFS
+/*  Description:
+        RootVoter v.2 API for baremetal applications
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
 
-#define RVC0_BASE 0xfffc0100
-#define RVC1_BASE 0xfffc0200
-#define RVC2_BASE 0xfffc0300
-#define RVC3_BASE 0xfffc0400
-
-
+*/
 
 /*
 Voter communicates with the SoC via 32 memory-mapped registers:
@@ -88,7 +86,8 @@ NOTE: Base Address should be aligned by 256 bytes, i.e. BASE_ADR = AXI_ADDR & 12
     [17]    - HWInfo.LIST_FAILURES
     [18]    - HWInfo.LIST_MATCHES
     [19]    - HWInfo.COUNT_MATCHES
-    [20:31] - RESERVED (not used)
+    [20:23] - HWInfo.RV_VERSION
+    [24:31] - RESERVED (not used)
     [63:32] - SYNC WORD (0x55555555)
     
 
@@ -234,12 +233,22 @@ NOTE: Base Address should be aligned by 256 bytes, i.e. BASE_ADR = AXI_ADDR & 12
 */
 
 
+#ifndef ROOTVOTER_DEFS
+#define ROOTVOTER_DEFS
+
+#define RVC0_BASE 0xfffc0100
+#define RVC1_BASE 0xfffc0200
+#define RVC2_BASE 0xfffc0300
+#define RVC3_BASE 0xfffc0400
+
+
 typedef struct {
     uint8_t           id;            //RVC identifier (index)
     uint8_t           max_sets;      //Read-back attribute: (2 to 16): Number of set registers 
     uint8_t           count_matches; //Read-back attribute:     (1/0): RVC counts matches for each dataset in the match_counters register (reg[21]) 
     uint8_t           list_matches;  //Read-back attribute      (1/0): RVC provides comparison flags for each pair of datasets in the match_vector register (reg[17] and reg[18])
-    uint8_t           list_failures; //Read-back attribute      (1/0): RVC provides failure flags for each dataset in the status[39:24] (reg[20])    
+    uint8_t           list_failures; //Read-back attribute      (1/0): RVC provides failure flags for each dataset in the status[39:24] (reg[20])   
+    uint8_t           version;       //Read-back attribute  (1 to 15): RVC version
 } RootVoterHWInf;
 
 

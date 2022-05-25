@@ -14,8 +14,8 @@ set_false_path -from [get_ports button*]
 set_false_path -from [get_ports switch*]
 
 # --- Clock Domain Crossing (in case of the DDR4 MIG)
-#set_false_path -from [get_clocks mmcm_clkout0] -to [get_clocks -include_generated_clocks mmcm_clkout1]
-#set_false_path -from [get_clocks mmcm_clkout1] -to [get_clocks -include_generated_clocks mmcm_clkout0]
+set_false_path -from [get_clocks mmcm_clkout0] -to [get_clocks -include_generated_clocks mmcm_clkout1]
+set_false_path -from [get_clocks mmcm_clkout1] -to [get_clocks -include_generated_clocks mmcm_clkout0]
 
 #-----------------------------------------------------------
 #                  Pin and IO Property                     -
@@ -33,6 +33,7 @@ set_property PACKAGE_PIN D12      [get_ports clk250n] ;# Bank  71 VCCO - VCC1V2_
 set_property IOSTANDARD  DIFF_SSTL12_DCI [get_ports clk250n] ;# Bank  71 VCCO - VCC1V2_FPGA - IO_L13N_T2L_N1_GC_QBC_71
 set_property PACKAGE_PIN E12      [get_ports clk250p] ;# Bank  71 VCCO - VCC1V2_FPGA - IO_L13P_T2L_N0_GC_QBC_71
 set_property IOSTANDARD  DIFF_SSTL12_DCI [get_ports clk250p] ;# Bank  71 VCCO - VCC1V2_FPGA - IO_L13P_T2L_N0_GC_QBC_71
+
 
 #set_property PACKAGE_PIN F31      [get_ports clk300n] ;# Bank  47 VCCO - VCC1V2_FPGA - IO_L13N_T2L_N1_GC_QBC_47
 #set_property IOSTANDARD  DIFF_SSTL12_DCI [get_ports clk300n] ;# Bank  47 VCCO - VCC1V2_FPGA - IO_L13N_T2L_N1_GC_QBC_47
@@ -420,9 +421,29 @@ set_property IOSTANDARD  LVDS [get_ports rxp] ;# Bank  64 VCCO - VCC1V8_FPGA - I
 set_property IOSTANDARD  LVDS [get_ports txn] ;# Bank  64 VCCO - VCC1V8_FPGA - IO_L15N_T2L_N5_AD11N_64
 set_property IOSTANDARD  LVDS [get_ports txp] ;# Bank  64 VCCO - VCC1V8_FPGA - IO_L15P_T2L_N4_AD11P_64
 
+
+# Equalization can be set to EQ_LEVEL0-4 based on the loss in the channel. EQ_NONE is #an invalid option
+set_property EQUALIZATION EQ_LEVEL0 [get_ports rxn] 
+set_property EQUALIZATION EQ_LEVEL0 [get_ports rxp] 
+#DQS_BIAS is to be set to TRUE if internal DC biasing is used - this is recommended. 
+#If the signal is biased externally on the board, should be set to FALSE
+set_property DQS_BIAS TRUE [get_ports rxn] 
+set_property DQS_BIAS TRUE [get_ports rxp] 
+
+# DIFF_TERM is to be set to TERM_100 if internal Diff term is used - this is                                     
+#recommended. If differential termination is external on the board, should be set to 
+#TERM_NONE
+set_property DIFF_TERM_ADV TERM_100 [get_ports rxn] 
+set_property DIFF_TERM_ADV TERM_100 [get_ports rxp] 
+set_property DIFF_TERM_ADV TERM_100 [get_ports gtrefclk_n]
+set_property DIFF_TERM_ADV TERM_100 [get_ports gtrefclk_p]
+
+set_property LVDS_PRE_EMPHASIS FALSE [get_ports txn] 
+set_property LVDS_PRE_EMPHASIS FALSE [get_ports txp] 
+
 # There was a WNS of -5 between the paths
-#set_max_delay -from [get_clocks mmcm_clkout1] -to   [get_clocks IntTx_ClkOut1] 20.000
-#set_max_delay -to   [get_clocks mmcm_clkout1] -from [get_clocks IntTx_ClkOut1] 20.000
+set_max_delay -from [get_clocks mmcm_clkout1] -to   [get_clocks IntTx_ClkOut1] 20.000
+set_max_delay -to   [get_clocks mmcm_clkout1] -from [get_clocks IntTx_ClkOut1] 20.000
 
 # From kcu105 xdc
 

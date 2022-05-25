@@ -71,32 +71,30 @@ unsigned pmu_configure_crossbar(unsigned int output, unsigned int event_index) {
         #endif
     return (1);
     } 
-
-    unsigned int ev_idx = (event_index & CROSSBAR_INPUTS ); //?
+    unsigned int ev_idx = event_index;
     unsigned int fieldw = log2(CROSSBAR_INPUTS);
-   
     //Blank Mask. It will reset any configuration field
     unsigned int bmask ; 
     bmask=(1<<fieldw)-1;
+    unsigned int tmp,reg_idx,field_idx;
     //Get the bit position if all registers where concatenated
-    unsigned tmp,reg_idx,field_idx;
-    tmp = event_index*fieldw;
+    tmp = output*fieldw;
     //Get the register index given a register width
     reg_idx = tmp/REG_WIDTH;
     //Get the position of the crossbar configuration field
     field_idx = (int)tmp % REG_WIDTH;
     // check if the configuration field has bits in two different registers
-    unsigned fieldw1 = fieldw; // Bits in first register
-    unsigned fieldw2 = 0; //Bits in second register
+    unsigned int fieldw1 = fieldw; // Bits in first register
+    unsigned int fieldw2 = 0; //Bits in second register
     if ((field_idx+fieldw)>REG_WIDTH) {
         fieldw1 = REG_WIDTH-field_idx;
         fieldw2 = fieldw - fieldw1;
         // Clear previous field
-        _PMU_CROSSBAR[reg_idx] &= (~((1<<fieldw1)-1) << field_idx); 
+        _PMU_CROSSBAR[reg_idx] &= (~(((1<<fieldw1)-1) << field_idx));
         _PMU_CROSSBAR[reg_idx+1] &= ~((1<<fieldw2)-1); 
         //Set new values
         _PMU_CROSSBAR[reg_idx] |= ev_idx << field_idx; 
-        _PMU_CROSSBAR[reg_idx] |= (ev_idx>>fieldw1); 
+        _PMU_CROSSBAR[reg_idx+1] |= (ev_idx>>fieldw1);
     } else {
         _PMU_CROSSBAR[reg_idx] &= (~((bmask) << field_idx)); // Erease the output field
         _PMU_CROSSBAR[reg_idx] |= ev_idx << field_idx; // Write into the output field

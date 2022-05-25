@@ -1,3 +1,15 @@
+/*  Description:
+        Configurable RootVoter with AXI4-lite interface
+        Supports any MooN voting scheme (M, N = [2:16])
+        Used for the detection of data corruption and timeout/hang failures in multicore SoC
+        version: 2.0
+            
+    Author / Developer: 
+        Ilya Tuzov (Universitat Politecnica de Valencia)
+
+*/
+
+
 /*
 Voter communicates with the SoC via 32 memory-mapped registers:
             offset    (uint64* ptr)      Register
@@ -235,7 +247,7 @@ module rootvoter
     parameter int unsigned MAX_DATASETS = 9,
     parameter int unsigned COUNT_MATCHES = 1,
     parameter int unsigned LIST_MATCHES = 0,
-    parameter int unsigned LIST_FAILURES = 1    
+    parameter int unsigned LIST_FAILURES = 1
 )(
     // axi4 lite slave signals
     input  wire                          S_AXI_ACLK_i,
@@ -304,7 +316,7 @@ module rootvoter
 //-----RootVoter memory mapped registers signals
 //----------------------------------------------
     wire [39:0]  status;
-    wire [19:0]  state_internal;
+    wire [23:0]  state_internal;
     wire [3:0]   match_cnt [MAX_DATASETS];
     wire [119:0] match_vector;
     wire [MAX_DATASETS*4-1:0] match_cnt_vec;
@@ -614,11 +626,12 @@ endgenerate
 assign read_reg[4] = { {(REG_DATA_WIDTH-MAX_DATASETS*4){1'b0}}, match_cnt_vec};
 assign read_reg[0] = match_vector[63:0];
 assign read_reg[1] = match_vector[119:64];
-assign read_reg[2] = {32'h55555555, {(REG_DATA_WIDTH-52){1'b0}}, state_internal};
+assign read_reg[2] = {32'h55555555, {(REG_DATA_WIDTH-56){1'b0}}, state_internal};
 assign read_reg[3] = {{(REG_DATA_WIDTH-40){1'b0}}, status};
 
 
-RVCell #(.REG_DATA_WIDTH(REG_DATA_WIDTH), 
+RVCell #(.RVC_ID(RVC_ID),
+         .REG_DATA_WIDTH(REG_DATA_WIDTH), 
          .MAX_DATASETS(MAX_DATASETS),
          .COUNT_MATCHES(COUNT_MATCHES | LIST_FAILURES),
          .LIST_MATCHES(LIST_MATCHES),
