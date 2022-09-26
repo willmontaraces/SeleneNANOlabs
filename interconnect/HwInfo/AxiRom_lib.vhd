@@ -49,7 +49,7 @@ package libaxirom is
       rst_n:            in std_logic;
       axi_in:           in axi_mosi_type;
       axi_out:          out axi_somi_type;
-      interrupt:        out std_logic
+      acc_sw_reset_n:        out std_logic
     );  
   end component;
 
@@ -85,7 +85,7 @@ package libaxirom is
       S_AXI_BVALID_o: out std_logic;
       S_AXI_BREADY_i: in std_logic;
       S_AXI_BRESP_o: out std_logic_vector(1 downto 0);
-      INTERRUPT: out std_logic
+      acc_sw_reset_n: out std_logic
     );
     end component;
     

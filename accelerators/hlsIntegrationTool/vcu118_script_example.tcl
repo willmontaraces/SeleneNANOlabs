@@ -34,7 +34,7 @@ add_files -tb ../src/test_cpu.cpp -cflags "-D [lindex $argv 2] -Wno-unknown-prag
 add_files -tb ../src/test_file.cpp -cflags "-D [lindex $argv 2] -Wno-unknown-pragmas" -csimflags "-Wno-unknown-pragmas"
 add_files -tb ../src/test_kernel.cpp -cflags "-D [lindex $argv 2] -Wno-unknown-pragmas" -csimflags "-Wno-unknown-pragmas"
 add_files -tb ../src/test_print.cpp -cflags "-D [lindex $argv 2] -Wno-unknown-pragmas" -csimflags "-Wno-unknown-pragmas"
-open_solution "[lindex $argv 2]" -flow_target vivado
+open_solution "[lindex $argv 2]" -flow_target vitis
 set_part {xcvu9p-flga2104-2L-e}
 create_clock -period 3.33 -name default
 config_interface -default_slave_interface s_axilite -m_axi_alignment_byte_size 64 -m_axi_latency 64 -m_axi_max_widen_bitwidth 512 -m_axi_offset slave

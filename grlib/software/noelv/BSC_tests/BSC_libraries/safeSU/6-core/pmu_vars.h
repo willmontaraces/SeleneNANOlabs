@@ -252,14 +252,24 @@
 
 #define PMUCFG1 (_PMU_MCCU_RDC[0]) // PMU configuration register 1
 
-#define PMU_QUOTA_REM0 (_PMU_MCCU_QUOTA[4]) // Quota current remaining for core 0
-#define PMU_QUOTA_REM1 (_PMU_MCCU_QUOTA[5]) // Quota current remaining for core 1
-#define PMU_QUOTA_REM2 (_PMU_MCCU_QUOTA[6]) // Quota current remaining for core 2
-#define PMU_QUOTA_REM3 (_PMU_MCCU_QUOTA[7]) // Quota current remaining for core 3
+#define PMU_QUOTA_SET0 (_PMU_MCCU_QUOTA[0]) // Quota set register 
+#define PMU_QUOTA_SET1 (_PMU_MCCU_QUOTA[1]) // Quota set register 
+#define PMU_QUOTA_SET2 (_PMU_MCCU_QUOTA[2]) // Quota set register 
+#define PMU_QUOTA_SET3 (_PMU_MCCU_QUOTA[3]) // Quota set register 
+#define PMU_QUOTA_SET4 (_PMU_MCCU_QUOTA[4]) // Quota set register 
+#define PMU_QUOTA_SET5 (_PMU_MCCU_QUOTA[5]) // Quota set register 
 
-#define EVENT_WEIGHT_REG0 (_PMU_MCCU_QUOTA[8]) // Event weight register 0 (input 0 to 3)
-#define EVENT_WEIGHT_REG1 (_PMU_MCCU_QUOTA[9]) // Event weight register 1 (input 4 to 7)
-#define EVENT_WEIGHT_REG2 (_PMU_MCCU_QUOTA[10]) // Event weight register 1 (input 4 to 7)
+#define PMU_QUOTA_REM0 (_PMU_MCCU_QUOTA[6]) // Quota current remaining for core 0
+#define PMU_QUOTA_REM1 (_PMU_MCCU_QUOTA[7]) // Quota current remaining for core 1
+#define PMU_QUOTA_REM2 (_PMU_MCCU_QUOTA[8]) // Quota current remaining for core 2
+#define PMU_QUOTA_REM3 (_PMU_MCCU_QUOTA[9]) // Quota current remaining for core 3
+#define PMU_QUOTA_REM4 (_PMU_MCCU_QUOTA[10]) // Quota current remaining for core 3
+#define PMU_QUOTA_REM5 (_PMU_MCCU_QUOTA[11]) // Quota current remaining for core 3
+
+#define EVENT_WEIGHT_REG0 (_PMU_MCCU_QUOTA[12]) // Event weight register 0 (input 0 to 3)
+#define EVENT_WEIGHT_REG1 (_PMU_MCCU_QUOTA[13]) // Event weight register 1 (input 4 to 7)
+#define EVENT_WEIGHT_REG2 (_PMU_MCCU_QUOTA[14]) // Event weight register 2 (input 8 to 12)
+
 
 #define _PMU_RDC_IV (_PMU_REG_TYPE(PMU_ADDR + BASE_RDC_VECT * R2A))
 #define PMU_RDC_IV (_PMU_RDC_IV[0])

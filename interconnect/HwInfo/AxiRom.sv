@@ -28,14 +28,13 @@ module AxiRom
     output wire [1:0]                    S_AXI_RRESP_o,
     output wire                          S_AXI_RVALID_o,
     input  wire                          S_AXI_RREADY_i,
-    output wire                          INTERRUPT // or whatever output the rootvoter produces
-
+    output logic                         acc_sw_reset_n // or whatever output the rootvoter produces                        
 );
     
     
     localparam READ_LOW_ADR  = 0;
     localparam READ_HIGH_ADR = REGNUM;
-
+    localparam CMD_ADR       = 31;
     localparam ADR_MASK = { {(C_S_AXI_ADDR_WIDTH-8){1'b0}}, {8{1'b1}} };
     localparam integer AXI_ALIGN_FACTOR = C_S_AXI_DATA_WIDTH/REG_DATA_WIDTH;
     localparam REG_DATA_BYTES = REG_DATA_WIDTH / 8;
@@ -182,14 +181,25 @@ module AxiRom
     begin
       if ( S_AXI_ARESETN_i == 1'b0 )
         begin : reset_all
-            // place your reset logic here (if any)
+          acc_sw_reset_n <= 1'b0;
         end 
       else begin
-        if (slv_reg_wren)
-          begin : strobes
-            // place your write logic here (if any)
-          end 
-       end
+        
+        if (S_AXI_ARESETN_i == 1'b1 & acc_sw_reset_n== 1'b0) begin
+          acc_sw_reset_n <= 1'b1;
+        
+        end else if (slv_reg_wren) begin : strobes
+            integer write_address, offset;
+            
+            write_address = axi_awaddr[ADDR_MSB:ADDR_LSB];      //register index
+            if (write_address == CMD_ADR && S_AXI_WSTRB_i[REG_DATA_BYTES-1:0] != 0 ) begin
+                if (S_AXI_WDATA_i[3:0]==4'b1111) begin          
+                    acc_sw_reset_n <= 1'b0;
+                end
+            end
+            
+        end 
+      end
     end
           
 
@@ -323,7 +333,24 @@ module AxiRom
         end
     end    
 
-   
+   // // Output Interrupt to make ACC SW RESET
+   //  always @( posedge S_AXI_ACLK_i)
+   //  begin
+   //    if ( S_AXI_ARESETN_i == 1'b0 )
+   //      begin
+   //        acc_sw_reset_n  <= 0;
+   //      end 
+   //    else
+   //      begin    
+   //        // When there is a valid read address (S_AXI_ARVALID_i) with 
+   //        // acceptance of read address by the slave (axi_arready), 
+   //        // output the read dada 
+   //        if (slv_reg_rden && reg_data_out == 0X56777777) 
+   //          begin
+   //            axi_rdata <= reg_data_out;     // register read data
+   //          end   
+   //      end
+   //  end  
    
 
 

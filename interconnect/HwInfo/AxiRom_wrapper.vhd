@@ -20,7 +20,7 @@ entity AxiRom_wrapper is
         rst_n:            in std_logic;
         axi_in:           in axi_mosi_type;
         axi_out:          out axi_somi_type;
-        interrupt:        out std_logic
+        acc_sw_reset_n:        out std_logic
     );  
 end entity;
 
@@ -94,7 +94,7 @@ ROM_inst : AxiRom
     S_AXI_BVALID_o  => rv_slv_out.s_axi_control_bvalid,
     S_AXI_BREADY_i  => rv_slv_in.s_axi_control_bready,
     S_AXI_BRESP_o   => rv_slv_out.s_axi_control_bresp,
-    INTERRUPT       => interrupt    
+    acc_sw_reset_n    => acc_sw_reset_n    
   );
 
 

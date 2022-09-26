@@ -1,0 +1,5 @@
+bsc_lightlock/hdl/lightlock_pkg.vhd
+lightlock_module.vhd
+apb_wrapper_lightlock.vhd
+bsc_lightlock/hdl/apb_lightlock.vhd
+bsc_lightlock/hdl/staggering/staggering_handler.vhd

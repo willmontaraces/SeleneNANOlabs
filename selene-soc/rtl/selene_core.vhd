@@ -38,13 +38,8 @@ use gaisler.ahbtbp.all;
 library interconnect;
 use interconnect.libnoc.all;
 use interconnect.libaxirom.all;
---library accelerators;
---use accelerators.libaccel.all;
---use accelerators.librtlacc.all;
---use accelerators.vcopy_pkg.all;
---use accelerators.vcopy64_pkg.all;
---use accelerators.vcopy512_pkg.all;
---use accelerators.conv_pkg.all;
+library accelerators;
+use accelerators.conv_pkg.all;
 library safety; 
 use safety.librv.all;
 
@@ -128,7 +123,7 @@ entity selene_core is
 
   --FOR TESTING
     -- pragma translate_off
-;
+    ;
     io_atmi       : in  ahbtbm_ctrl_in_type;
     io_atmo       : out ahbtbm_ctrl_out_type;
     dbg_atmi      : in  ahbtbm_ctrl_in_type;
@@ -237,12 +232,19 @@ architecture rtl of selene_core is
   signal acc_mem_aximi     : axi_somi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);
   signal acc_mem_aximo_wide : axi4wide_mosi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);
   signal acc_mem_aximi_wide : axiwide_somi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);
+  signal acc_sw_reset_n      : std_ulogic;
+  signal acc_rst_n : std_ulogic;
 
     signal ffi_clk : STD_LOGIC;
     signal ffi_rst : STD_LOGIC;
     signal ffi_gpio_in : STD_LOGIC_VECTOR ( 31 downto 0 );
     signal rstboardn      : std_ulogic;
 
+  --mem_monitor wires from mem_sys to gpp--
+  signal mem_sniff_coreID_read_pending_int : std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+  signal mem_sniff_coreID_read_serving_int : std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+  signal mem_sniff_coreID_write_pending_int : std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+  signal mem_sniff_coreID_write_serving_int : std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
 
     
     --| XXXX XXXX    XXXX XX      X        X         X
@@ -257,6 +259,7 @@ architecture rtl of selene_core is
     --      0xA - RootVoter
     --      0xB - HSL accelerator     
     --      0xC - SafeSU 
+    --      0xD - SafeDE 
     function format_HWInfo(
             Enabled : integer;
             BaseAddress: std_logic_vector;
@@ -365,6 +368,7 @@ begin
         rstboardn;
   
   rstn_out <= rstn;
+  acc_rst_n <= (rstn and acc_sw_reset_n);
 
   ----------------------------------------------------------------------
   ---  Fault Injector --------------------------------------------------
@@ -419,6 +423,10 @@ end generate;
       mem_apbo      => mem_apbo,
       mem_aximi     => gpp_aximi,
       mem_aximo     => gpp_aximo,
+      mem_sniff_coreID_read_pending_o  => mem_sniff_coreID_read_pending_int,
+      mem_sniff_coreID_read_serving_o  => mem_sniff_coreID_read_serving_int,
+      mem_sniff_coreID_write_pending_o => mem_sniff_coreID_write_pending_int,
+      mem_sniff_coreID_write_serving_o => mem_sniff_coreID_write_serving_int,
       --Interface with xbar lite
       xbar_l_aximi  => xbar_l_aximi(0),
       xbar_l_aximo  => xbar_l_aximo(0),
@@ -479,7 +487,12 @@ end generate;
       ddr4_ten     => ddr4_ten,
       ddr4_cs_n    => ddr4_cs_n,
       ddr4_reset_n => ddr4_reset_n,
-      calib_done   => ddr_calib_done
+      calib_done   => ddr_calib_done,
+      --mem_sniff signals
+      mem_sniff_coreID_read_pending_o  => mem_sniff_coreID_read_pending_int,
+      mem_sniff_coreID_read_serving_o  => mem_sniff_coreID_read_serving_int,
+      mem_sniff_coreID_write_pending_o => mem_sniff_coreID_write_pending_int,
+      mem_sniff_coreID_write_serving_o => mem_sniff_coreID_write_serving_int
     );
 
   io0 : entity work.io_sys
@@ -579,21 +592,18 @@ end generate;
 
     --Rtl accelerator created by vivado HLS
     -- axi_acc_instance0 : vcopy_kernel 
-     -- port map (
-       -- clk                 => clkm,
-       -- rst_n               => rstn,
-       -- axi_control_in      => accel_l_aximo(5), --address is 0xfffc0010 
-       -- axi_control_out     => accel_l_aximi(5),
-       -- axi_to_mem          => acc_mem_aximo(0),
-       -- axi_from_mem        => acc_mem_aximi(0),
-       -- interrupt           => acc_interrupt  
-     -- );
+    --  port map (
+    --    clk                 => clkm,
+    --    rst_n               => acc_rst_n,
+    --    axi_control_in      => accel_l_aximo(0), --address is 0xfffc0010 
+    --    axi_control_out     => accel_l_aximi(0),
+    --    axi_to_mem          => acc_mem_aximo(0),
+    --    axi_from_mem        => acc_mem_aximi(0),
+    --    interrupt           => acc_interrupt  
+    --  );
     
     -- acc_mem_aximi(0)      <= initiator_aximi(1); 
     -- initiator_aximo(1) <= acc_mem_aximo(0);
-
-
-
 
 
     RVC_0_GEN: if(RVC_0_ENABLE = 1) generate
@@ -671,6 +681,142 @@ end generate;
         );  	
     end generate;
 
+--PLACE HOLDER, PLEASE DO NOT REMOVE COMMENTS
+--PLEASE DO NOT ADD MORE CODE BETWEEN THIS, ADD AFTHER OR BEFORE PLACE HOLDER
+     HLSinf_en : if (CFG_HLSINF_EN = 1 and CFG_IN_SYNTHESIS) generate 
+     --Rtl accelerator conv created by vivado HLS
+     axi_acc_conv_instance : conv_kernel 
+       port map (
+         clk                 => clkm,
+         rst_n               => acc_rst_n,
+         axi_control_in      => accel_l_aximo(0), --address is
+         axi_control_out     => accel_l_aximi(0),
+         axi_to_mem          => acc_mem_aximo_wide(0),
+         axi_from_mem        => acc_mem_aximi_wide(0),
+         axi_to_mem_1          => acc_mem_aximo_wide(1),
+         axi_from_mem_1        => acc_mem_aximi_wide(1),
+         axi_to_mem_2          => acc_mem_aximo_wide(2),
+         axi_from_mem_2        => acc_mem_aximi_wide(2),
+         axi_to_mem_3          => acc_mem_aximo_wide(3),
+         axi_from_mem_3        => acc_mem_aximi_wide(3),
+         axi_to_mem_5          => acc_mem_aximo_wide(4),
+         axi_from_mem_5        => acc_mem_aximi_wide(4),
+         axi_to_mem_6          => acc_mem_aximo_wide(5),
+         axi_from_mem_6        => acc_mem_aximi_wide(5),
+         interrupt           => acc_interrupt  
+       );
+     width_converter_conv_mem0: axi_dw_wrapper 
+      generic map(
+        AxiMaxReads =>    1,     
+        AxiSlvPortDataWidth => 128,
+        AxiMstPortDataWidth => AXIDW
+      )
+      port map (
+        clk               => clkm, 
+        rst               => rstn, 
+        axi_component_in  => acc_mem_aximo_wide(0),
+        axi_component_out => acc_mem_aximi_wide(0),
+        axi_from_noc      => acc_mem_aximi(0),
+        axi_to_noc        => acc_mem_aximo(0)
+     );
+ 
+     width_converter_conv_mem1: axi_dw_wrapper 
+      generic map(
+        AxiMaxReads =>    1,     
+        AxiSlvPortDataWidth => 32,
+        AxiMstPortDataWidth => AXIDW
+      )
+      port map (
+        clk               => clkm, 
+        rst               => rstn, 
+        axi_component_in  => acc_mem_aximo_wide(1),
+        axi_component_out => acc_mem_aximi_wide(1),
+        axi_from_noc      => acc_mem_aximi(1),
+        axi_to_noc        => acc_mem_aximo(1)
+     );
+ 
+     width_converter_conv_mem2: axi_dw_wrapper 
+      generic map(
+        AxiMaxReads =>    1,     
+        AxiSlvPortDataWidth => 128,
+        AxiMstPortDataWidth => AXIDW
+      )
+      port map (
+        clk               => clkm, 
+        rst               => rstn, 
+        axi_component_in  => acc_mem_aximo_wide(2),
+        axi_component_out => acc_mem_aximi_wide(2),
+        axi_from_noc      => acc_mem_aximi(2),
+        axi_to_noc        => acc_mem_aximo(2)
+     );
+ 
+     width_converter_conv_mem3: axi_dw_wrapper 
+      generic map(
+        AxiMaxReads =>    1,     
+        AxiSlvPortDataWidth => 128,
+        AxiMstPortDataWidth => AXIDW
+      )
+      port map (
+        clk               => clkm, 
+        rst               => rstn, 
+        axi_component_in  => acc_mem_aximo_wide(3),
+        axi_component_out => acc_mem_aximi_wide(3),
+        axi_from_noc      => acc_mem_aximi(3),
+        axi_to_noc        => acc_mem_aximo(3)
+     );
+ 
+     width_converter_conv_mem5: axi_dw_wrapper 
+      generic map(
+        AxiMaxReads =>    1,     
+        AxiSlvPortDataWidth => 128,
+        AxiMstPortDataWidth => AXIDW
+      )
+      port map (
+        clk               => clkm, 
+        rst               => rstn, 
+        axi_component_in  => acc_mem_aximo_wide(4),
+        axi_component_out => acc_mem_aximi_wide(4),
+        axi_from_noc      => acc_mem_aximi(4),
+        axi_to_noc        => acc_mem_aximo(4)
+     );
+ 
+     width_converter_conv_mem6: axi_dw_wrapper 
+      generic map(
+        AxiMaxReads =>    1,     
+        AxiSlvPortDataWidth => 512,
+        AxiMstPortDataWidth => AXIDW
+      )
+      port map (
+        clk               => clkm, 
+        rst               => rstn, 
+        axi_component_in  => acc_mem_aximo_wide(5),
+        axi_component_out => acc_mem_aximi_wide(5),
+        axi_from_noc      => acc_mem_aximi(5),
+        axi_to_noc        => acc_mem_aximo(5)
+     );
+ 
+      acc_mem_aximi(0)      <= initiator_aximi(1); 
+      initiator_aximo(1) <= acc_mem_aximo(0);
+ 
+      acc_mem_aximi(1)      <= initiator_aximi(2); 
+      initiator_aximo(2) <= acc_mem_aximo(1);
+ 
+      acc_mem_aximi(2)      <= initiator_aximi(3); 
+      initiator_aximo(3) <= acc_mem_aximo(2);
+ 
+      acc_mem_aximi(3)      <= initiator_aximi(4); 
+      initiator_aximo(4) <= acc_mem_aximo(3);
+ 
+      acc_mem_aximi(4)      <= initiator_aximi(5); 
+      initiator_aximo(5) <= acc_mem_aximo(4);
+ 
+      acc_mem_aximi(5)      <= initiator_aximi(6); 
+      initiator_aximo(6) <= acc_mem_aximo(5);
+ 
+      end generate;
+--PLEASE DO NOT ADD MORE CODE BETWEEN THIS, ADD AFTHER OR BEFORE PLACE HOLDER
+--END PLACE HOLDER, PLEASE DO NOT REMOVE COMMENTS
+
     target_aximi(0)    <= mem_aximi; 
     mem_aximo          <= target_aximo(0); 
 
@@ -694,7 +840,6 @@ end generate;
         x"0000000000000000" &
         x"0000000000000000" &
         x"0000000000000000" &
-        x"0000000000000000" &
         
         -- Template for appenging HWInfo descriptors for new cores
         -- format_HWInfo(
@@ -706,27 +851,33 @@ end generate;
                     -- CORE_DEVICE_TYPE (integer: 4 bits)
         -- )
        
+        --HWInfo for SafeDE 
+        format_HWInfo(CFG_SAFEDE_EN,X"FC000500", 
+                        X"00000",
+                        16#6#, CFG_SAFEDE_VERSION,16#4#)& 
+
         --HWInfo for SafeSU 
         format_HWInfo(CFG_SAFESU_EN,X"80100000", 
                         format_safeSU_Features(CFG_SAFESU_EN, CFG_SAFESU_NEV,CFG_SAFESU_NCNT),
                         16#5#, CFG_SAFESU_VERSION,16#3#)& 
+
         --HWInfo for RootVoter 3        
-        format_HWInfo(RVC_3_ENABLE, X"FFFC0400", 
+        format_HWInfo(RVC_3_ENABLE, X"FFFC0500", 
                         format_RVC_Features(RVC_3_ENABLE,  RVC_3_MAX_DATASETS, RVC_3_LIST_FAILURES, RVC_3_LIST_MATCHES, RVC_3_COUNT_MATCHES ), 
                         16#4#,  CFG_RVC_VERSION,    16#2#) &
 
         --HWInfo for RootVoter 2                        
-        format_HWInfo(RVC_2_ENABLE, X"FFFC0300", 
+        format_HWInfo(RVC_2_ENABLE, X"FFFC0400", 
                         format_RVC_Features(RVC_2_ENABLE,  RVC_2_MAX_DATASETS, RVC_2_LIST_FAILURES, RVC_2_LIST_MATCHES, RVC_2_COUNT_MATCHES ), 
                         16#3#,  CFG_RVC_VERSION,    16#2#) &
                         
         --HWInfo for RootVoter 1                        
-        format_HWInfo(RVC_1_ENABLE, X"FFFC0200", 
+        format_HWInfo(RVC_1_ENABLE, X"FFFC0300", 
                         format_RVC_Features(RVC_1_ENABLE,  RVC_1_MAX_DATASETS, RVC_1_LIST_FAILURES, RVC_1_LIST_MATCHES, RVC_1_COUNT_MATCHES ), 
                         16#2#,  CFG_RVC_VERSION,    16#2#) &
                         
         --HWInfo for RootVoter 0
-        format_HWInfo(RVC_0_ENABLE, X"FFFC0100", 
+        format_HWInfo(RVC_0_ENABLE, X"FFFC0200", 
                         format_RVC_Features(RVC_0_ENABLE,  RVC_0_MAX_DATASETS, RVC_0_LIST_FAILURES, RVC_0_LIST_MATCHES, RVC_0_COUNT_MATCHES ), 
                         16#1#,  CFG_RVC_VERSION,    16#2#) &
                         
@@ -744,7 +895,7 @@ end generate;
       rst_n     => rstn, 
       axi_in    => accel_l_aximo(5), 
       axi_out   => accel_l_aximi(5), 
-      interrupt => open
+      acc_sw_reset_n => acc_sw_reset_n
     ); 
 
     

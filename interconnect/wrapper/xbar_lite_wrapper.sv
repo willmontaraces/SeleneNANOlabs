@@ -73,11 +73,11 @@ module axi_xbar_lite_wrapper #(
 
   localparam rule_t [xbar_cfg.NoAddrRules-1:0] AddrMap = '{
 
-	  '{idx: 32'd0, start_addr: 32'hfffc0000, end_addr: 32'hfffc00FF},	//HSL accelerator  
-	  '{idx: 32'd1, start_addr: 32'hfffc0100, end_addr: 32'hfffc01FF},	//Root Voter Cell 0
-	  '{idx: 32'd2, start_addr: 32'hfffc0200, end_addr: 32'hfffc02FF},	//Root Voter Cell 1
-	  '{idx: 32'd3, start_addr: 32'hfffc0300, end_addr: 32'hfffc03FF},	//Root Voter Cell 2
-	  '{idx: 32'd4, start_addr: 32'hfffc0400, end_addr: 32'hfffc04FF},	//Root Voter Cell 3
+	  '{idx: 32'd0, start_addr: 32'hfffc0000, end_addr: 32'hfffc01FF},	//HSL accelerator  
+	  '{idx: 32'd1, start_addr: 32'hfffc0200, end_addr: 32'hfffc02FF},	//Root Voter Cell 0
+	  '{idx: 32'd2, start_addr: 32'hfffc0300, end_addr: 32'hfffc03FF},	//Root Voter Cell 1
+	  '{idx: 32'd3, start_addr: 32'hfffc0400, end_addr: 32'hfffc04FF},	//Root Voter Cell 2
+	  '{idx: 32'd4, start_addr: 32'hfffc0500, end_addr: 32'hfffc05FF},	//Root Voter Cell 3
 	  '{idx: 32'd5, start_addr: 32'hfffc0700, end_addr: 32'hfffc07FF}	//HW info of components connected to AHB2AXI bridge
 	  
   };

@@ -39,6 +39,8 @@ use unisim.all;
 -- BSC library
 library safety;
 use safety.pmu_module.all;
+use safety.lightlock_module.all;
+
 
 use work.config.all;
 use work.selene.all;
@@ -76,6 +78,11 @@ entity gpp_sys is
     --Interface with mem_sys
     mem_aximi     : in  axi_somi_type;
     mem_aximo     : out axi4_mosi_type;
+    --Interface with mem_sys
+    mem_sniff_coreID_read_pending_o :  in std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+    mem_sniff_coreID_read_serving_o :  in std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+    mem_sniff_coreID_write_pending_o : in std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+    mem_sniff_coreID_write_serving_o : in std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
     --Interface with accel
     xbar_l_aximi   : in  axi_somi_type;
     xbar_l_aximo   : out axi_mosi_type;
@@ -130,7 +137,8 @@ architecture rtl of gpp_sys is
   --constant pidx_spw(1)  : integer := 6;
   --constant pidx_spw(2)  : integer := 7;
   --constant pidx_spw(3)  : integer := 8;
-  constant nextapb : integer := apbstart_gpp;
+  constant pidx_lightlock : integer := apbstart_gpp;
+  constant nextapb : integer := apbstart_gpp + 1;
   
   -- BSC PMU
   constant nev : integer := CFG_SAFESU_NEV ; --max number of events
@@ -170,9 +178,10 @@ architecture rtl of gpp_sys is
   -- Signals of the PMU
   signal pmu_events : nv_counter_out_vector(ncpu-1 downto 0);
   signal one_hmaster : std_logic_vector (ncpu-1 downto 0); -- one hot encoded hmaster signal
-	
+
   -- rdc contenttion
-  signal ccs_contention : ccs_contention_vector_type((ncpu-1)-1 downto 0); 
+  signal ccs_contention : ccs_contention_vector_type((ncpu-1)-1 downto 0);
+  signal axi_contention : axi_contention_vector_type((MEM_SNIFF_CORES_VECTOR_DEEP*(MEM_SNIFF_CORES_VECTOR_DEEP-1))-1 downto 0);
   signal cpus_ahbmo : ahb_mst_out_vector_type(ncpu-1 downto 0);
 
   --rdc latency
@@ -185,6 +194,7 @@ architecture rtl of gpp_sys is
   signal latency_cause_state, n_latency_cause_state : ccs_latency_cause_state(ncpu-1 downto 0);
   
   signal ccs_latency : ccs_latency_vector_type(ncpu-1 downto 0);
+  signal freeze : std_logic_vector(ncpu-1 downto 0);
   signal hq_mccu :  std_logic_vector(ncpu-1 downto 0);
 
 begin
@@ -254,7 +264,7 @@ begin
       wbmask   => 16#50FF#,
       busw     => AHBDW,
       cmemconf => 0,
-      fpuconf  => 0,
+      fpuconf  => CFG_FPU,
       mulconf => 0,
       disas    => disas,
       ahbtrace => 1,
@@ -291,6 +301,7 @@ begin
       cnt       => pmu_events, -- signals for PMU
       -- Bus ahbmo from all cores 
       cpus_ahbmo => cpus_ahbmo,
+      freeze => freeze,
 
       hq_mccu    => hq_mccu
       );
@@ -395,7 +406,7 @@ begin
     scantest  => 0,
     vendor    => VENDOR_GAISLER,
     device    => GAISLER_AHB2AXI,
-    bar0      => 16#3000ff83#, --2048 addressable directions AHB I/O without prefetch or cache
+    bar0      => ahb2ahb_iobar(16#C00#, 16#FF8#), --2048 addressable directions AHB I/O
     bar1      => 0,
     bar2      => 0,
     bar3      => 0
@@ -473,7 +484,9 @@ gen_safeSU : if CFG_SAFESU_EN /= 0 generate
   ahb_latency_and_contention_inst : ahb_latency_and_contention
   generic map(
       ncpu => ncpu,  -- active cores
-      nout => nev --number of outputs to crossbar
+      nout => nev, --number of outputs to crossbar
+      naxi_deep => MEM_SNIFF_CORES_VECTOR_DEEP,  -- Width of dniff cores vector
+      naxi_ccs => CFG_SAFESU_AHBMST -- number of used signals in mem_sniff vector
       )
   port map(
       rstn           => rstn,
@@ -482,6 +495,12 @@ gen_safeSU : if CFG_SAFESU_EN /= 0 generate
       ahbmi          => ahbmi,
       cpus_ahbmo     => cpus_ahbmo,    -- cpu ahb master signals
       ahbsi_hmaster  => ahbsi.hmaster,
+      -- mem_sniff signals
+      mem_sniff_coreID_read_pending_o => mem_sniff_coreID_read_pending_o,
+      mem_sniff_coreID_read_serving_o => mem_sniff_coreID_read_serving_o,
+      mem_sniff_coreID_write_pending_o => mem_sniff_coreID_write_pending_o,
+      mem_sniff_coreID_write_serving_o => mem_sniff_coreID_write_serving_o,
+      -- PMU events
       pmu_events     => pmu_events,    -- Pulse signals for different events such dcmiss, icmiss, bpmiss an insturction count
       dcl2_events    => (others => '0'), -- TODO: Do we need it for GLP? 
       -- PMU input
@@ -509,4 +528,61 @@ gen_safeSU : if CFG_SAFESU_EN /= 0 generate
     ahbso              => ahbso(hsidx_pmu),
     HQ_MCCU            => hq_mccu);
     end generate gen_safeSU;
+
+	        -- SAFESU disabled
+   nogen_safeSU : if CFG_SAFESU_EN = 0 generate
+     hq_mccu <= (others => '0');
+   end generate nogen_safeSU;
+
+
+
+  -----------------------------------------------------------------------
+  --- SafeDE (light lockstep)  ------------------------------------------
+  -----------------------------------------------------------------------
+  -- In this instanciation SafeDE is coupling system cores 0 and 1 
+  
+  gen_safeDE : if CFG_SAFEDE_EN /= 0 generate
+     apb_lightlock_inst : apb_wrapper_lightlock
+       generic map( 
+           -- apb generics
+           pindex    => pidx_lightlock,
+           pirq      => 14,
+           paddr     => 5,             -- 0x600 + APB base address
+           pmask     => 16#fff#,       -- 256 bytes
+           -- Lockstep
+           lanes_number         => 2,
+           register_input       => 0,
+           register_output      => 0,
+           en_cycles_limit      => 500, 
+           min_staggering_init  => 20
+           )
+       port map( 
+           -- apb signals
+           rstn     => rstn,
+           clk      => clkm,
+           apbi_i   => apbi(pidx_lightlock),
+           apbo_o   => apbo(pidx_lightlock),
+           -- Lockstep signals
+           icnt1_i  => pmu_events(2).icnt,
+           icnt2_i  => pmu_events(3).icnt, 
+           stall1_o => freeze(2),
+           stall2_o => freeze(3)
+           );
+
+   cpu_freeze_top1 : for i in 0 to 1 generate
+        freeze(i) <= '0';
+   end generate;
+   gen_freeze_six_core : if (ncpu > 4) generate
+     cpu_freeze_top2 : for i in 4 to ncpu-1 generate --for the six-core version
+          freeze(i) <= '0';
+     end generate;
+    end generate gen_freeze_six_core;
+  end generate gen_safeDE;
+  
+  nogen_safeDE : if CFG_SAFEDE_EN = 0 generate
+     cpu_freeze_nogen : for i in 0 to ncpu-1 generate
+          freeze(i) <= '0';
+     end generate;
+  end generate nogen_safeDE;
+
 end;

@@ -82,6 +82,46 @@ package libnoc is
   type axi_mosi_vector_type is array (natural range <>) of axi_mosi_type; 
   type axi4_mosi_vector_type is array (natural range <>) of axi4_mosi_type;
 
+  -- AXI Memory interface sniffer (Mem_sniff)-------------------------------------------
+  component mem_monitor is
+  generic(
+    AXI_ID_WIDTH : integer;
+    NUM_CORES : integer;
+    NUM_INITIATORS : integer; 
+    MAX_PENDING_REQ : integer
+  );
+  port (
+    clkm: in std_ulogic;
+    rstn: in std_ulogic;
+    -- AXI bus signals
+    ar_valid : in std_logic;
+    ar_id  : in unsigned (AXI_ID_WIDTH-1 downto 0);
+    ar_qos  : in unsigned (3 downto 0);
+    ar_ready : in std_logic;
+    
+    r_valid  : in std_logic;
+    r_id  : in unsigned (AXI_ID_WIDTH-1 downto 0);
+    r_last  : in std_logic;
+    r_ready  : in std_logic;
+    
+    aw_valid : in std_logic;
+    aw_id : in unsigned (AXI_ID_WIDTH-1 downto 0);
+    aw_qos : in unsigned (3 downto 0);
+    aw_ready : in std_logic;
+
+    b_valid  : in std_logic;
+    b_id  : in unsigned (AXI_ID_WIDTH-1 downto 0);
+    b_ready  : in std_logic;
+    
+    -- AXI monitor pending and serving signals
+    read_pending_o : out std_ulogic_vector(NUM_CORES - 1 downto 0);
+    read_serving_o : out std_ulogic_vector(NUM_CORES - 1 downto 0);
+    write_pending_o : out std_ulogic_vector(NUM_CORES - 1 downto 0);
+    write_serving_o : out std_ulogic_vector(NUM_CORES - 1 downto 0)
+  );   
+  end component;
+  -- END AXI Memory interface sniffer (Mem_sniff)-------------------------------------------
+
   component axi_noc is
   generic(
     NoInitiators  : integer;

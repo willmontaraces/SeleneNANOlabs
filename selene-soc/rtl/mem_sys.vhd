@@ -5,6 +5,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 library grlib, techmap;
 use grlib.amba.all;
@@ -19,6 +20,11 @@ library gaisler;
 use gaisler.misc.all;
 use gaisler.l2cache.all;
 use gaisler.memctrl.all;
+
+library interconnect; --for axi_mem_monitor
+use interconnect.libnoc.all;
+use interconnect.libnoc_pkg.all;
+
 -- pragma translate_off
 use gaisler.sim.all;
 
@@ -51,6 +57,10 @@ entity mem_sys is
     apbi         : in    apb_slv_in_vector;
     aximi        : out   axi_somi_type;   -- see ../rtl/selene.vhd package file
     aximo        : in    axi4_mosi_type;
+    mem_sniff_coreID_read_pending_o : out std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+    mem_sniff_coreID_read_serving_o : out std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+    mem_sniff_coreID_write_pending_o : out std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+    mem_sniff_coreID_write_serving_o : out std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
     -- DDR4 (MIG)
     ddr4_dq      : inout std_logic_vector(63 downto 0);
     ddr4_dqs_c   : inout std_logic_vector(7 downto 0);  -- Data Strobe
@@ -133,6 +143,7 @@ architecture rtl of mem_sys is
   signal migrstn : std_ulogic;
   signal calib   : std_ulogic;
   signal aximo_l : axi_mosi_type;
+  signal aximi_o : axi_somi_type;
 
   -- Clocks and Reset
   signal clkm   : std_ulogic := '0';
@@ -171,6 +182,9 @@ begin
   migrstn    <= rstn;
   mig_clkout <= clkm;
   calib_done <= calib;
+
+  -- For reading output port with vhdl-2002
+  aximi <= aximi_o;
 
   -- For designs that have PAR connected from the FPGA to a component, SODIMM, or UDIMM,
   -- the PAR output of the FPGA should be driven low using an SSTL12 driver to ensure it
@@ -220,7 +234,7 @@ begin
           ddr4_ui_clk_sync_rst => open,
           rst_n_syn            => migrstn,
           rst_n_async          => rstraw,
-          aximi                => aximi,
+          aximi                => aximi_o,
           aximo                => aximo,
           -- Misc
           ddr4_ui_clkout1      => clkm,
@@ -241,7 +255,7 @@ begin
           clk  => clkm,
           rst  => rstn,
           axisi=> aximo_l,
-          axiso=> aximi
+          axiso=> aximi_o
           );
 
       aximo_l.aw.id    <= aximo.aw.id;
@@ -354,7 +368,7 @@ begin
     end generate ahbram_gen;
 
     -- Drive signals when MIG/mig model is not instantiated
-    aximi        <= aximi_none;
+    aximi_o        <= aximi_none;
     -- Tie-Off DDR4 Signals
     ddr4_addr    <= (others => '0');
     ddr4_we_n    <= '0';
@@ -378,6 +392,51 @@ begin
     -- no_fake_mig_gen :
     ahbso(1) <= ahbs_none;
   end generate no_mig_gen;
+
+
+  ----------------------------------------------------------------------
+  ---  MEM MONITOR  ----------------------------------------------------
+  ----------------------------------------------------------------------
+  mem_monitor_inst : mem_monitor
+  generic map (
+    AXI_ID_WIDTH => AXI_ID_WIDTH,
+    NUM_CORES => MEM_SNIFF_CORES_VECTOR_DEEP,
+    NUM_INITIATORS => MEM_SNIFF_INITIATORS_VECTOR_DEEP,
+    MAX_PENDING_REQ => MEM_SNIFF_MAX_PENDING_REQ
+    )
+  port map(
+    clkm         => clkm,
+    rstn         => rstn,
+    -- AXI bus signals
+    ar_valid => aximo.ar.valid,
+    ar_id    => "0000",--unsigned(aximo.ar.id),
+    ar_qos   => unsigned(aximo.ar.qos),
+    ar_ready => aximi_o.ar.ready,
+    
+    r_valid  => aximi_o.r.valid,
+    r_id     => "0000",--unsigned(aximi_o.r.id),
+    r_last   => aximi_o.r.last,
+    r_ready  => aximo.r.ready,
+    
+    aw_valid => aximo.aw.valid,
+    aw_id    => "0000",--unsigned(aximo.aw.id),
+    aw_qos   => unsigned(aximo.aw.qos),
+    aw_ready => aximi_o.aw.ready,
+
+    b_valid  => aximi_o.b.valid,
+    b_id     => "0000",--unsigned(aximi_o.b.id),
+    b_ready  => aximo.b.ready,
+    
+    -- AXI monitor pending and serving signals
+    read_pending_o  => mem_sniff_coreID_read_pending_o,
+    read_serving_o  => mem_sniff_coreID_read_serving_o,
+    write_pending_o => mem_sniff_coreID_write_pending_o,
+    write_serving_o => mem_sniff_coreID_write_serving_o
+
+  );
+  ----------------------------------------------------------------------
+  ---  END MEM MONITOR  ------------------------------------------------
+  ----------------------------------------------------------------------
 
 end;
 

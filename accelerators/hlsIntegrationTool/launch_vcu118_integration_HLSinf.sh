@@ -1,82 +1,72 @@
 #!/bin/bash
 
+usage() {   echo "Usage: ./launch_vcu118_integration_HLSinf.sh <DEBUG>"
+      echo
+      1>&2; exit 1;
+    }
+
 # exit when any command fails
 set -e
 
-# Base working directory i.e. $HOME
-BaseDir=$HOME
+# Debug mode by default, all prints are set
+DEBUG=$1
 
+if [ -z "$1" ]; then
+  DEBUG=1
+fi
 # Implementation name i.e. conv
 imple_name=conv
 # Top file module name i.e. k_conv2D
 top_name=k_conv2D
 # Main selene project folder i.e. selene-hardware
-selene_folder_name=selene-hardware_accelerators_axi4
-selene_project_base_dir=${BaseDir}/${selene_folder_name}
+selene_project_base_dir=${PWD}/../../
 
 #Main hls accelerator folder name i.e. HLSinf
-hls_folder_name=/Desktop/HLSinf_yolo_new
+hls_folder_name=accelerators/HLSinf
+hls_folder_base_dir=${selene_project_base_dir}$hls_folder_name
 
 # This folder normally contains a file called ".project" i.e. project/HLSinf
 hls_project_base_dir=project/HLSinf
 # Folder where other solutions are allocated
-hls_project_solutions_dir=${BaseDir}${hls_folder_name}/${hls_project_base_dir}
-hls_project_scripts_dir=${BaseDir}${hls_folder_name}/scripts
-# Main solution name to copy files, directives and constrains from. i.e. solution1
-hls_solution_name=AlveoU200
+hls_project_solutions_dir=${hls_folder_base_dir}/${hls_project_base_dir}
+hls_project_scripts_dir=${hls_folder_base_dir}/scripts
 
-usage() {   echo "\n\nPLEASE PROVIDE A SOLUTION NAME: \"hls_solution_name=\""
-      echo
-      1>&2; exit 1;
-    }
-
-chmod 755 setenv_2020.2.sh
-source ./setenv_2020.2.sh
-cd $hls_project_solutions_dir
-
-#Create new solution folder and script.tcl
-CHECK=$(ls | grep "${hls_solution_name}" | wc -l)
-if [ $CHECK -eq "0"  ]; then
-    usage
+if [ $DEBUG -ne "1"  ]; then
+    exec > /dev/null
 fi
 
-CHECK=$(ls | grep "pyscript2.py" | wc -l)
+cd $selene_project_base_dir
+# git clone https://github.com/PEAK-UPV/HLSinf.git $hls_folder_base_dir
+cd $hls_folder_base_dir
+# git checkout develop
+# git checkout 57291dd84be2c5c264fd96e7a91dd287dac5ffce
+
+CHECK=$(ls | grep -w "scripts" | wc -l)
+if [ $CHECK -ne "1"  ]; then
+    git submodule update --init --recursive
+fi
+
+
+CHECK=$(ls | grep -w "pyscript2.py" | wc -l)
 if [ $CHECK -ne "0"  ]; then
     rm pyscript2.py
 fi
+touch src/conv2D_out.h
 cat << EOF > pyscript2.py
 #!/usr/bin/python
 import sys
 
-hls_solution_name = sys.argv[1]
-hls_project_solutions_dir = sys.argv[2]
-hls_project_scripts_dir = sys.argv[3]
+hls_folder_base_dir = sys.argv[1]
 
-with open(str(hls_project_solutions_dir) + '/vcu118/script.tcl', 'w') as filename_out:  # Outfile name changed
-    with open(str(hls_project_scripts_dir) + '/alveo_u200_csynth.tcl', 'r') as filename_in:
+with open(str(hls_folder_base_dir) + '/src/conv2D_out.h', 'w') as filename_out:  # Outfile name changed
+    with open(str(hls_folder_base_dir) + '/src/conv2D.h', 'r') as filename_in:
         Lines = filename_in.readlines()
         for line in Lines:
-            if(line.startswith("open_solution")):
-                newlines = ('open_solution "vcu118" -flow_target vivado\n')
+            if(line.startswith("#define HLSINF_1_15")):
+                newlines = ('//#define HLSINF_1_15\n')
                 filename_out.write(newlines)
-            elif(line.startswith("set_part")):
-                newlines = ('set_part {xcvu9p-flga2104-2L-e}\n')
-                filename_out.write(newlines)
-            elif(line.startswith("create_clock")):
-                newlines = ('create_clock -period 3.33 -name default\n')
-                filename_out.write(newlines)
-            elif(line.startswith("source")):
-                newlines = ('#source "'+str(hls_project_solutions_dir)+'/vcu118/directives.tcl"\n')
-                filename_out.write(newlines)
-            elif(line.startswith("csim_design")):
-                newlines = ('# '+str(line)+'\n')
-                filename_out.write(newlines)
-            elif(line.startswith("cosim_design")):
-                newlines = ('# '+str(line)+'\n')
-                filename_out.write(newlines)
-            elif(line.startswith("export_design")):
-                filename_out.write(line)
-                newlines = ('\nexit\n')
+            elif(line.startswith("//#define HLSINF_1_0")):
+                newlines = ('#define HLSINF_1_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE\n')
                 filename_out.write(newlines)
             else:
                 filename_out.write(line)
@@ -84,38 +74,98 @@ with open(str(hls_project_solutions_dir) + '/vcu118/script.tcl', 'w') as filenam
 filename_out.close()
 EOF
 
-CHECK=$(ls | grep "vcu118" | wc -l)
-if [ $CHECK -ne "0"  ]; then
-    rm -r vcu118
-fi
-
-CHECK=$(ls | grep "vcu118_export" | wc -l)
-if [ $CHECK -ne "0"  ]; then
-    rm -r vcu118_export
-fi
-
-mkdir vcu118
-touch vcu118/script.tcl
-# cp ${hls_solution_name}/directives.tcl vcu118/directives.tcl
 chmod 755 pyscript2.py
-./pyscript2.py ${hls_solution_name} ${hls_project_solutions_dir} ${hls_project_scripts_dir}
-CHECK=$(ls | grep "pyscript2.py" | wc -l)
+./pyscript2.py ${hls_folder_base_dir}
+rm pyscript2.py
+rm src/conv2D.h
+mv src/conv2D_out.h src/conv2D.h
+
+touch scripts/vcu118_csynth.tcl
+CHECK=$(ls | grep -w "pyscript2.py" | wc -l)
 if [ $CHECK -ne "0"  ]; then
     rm pyscript2.py
 fi
-#Export the impl accelerator to vcu118 target device
-cd ..
-vitis_hls -f ${hls_project_solutions_dir}/vcu118/script.tcl ${hls_solution_name}
-cd $hls_project_solutions_dir
-mkdir vcu118_export
-unzip -d ./vcu118_export/ ./vcu118/impl/export.zip
+cat << EOF > pyscript2.py
+#!/usr/bin/python
+import sys
 
+hls_project_scripts_dir = sys.argv[1]
+
+with open(str(hls_project_scripts_dir) + '/vcu118_csynth.tcl', 'w') as filename_out:  # Outfile name changed
+    newlines = ('open_project HLSinf\n'
+                'set_top k_conv2D\n'
+                'add_files ../src/add.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/add_data.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/stm.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/conv2D.h -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/cvt.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/direct_convolution.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/dws_convolution.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/join_split.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/k_conv2D.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/mul.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/padding.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/pooling.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/read.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/relu.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/serialization.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/winograd_convolution.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/write.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files ../src/batch_normalization.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/data_test.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/test_arguments.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/test_buffers.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/test_check.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/test_conv2D.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/test_conv2D.h -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/test_cpu.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/test_file.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/test_kernel.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'add_files -tb ../src/test_print.cpp -cflags "-D [lindex \$argv 2]"\n'
+                'open_solution "[lindex \$argv 2]" -flow_target vitis\n'
+                'set_part {xcvu9p-flga2104-2L-e}\n'
+                'create_clock -period 3.33 -name default\n'
+                'config_interface -default_slave_interface s_axilite -m_axi_alignment_byte_size 64 -m_axi_latency 64 -m_axi_max_widen_bitwidth 512 -m_axi_offset slave\n'
+                'config_rtl -register_reset_num 3\n'
+                '# source "./HLSinf/vcu118/directives.tcl"\n'
+                '# csim_design -O -setup\n'
+                'csynth_design\n'
+                '# cosim_design -wave_debug -trace_level all\n'
+                'export_design -rtl verilog -format ip_catalog\n'
+                'exit\n')
+    filename_out.write(newlines)
+filename_out.close()
+EOF
+
+chmod 755 pyscript2.py
+./pyscript2.py ${hls_project_scripts_dir}
+rm pyscript2.py
+
+cd $hls_project_solutions_dir
+CHECK=$(ls | grep -w "vcu118" | wc -l)
+if [ $CHECK -ne "1"  ]; then
+    cd $hls_folder_base_dir
+    chmod +x scripts/setenv_2020.2.sh
+    source scripts/setenv_2020.2.sh
+    cd project
+    vitis_hls -f ../scripts/vcu118_csynth.tcl HLSINF_1_0
+    cd $hls_project_solutions_dir
+    mkdir vcu118
+    cp -a HLSINF_1_0/. vcu118/.
+fi
+
+
+CHECK=$(ls | grep -w "vcu118_export$" | wc -l)
+if [ $CHECK -ne "1"  ]; then
+    mkdir vcu118_export
+    unzip -d ./vcu118_export/ ./vcu118/impl/export.zip
+fi
 
 #Copy needed files in selene-hardware project
 cd $selene_project_base_dir/accelerators
 touch dirs2.txt
 
-CHECK=$(ls | grep "pyscript2.py" | wc -l)
+CHECK=$(ls | grep -w "pyscript2.py" | wc -l)
 if [ $CHECK -ne "0"  ]; then
     rm pyscript2.py
 fi
@@ -149,10 +199,10 @@ mv dirs2.txt dirs.txt
 rm pyscript2.py
 
 
-CHECK=$(find ./${imple_name}/ | grep "./${imple_name}" | wc -l)
+CHECK=$(find ./${imple_name}/ | grep -w "./${imple_name}" | wc -l)
 if [ $CHECK -ne "0"  ]; then
     cd ${imple_name}
-    CHECK=$(find ./src/ | grep "./src" | wc -l)
+    CHECK=$(ls | grep -w "src" | wc -l)
     if [ $CHECK -ne "0"  ]; then
         rm -r ./src
     fi
@@ -186,7 +236,7 @@ fi
 
 #Copy IP-cores
 cd $selene_project_base_dir/grlib/boards/xilinx-vcu118-xcvu9p/
-CHECK=$(ls | grep "acc" | wc -l)
+CHECK=$(ls | grep -w "acc" | wc -l)
 if [ $CHECK -ne "0"  ]; then
     rm -r acc
 fi
@@ -200,13 +250,31 @@ else
     rm -r acc
 fi
 
+#Copy software driver files
+cd $selene_project_base_dir/accelerators/${imple_name}
+CHECK=$(ls | grep -w "software$" | wc -l)
+if [ $CHECK -ne "1"  ]; then
+    mkdir software
+fi
+cd software
+CHECK=$(ls | grep -w "k_conv2D_v1_0$" | wc -l)
+if [ $CHECK -ne "0"  ]; then
+    rm -r k_conv2D_v1_0
+fi
+mkdir k_conv2D_v1_0
+mkdir k_conv2D_v1_0/src 
+cd k_conv2D_v1_0/src
+cp $hls_project_solutions_dir/vcu118_export/drivers/k_conv2D_v1_0/src/xk_conv2d.c .
+cp $hls_project_solutions_dir/vcu118_export/drivers/k_conv2D_v1_0/src/xk_conv2d.h .
+cp $hls_project_solutions_dir/vcu118_export/drivers/k_conv2D_v1_0/src/xk_conv2d_hw.h .
+
 #Generate instance wrapper with python script
 cd $selene_project_base_dir/accelerators/${imple_name}/src
 touch ${imple_name}_pkg.vhd
 touch ${imple_name}_kernel.vhd
 touch ../../../selene-soc/rtl/selene_core2.vhd
 
-CHECK=$(ls | grep "pyscript2.py" | wc -l)
+CHECK=$(ls | grep -w "pyscript2.py" | wc -l)
 if [ $CHECK -ne "0"  ]; then
     rm pyscript2.py
 fi
@@ -613,8 +681,8 @@ with open(str(imple_name) + '_kernel.vhd', 'w') as filename_out:  # Outfile name
                                 '  axi_to_mem'+str(indexSlash)+'.ar.prot  <= acc_mst_out'+str(indexSlash)+'.m00_axi_arprot;\n'
                                 '  axi_to_mem'+str(indexSlash)+'.r.ready  <= acc_mst_out'+str(indexSlash)+'.m00_axi_rready;\n'
                                 ' \n'
-                                '  axi_to_mem'+str(indexSlash)+'.aw.qos   <= "0000";\n'
-                                '  axi_to_mem'+str(indexSlash)+'.ar.qos   <= "0000";\n'
+                                '  axi_to_mem'+str(indexSlash)+'.aw.qos   <= (others => \'0\');\n'
+                                '  axi_to_mem'+str(indexSlash)+'.ar.qos   <= (others => \'0\');\n'
                                 ' \n'
                                 ' -- mst'+str(index)+' AXI4 interface IN\n'
                                 '  acc_mst_in'+str(indexSlash)+'.m00_axi_awready <= axi_from_mem'+str(indexSlash)+'.aw.ready;\n'
@@ -747,7 +815,14 @@ with open('../../../selene-soc/rtl/selene_core2.vhd', 'w') as filename_out:  # O
     with open('../../../selene-soc/rtl/selene_core.vhd', 'r') as filename_in:
         Lines = filename_in.readlines()
         for line in Lines:
-            if(line.startswith("--PLACE HOLDER, PLEASE DO NOT REMOVE COMMENTS")):
+            if(line.startswith("--use accelerators.conv_pkg.all;")):
+                newlines = ('use accelerators.conv_pkg.all;\n')
+                filename_out.write(newlines)
+            elif(line.startswith("--library accelerators;")):
+                newlines = ('library accelerators;\n')
+                filename_out.write(newlines)
+
+            elif(line.startswith("--PLACE HOLDER, PLEASE DO NOT REMOVE COMMENTS")):
                 filename_out.write(line)
                 newlines = ('--PLEASE DO NOT ADD MORE CODE BETWEEN THIS, ADD AFTHER OR BEFORE PLACE HOLDER\n'
                             '     HLSinf_en : if (CFG_HLSINF_EN = 1 and CFG_IN_SYNTHESIS) generate \n'
@@ -755,7 +830,7 @@ with open('../../../selene-soc/rtl/selene_core2.vhd', 'w') as filename_out:  # O
                             '     axi_acc_'+str(imple_name)+'_instance : '+str(imple_name)+'_kernel \n'
                             '       port map (\n'
                             '         clk                 => clkm,\n'
-                            '         rst_n               => rstn,\n'
+                            '         rst_n               => acc_rst_n,\n'
                             '         axi_control_in      => accel_l_aximo(0), --address is\n'
                             '         axi_control_out     => accel_l_aximi(0),\n')
                 filename_out.write(newlines)
@@ -818,16 +893,16 @@ with open('../../../selene-soc/rtl/selene_core2.vhd', 'w') as filename_out:  # O
             print '\nACC INSTANCE DONE! at selene-soc/rtl/selene_core.vhd file'
             print 'PLEASE CHECK the following changes:'
             print ''
-            print '     1) Add the acc pkg at instance at the begining of selene-soc/rtl/selene_core.vhd file:' 
-            print '         \"use accelerators.'+str(imple_name)+'_pkg.all;\"'
-            print '     2) Uncomment the following line at selene-soc/rtl/selene_core.vhd file:'
-            print '         \"signal acc_mem_aximo_wide : axi4wide_mosi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);\"'
-            print '     3) Uncomment the following line at selene-soc/rtl/selene_core.vhd file:'
-            print '         \"signal acc_mem_aximi_wide : axiwide_somi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);\"'
-            print '     4) Check the acc instance at selene-soc/rtl/selene_core.vhd file.'
-            print '     5) Modify the following line at selene-soc/selene-xilinx-vcu118/config.vhd file:'
+            # print '     1) Add the acc pkg at instance at the begining of selene-soc/rtl/selene_core.vhd file:' 
+            # print '         \"use accelerators.'+str(imple_name)+'_pkg.all;\"'
+            # print '     2) Uncomment the following line at selene-soc/rtl/selene_core.vhd file:'
+            # print '         \"signal acc_mem_aximo_wide : axi4wide_mosi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);\"'
+            # print '     3) Uncomment the following line at selene-soc/rtl/selene_core.vhd file:'
+            # print '         \"signal acc_mem_aximi_wide : axiwide_somi_vector_type(0 to CFG_AXI_N_ACCELERATOR_PORTS-1);\"'
+            print '     1) Check the acc instance at selene-soc/rtl/selene_core.vhd file.'
+            print '     2) Modify the following line at selene-soc/selene-xilinx-vcu118/config.vhd file:'
             print '         \"constant CFG_AXI_N_ACCELERATOR_PORTS : integer := CFG_AXI_N_ACCELERATORS + '+str(num_ports-1)+';\"'
-            print '     6) Modify the following line at selene-soc/selene-xilinx-vcu118/config.vhd file:'
+            print '     3) Modify the following line at selene-soc/selene-xilinx-vcu118/config.vhd file:'
             print '         \"constant CFG_AXI_N_INITIATORS : integer := '+str(num_ports+1)+';\"'
         else:
             print '\nERROR! ACC INSTANCE PLACE HOLDER NOT FOUND, PLEASE CHECK selene-soc/rtl/selene_core.vhd file'
@@ -845,3 +920,16 @@ rm pyscript2.py
 cd $selene_project_base_dir/selene-soc/rtl
 rm selene_core.vhd
 mv selene_core2.vhd selene_core.vhd
+
+# # Assign the filename
+# filename="scr/conv2D.h"
+
+# # Take the search string
+# read -p "#define HLSINF_1_15" search
+
+# # Take the replace string
+# read -p "#define HLSINF_1_15" replace
+
+# if [[ $search != "" && $replace != "" ]]; then
+# sed -i "s/$search/$replace/" $filename
+# fi

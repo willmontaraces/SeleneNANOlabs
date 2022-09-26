@@ -47,6 +47,14 @@ proc get_HwInfo { adr } {
             } else {
                 append str "\n\tUnknown Version"
             } 
+        } elseif { $dev_type == 0x4 } {
+            append str "\n\tType:    SafeDE, light-lockstep"
+            append str "\n\tVersion: $dev_version" 
+            append str "\n\tCores Used: 2 and 3" 
+            if {  $dev_version == 0} {
+            } else {
+                append str "\n\tUnknown Version"
+            } 
         } else {
             #NEW CORES
             #append new rules to parse core-specific HW feratures for other dev_types

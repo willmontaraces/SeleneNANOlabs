@@ -12,8 +12,10 @@ use safety.pmu_module.all;
 
 entity ahb_latency_and_contention is
   generic(
-      ncpu : integer := 4;
-      nout : integer := 32 --number of outputs to crossbar
+      ncpu : integer := 6;
+      nout : integer := 32; --number of outputs to crossbar
+      naxi_deep : integer := 16; -- Width of dniff cores vector
+      naxi_ccs : integer := 4 -- number of used sources of axi contention 
       );
   port (
       rstn  : in  std_ulogic;
@@ -21,6 +23,11 @@ entity ahb_latency_and_contention is
       -- AHB bus signals
       ahbmi         : in ahb_mst_in_type;
       cpus_ahbmo    : in ahb_mst_out_vector_type(ncpu-1 downto 0);
+      -- AXI bus signals
+      mem_sniff_coreID_read_pending_o : in std_ulogic_vector(naxi_deep - 1 downto 0);
+      mem_sniff_coreID_read_serving_o : in std_ulogic_vector(naxi_deep - 1 downto 0);
+      mem_sniff_coreID_write_pending_o : in std_ulogic_vector(naxi_deep - 1 downto 0);
+      mem_sniff_coreID_write_serving_o : in std_ulogic_vector(naxi_deep - 1 downto 0);
       -- Bug ?  ahbsi_hmaster : in std_logic_vector(ncpu-1 downto 0);
       ahbsi_hmaster : in std_logic_vector(3 downto 0);
       -- PMU events
@@ -33,9 +40,18 @@ end;
 
 architecture rtl of ahb_latency_and_contention is
 
+    constant axi_ccs_victims : integer := ncpu;  -- number of cores suffering contention
     constant DCL2_ACCESS_EVENT : integer := 2;
     constant DCL2_MISS_EVENT   : integer := 1;
     constant DCL2_HIT_EVENT    : integer := 0; 
+    constant BASE_BASIC : integer := 0;  
+    constant END_BASIC : integer :=(ncpu-1)*7+8;
+    constant BASE_CCS_AHB: integer :=END_BASIC+1;
+    constant END_CCS_AHB: integer :=BASE_CCS_AHB+(ncpu-1)*(ncpu-1)+(ncpu-2);
+    constant BASE_CCS_AXI_W : integer :=END_CCS_AHB+1;
+    constant END_CCS_AXI_W : integer :=(axi_ccs_victims*(naxi_ccs-1)) + BASE_CCS_AXI_W -1;
+    constant BASE_CCS_AXI_R : integer :=END_CCS_AXI_W+1; 
+    constant END_CCS_AXI_R : integer :=(axi_ccs_victims*(naxi_ccs-1)) + BASE_CCS_AXI_R -1;
 
     -- SIGNALS -----------------------------------------------------------------------------------
 
@@ -50,6 +66,7 @@ architecture rtl of ahb_latency_and_contention is
     signal ccs_latency : ccs_latency_vector_type(ncpu-1 downto 0);
     -- Contention outputs
     signal ccs_contention : ccs_contention_vector_type((ncpu*(ncpu-1))-1 downto 0);
+    signal axi_contention : axi_contention_vector_type((naxi_ccs*(naxi_ccs-1))-1 downto 0);
     
     signal dcache_miss    : std_logic_vector(3 downto 0) := (others => '0');
 
@@ -205,8 +222,49 @@ begin
         end generate gen2;
     end generate gen1;
 
+	-- TODO UPDATE WITH AXI EXAMPLE	   
+	---------------------------------------------------------------------------
+    -- 4 CORES AXI CCS EXAMPLE -------------------------------------------------------- 
     ---------------------------------------------------------------------------
-    -- 4 CORES EXAMPLE -------------------------------------------------------- 
+    ----Core 0 contention
+    --ccs_contention(0)  <= cpu_ahb_access(1) and ahbmo(0).hbusreq; --over core 0
+    --ccs_contention(1)  <= cpu_ahb_access(2) and ahbmo(0).hbusreq; --over core 0
+    --ccs_contention(2)  <= cpu_ahb_access(3) and ahbmo(0).hbusreq; --over core 0
+    ----Core 1 contention   
+    --ccs_contention(3)  <= cpu_ahb_access(0) and ahbmo(1).hbusreq; --over core 1
+    --ccs_contention(4)  <= cpu_ahb_access(2) and ahbmo(1).hbusreq; --over core 1
+    --ccs_contention(5)  <= cpu_ahb_access(3) and ahbmo(1).hbusreq; --over core 1
+    ----Core 2 contention   
+    --ccs_contention(6)  <= cpu_ahb_access(0) and ahbmo(2).hbusreq; --over core 2
+    --ccs_contention(7)  <= cpu_ahb_access(1) and ahbmo(2).hbusreq; --over core 2
+    --ccs_contention(8)  <= cpu_ahb_access(3) and ahbmo(2).hbusreq; --over core 2
+    ----Core 3 contention   
+    --ccs_contention(9)  <= cpu_ahb_access(0) and ahbmo(3).hbusreq; --over core 3
+    --ccs_contention(10) <= cpu_ahb_access(1) and ahbmo(3).hbusreq; --over core 3
+    --ccs_contention(11) <= cpu_ahb_access(2) and ahbmo(3).hbusreq; --over core 3
+    ----------------------------------------------------------------------------------------------------------------------
+    -- CONTENTION CALCULATION (AXI bus)--------------------------------------------------------------------------------------
+    ----------------------------------------------------------------------------------------------------------------------
+
+
+    gen5 : for k in 0 to axi_ccs_victims-1 generate
+        gen6 : for l in 0 to naxi_ccs-1 generate
+            gen7 : if l < k generate
+       axi_contention(k*(naxi_ccs-1) + l).write   <= mem_sniff_coreID_write_serving_o(l) and mem_sniff_coreID_write_pending_o(k);
+       axi_contention(k*(naxi_ccs-1) + l).read    <= mem_sniff_coreID_read_serving_o(l) and mem_sniff_coreID_read_pending_o(k);
+            end generate gen7;
+            gen8 : if l > k generate
+       axi_contention(k*(naxi_ccs-1) + l-1).write   <= mem_sniff_coreID_write_serving_o(l) and mem_sniff_coreID_write_pending_o(k);
+       axi_contention(k*(naxi_ccs-1) + l-1).read    <= mem_sniff_coreID_read_serving_o(l) and mem_sniff_coreID_read_pending_o(k);
+            end generate gen8;
+        end generate gen6;
+    end generate gen5;
+
+
+
+
+    ---------------------------------------------------------------------------
+    -- 4 CORES AHB CCS EXAMPLE -------------------------------------------------------- 
     ---------------------------------------------------------------------------
     ----Core 0 contention
     --ccs_contention(0)  <= cpu_ahb_access(1) and ahbmo(0).hbusreq; --over core 0
@@ -233,37 +291,49 @@ begin
     -- This vecotr is a 32 bits std_logic_vector.
 
     -- This signals are assigned no matter how many cores are defined
-    pmu_input(0) <= '1';
-    pmu_input(1) <= '0';
+    pmu_input(BASE_BASIC) <= '1';
+    pmu_input(BASE_BASIC+1) <= '0';
 
     gen_ne : for I in 0 to ncpu-1 generate -- generate normal events
-        pmu_input(I*7+2) <= pmu_events(I).icnt(0);  -- Instruction count pipeline 0
-        pmu_input(I*7+3) <= pmu_events(I).icnt(1);  -- Instruction count pipeline 1
-        pmu_input(I*7+4) <= pmu_events(I).icmiss;   -- Instruction cache miss
-        pmu_input(I*7+5) <= pmu_events(I).itlbmiss;   --Instruction TLB miss
-        pmu_input(I*7+6) <= pmu_events(I).dcmiss;   -- Data chache L1 miss
-        pmu_input(I*7+7) <= pmu_events(I).dtlbmiss;   -- Data TLB miss 
-        pmu_input(I*7+8) <= pmu_events(I).bpmiss;   -- Branch predictor miss
+        pmu_input(BASE_BASIC+I*7+2) <= pmu_events(I).icnt(0);  -- Instruction count pipeline 0
+        pmu_input(BASE_BASIC+I*7+3) <= pmu_events(I).icnt(1);  -- Instruction count pipeline 1
+        pmu_input(BASE_BASIC+I*7+4) <= pmu_events(I).icmiss;   -- Instruction cache miss
+        pmu_input(BASE_BASIC+I*7+5) <= pmu_events(I).itlbmiss;   --Instruction TLB miss
+        pmu_input(BASE_BASIC+I*7+6) <= pmu_events(I).dcmiss;   -- Data chache L1 miss
+        pmu_input(BASE_BASIC+I*7+7) <= pmu_events(I).dtlbmiss;   -- Data TLB miss 
+        pmu_input(BASE_BASIC+I*7+8) <= pmu_events(I).bpmiss;   -- Branch predictor miss
     end generate gen_ne;
 
-    gen_ccse : for n in 0 to ncpu-1 generate -- generate css events
+    gen_ccse : for n in 0 to ncpu-1 generate -- generate ccs events
         gen4 : for I in 0 to ncpu-2 generate -- iterate over ccs signals
         -- Last signal assigned by gen_ne -> ((ncpu-1)*7+8)
         -- (ncpu-1) -> number of ccs signals for each core. 
-         pmu_input(n*(ncpu-1)+I+((ncpu-1)*7+8)+1) <= ccs_contention(n*(ncpu-1)+I).r_and_w; 
+         pmu_input(n*(ncpu-1)+I+BASE_CCS_AHB) <= ccs_contention(n*(ncpu-1)+I).r_and_w; 
          -- read and write contention can be measured individually with
          -- ccs_contention(n - 1).write; ccs_contention(n-1).read; 
         end generate gen4;
     end generate gen_ccse;
 
-   --Last used index
-   --variable last_id : integer := ((ncpu-1)*(ncpu-1)+(ncpu-2)+((ncpu-1)*7+8)+1);
- 
-    gen_fill : for n in (((ncpu-1)*(ncpu-1)+(ncpu-2)+((ncpu-1)*7+8)+1)+1) to (nout-1)  generate -- generate css events
+    gen_axi_write_e : for n in 0 to axi_ccs_victims-1 generate -- generate axi events
+	gen9 : for I in 0 to naxi_ccs -2 generate -- iterate over axi signals
+         pmu_input(n*(naxi_ccs -1)+ I + BASE_CCS_AXI_W) <= axi_contention(n*(naxi_ccs -1)+I).write; 
+         end generate gen9;
+    end generate gen_axi_write_e;
+
+
+    gen_axi_read_e : for n in 0 to axi_ccs_victims-1 generate -- generate axi events
+	gen10 : for I in 0 to naxi_ccs -2 generate -- iterate over axi signals
+         pmu_input(n*(naxi_ccs -1)+I+ BASE_CCS_AXI_R) <= axi_contention(n*(naxi_ccs -1)+I).read; 
+         end generate gen10;
+    end generate gen_axi_read_e;
+
+
+   --Fill unused signals on event vector
+    gen_fill : for n in (END_CCS_AXI_R+1) to (nout-1)  generate -- generate ccs events
          pmu_input(n) <= '0'; 
     end generate gen_fill;
 
--- TODO: review and update on python script instead of comment 
+-- TODO: review and update on python script, update comment
 
 -- |-------|----------------------------|----------|-----------|---------------------------------------------------------------------------------------------------------|
 -- | Index |  Name                      |   Type   |   Source  |    Description                                                                                          |  

@@ -56,6 +56,7 @@ signal intr_MCCU : std_logic_vector(ncpu-1 downto 0);
 signal hardware_quota_active : std_logic;
 
 constant REVISION : integer := 0;
+constant safeSU_nirq : integer := 3+ ncpu;
 -- plug&play configuration:
 -- VENDOR_CONTRIB and BSC_COUNTER imported from devices.vhd
 constant HCONFIG: ahb_config_type := (
@@ -77,12 +78,9 @@ begin
 
 -- unused interrupt signals filled with 0
 
-fill_IRQ_FOR_1: for i in (NAHBIRQ-1) downto 13 generate
+fill_IRQ_FOR_1: for i in ((NAHBIRQ-1)-safeSU_nirq) downto 0  generate
     irqvec(i) <= '0';
 end generate fill_IRQ_FOR_1;
-fill_IRQ_FOR_2: for i in (8-ncpu) downto 0 generate
-    irqvec(i) <= '0';
-end generate fill_IRQ_FOR_2;
 
 ahbso.hconfig <= hconfig;         -- Plug&play configuration
 ahbso.hirq    <= irqvec;          -- Interrupt lines
@@ -126,10 +124,10 @@ pmu_inst: pmu_ahb
 --      ,  hsplit_o    => ahbso.hsplit
         -- PMU signals
         events_i => events_i,
-        intr_overflow_o => irqvec(10),
-        intr_quota_o => irqvec(12),
+        intr_overflow_o => irqvec(29),
+        intr_quota_o => irqvec(31),
         intr_MCCU_o => intr_MCCU,
-        intr_RDC_o => irqvec(11),
+        intr_RDC_o => irqvec(30),
         en_hwquota_o => hardware_quota_active
     );        
 end generate;
@@ -170,16 +168,16 @@ pmu_inst: pmu_ahb
 --      ,  hsplit_o    => ahbso.hsplit
         -- PMU signals
         events_i => events_i,
-        intr_overflow_o => irqvec(10),
-        intr_quota_o => irqvec(12),
+        intr_overflow_o => irqvec(29),
+        intr_quota_o => irqvec(31),
         intr_MCCU_o => intr_MCCU,
-        intr_RDC_o => irqvec(11),
+        intr_RDC_o => irqvec(30),
         en_hwquota_o => hardware_quota_active
     );        
 end generate;
 
 --Routes interrupts to plic if hardware quota is not active (IE: default)
-irqvec(9 downto (10-ncpu)) <= intr_MCCU when hardware_quota_active = '0'
+irqvec(28 downto (29-ncpu)) <= intr_MCCU when hardware_quota_active = '0'
                                         else (others => '0');
 --When hardware quota is active routes PMU interrupt signals directly to AHBCTRL
 HQ_MCCU <= intr_MCCU when hardware_quota_active = '1'

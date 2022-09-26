@@ -14,15 +14,11 @@
  use gaisler.noelv.all;
  use gaisler.noelv.nv_counter_out_vector;
  use gaisler.noelv.nv_counter_out_type;
--- library work;
--- use work.config.all;
--- use work.selene.all;
 
 package pmu_module is
     --TODO I can't get CFG_NCPU from  work.config
     --HACK
     constant PMU_NCPU : integer := 6;
-    constant CB_NSIG : integer := 128; -- crossbar input signals
 
   -- TYPE DEFINITION ---------------------------------------------------------------------------
    
@@ -35,6 +31,12 @@ package pmu_module is
     write   : std_logic;
   end record;
   type ccs_contention_vector_type is array (integer range <>) of ccs_contention_type;
+
+  type axi_contention_type is record
+    read    : std_logic;
+    write   : std_logic;
+  end record;
+  type axi_contention_vector_type is array (integer range <>) of axi_contention_type;
 
   -- This type is used to measure the time from a dcmiss, icmiss or the start of a write request
   -- until the end of these transmissions.
@@ -70,7 +72,7 @@ package pmu_module is
     port (
         rst            : in  std_ulogic;
         clk            : in  std_ulogic;
-        events_vector  : in  std_logic_vector(CB_NSIG-1 downto 0);
+        events_vector  : in  std_logic_vector(nev-1 downto 0);
         ahbsi          : in  ahb_slv_in_type;
         ahbso          : out ahb_slv_out_type;
         --Hardware quota exhausted signals, all zeroes if hardware quota is disabled
@@ -154,7 +156,9 @@ package pmu_module is
   component ahb_latency_and_contention
     generic(
         ncpu : integer := 4;
-        nout : integer := 32 --number of outputs to crossbar
+        nout : integer := 32; --number of outputs to crossbar
+        naxi_deep : integer := 16; -- Width of dniff cores vector
+        naxi_ccs : integer := 4 -- number of masters for axi ccs signals 
         );
     port (
         rstn  : in  std_ulogic;
@@ -163,6 +167,11 @@ package pmu_module is
         ahbmi         : in ahb_mst_in_type;
         cpus_ahbmo    : in ahb_mst_out_vector_type(ncpu-1 downto 0);
         ahbsi_hmaster : in std_logic_vector(3 downto 0);
+        -- mem_sniff signals
+        mem_sniff_coreID_read_pending_o : in std_ulogic_vector(naxi_deep - 1 downto 0);
+        mem_sniff_coreID_read_serving_o : in std_ulogic_vector(naxi_deep - 1 downto 0);
+        mem_sniff_coreID_write_pending_o : in std_ulogic_vector(naxi_deep - 1 downto 0);
+        mem_sniff_coreID_write_serving_o : in std_ulogic_vector(naxi_deep - 1 downto 0);
         -- PMU events
         pmu_events : in nv_counter_out_vector(ncpu-1 downto 0);
         dcl2_events   : in std_logic_vector(10 downto 0);

@@ -17,7 +17,8 @@
 // ========================
 
 //base addres for PMU on SoC
-#define PMU_ADDR 0x80100000
+#define PMU_ADDR (0x80100000)
+#define PLIC_BASE 0xf8000000U
 
 // ========================
 // General pourpose functions
@@ -270,6 +271,7 @@ void pmu_counters_reset(void);
 void pmu_counters_enable(void);
 void pmu_counters_disable(void);
 void pmu_counters_print(const crossbar_event_t * table, unsigned int event_count);
+void pmu_counters_fill_default_descriptions(crossbar_event_t* table, unsigned int event_count);
 
 /* **********************************
           OVERFLOW SUBMODULE
@@ -291,10 +293,12 @@ unsigned int pmu_overflow_get_iv(void);
 void pmu_mccu_enable(void);
 void pmu_mccu_disable(void);
 void pmu_mccu_reset(void);
+void pmu_mccu_enable_HQ(void);
+void pmu_mccu_disable_HQ(void);
 
 unsigned pmu_mccu_set_quota_limit(const unsigned int core,
     const unsigned int quota);
-unsigned int pmu_mccu_get_quota_remaining(unsigned int mask);
+unsigned int pmu_mccu_get_quota_remaining(unsigned int core);
 unsigned pmu_mccu_set_event_weigths(const unsigned int input,
     const unsigned int weigth);
 
@@ -439,6 +443,84 @@ const crossbar_event_t pmu_default_event_table[] = {
         "Latency caused by a data cache miss on core 2"
     }
 };
+
+static const char* counterDescriptions[] = {
+    "0  - Constant HIGH, used for debug purposes or clock cycles", 
+    "1  - Constant LOW, used for debug purposes",
+    "2  - C0 Instruction count pipeline 0",
+    "3  - C0 Instruction count pipeline 1",
+    "4  - C0 Instruction cache miss",
+    "5  - C0 Instruction TLB miss",
+    "6  - C0 Data caches L1 miss",
+    "7  - C0 Data TLB miss",
+    "8  - C0 Branch predictor miss",
+    "9  - C1 Instruction count pipeline 0",
+    "10 - C1 Instruction count pipeline 1",
+    "11 - C1 Instruction cache miss",
+    "12 - C1 Instruction TLB miss",
+    "13 - C1 Data caches L1 miss",
+    "14 - C1 Data TLB miss",
+    "15 - C1 Branch predictor miss",
+    "16 - C2 Instruction count pipeline 0",
+    "17 - C2 Instruction count pipeline 1",
+    "18 - C2 Instruction cache miss",
+    "19 - C2 Instruction TLB miss",
+    "20 - C2 Data caches L1 miss",
+    "21 - C2 Data TLB miss",
+    "22 - C2 Branch predictor miss",
+    "23 - C3 Instruction count pipeline 0",
+    "24 - C3 Instruction count pipeline 1",
+    "25 - C3 Instruction cache miss",
+    "26 - C3 Instruction TLB miss",
+    "27 - C3 Data caches L1 miss",
+    "28 - C3 Data TLB miss",
+    "29 - C3 Branch predictor miss",
+    "30 - C4 Instruction count pipeline 0",
+    "31 - C4 Instruction count pipeline 1",
+    "32 - C4 Instruction cache miss",
+    "33 - C4 Instruction TLB miss",
+    "34 - C4 Data caches L1 miss",
+    "35 - C4 Data TLB miss",
+    "36 - C4 Branch predictor miss",
+    "37 - C5 Instruction count pipeline 0",
+    "38 - C5 Instruction count pipeline 1",
+    "39 - C5 Instruction cache miss",
+    "40 - C5 Instruction TLB miss",
+    "41 - C5 Data caches L1 miss",
+    "42 - C5 Data TLB miss",
+    "43 - C5 Branch predictor miss",
+    "44 - Contention C0 over C1",
+    "45 - Contention C0 over C2",
+    "46 - Contention C0 over C3",
+    "47 - Contention C0 over C4",
+    "48 - Contention C0 over C5",
+    "49 - Contention C1 over C0",
+    "50 - Contention C1 over C2",
+    "51 - Contention C1 over C3",
+    "52 - Contention C1 over C4",
+    "53 - Contention C1 over C5",
+    "54 - Contention C2 over C0",
+    "55 - Contention C2 over C1",
+    "56 - Contention C2 over C3",
+    "57 - Contention C2 over C4",
+    "58 - Contention C2 over C5",
+    "59 - Contention C3 over C0",
+    "60 - Contention C3 over C1",
+    "61 - Contention C3 over C2",
+    "62 - Contention C3 over C4",
+    "63 - Contention C3 over C5",
+    "64 - Contention C4 over C0",
+    "65 - Contention C4 over C1",
+    "66 - Contention C4 over C2",
+    "67 - Contention C4 over C3",
+    "68 - Contention C4 over C5",
+    "69 - Contention C5 over C0",
+    "70 - Contention C5 over C1",
+    "71 - Contention C5 over C2",
+    "72 - Contention C5 over C3",
+    "73 - Contention C5 over C4"
+    };
+
 /* **********************************
 //Legacy function calls
 * **********************************/

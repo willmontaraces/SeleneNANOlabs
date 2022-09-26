@@ -145,11 +145,18 @@ RISCV_ARCH = rv$(XLEN)imafd
 include $(GRLIB)/bin/Makefile
 include $(GRLIB)/software/noelv/systest/Makefile
 
+### Check HLSinf accelerator implementation ###
+CFG_HLSINF_EN=$(shell awk -F\; '{print $1}' config.vhd | grep "CFG_HLSINF_EN" | grep -c '1')
+HLSINF_EXISTS=$(shell ls ../../accelerators/conv/src/ | grep libraries$)
+
 ##################  project specific targets ##########################
 
 ### Simulation ###
 fix_simulation:
 	../../interconnect/scripts/preprocessInterconnect.sh SIMULATION
+ifeq ($(CFG_HLSINF_EN), 1)
+	@echo "HLSinf accelerator is not instanciated on simulation"
+endif
 
 patch_selene: patch_grlib
 
@@ -222,7 +229,15 @@ comp_mem:
 fix_vivado:
 	../../interconnect/scripts/preprocessInterconnect.sh SYNTHESIS
 
-cp-xci-files: scripts
+
+create_accelerators:
+ifeq ($(CFG_HLSINF_EN), 1)
+ifneq ("$(HLSINF_EXISTS)","libraries")
+	../../accelerators/hlsIntegrationTool/launch_vcu118_integration_HLSinf.sh 1
+endif
+endif	
+
+cp-xci-files: create_accelerators scripts
 	@echo "Overwriting board mig files with local files"
 	cp ../../grlib/boards/xilinx-vcu118-xcvu9p/mig.xci ./vivado/mig.xci
 	cp ../../grlib/boards/xilinx-vcu118-xcvu9p/mig_cdc.xci ./vivado/mig_cdc.xci

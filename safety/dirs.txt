@@ -1,3 +1,4 @@
 ahb_pmu
 rootvoter_v2/hw
+apb_lightlock
 

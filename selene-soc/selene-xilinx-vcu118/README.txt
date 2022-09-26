@@ -318,8 +318,9 @@ Currently used device-IDs:
     |---------------------------------|
     |   0:      HLS accelerator       |
     |   1-4:    RootVoters            |
-    |   5:      SafeSu                |
-    |   6-15:   Not used              |
+    |   5:      SafeSU                |
+    |   6:      SafeDE                |
+    |   7-15:   Not used              |
     |---------------------------------|
                                   
 Currently defined Device Types:
@@ -330,7 +331,8 @@ Currently defined Device Types:
     |   1:      HLS accelerator       |
     |   2:      RootVoter             |
     |   3:      SafeSU                |
-    |   4-15:   Currently not used    |
+    |   4:      SafeDE                |
+    |   5-15:   Currently not used    |
     |---------------------------------|
 
 
@@ -364,7 +366,7 @@ grmon3> info sys
     Type:    HLSinf Accelerator core
     Version: 10
     Features: U200, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
-  Device at ADR: 0xfffc0100
+  Device at ADR: 0xfffc0200
     ID:      1
     Type:    RootVoter
     Version: 2
@@ -372,7 +374,7 @@ grmon3> info sys
     Detection of Data Errors: 1
     Tracking of Match Pairs:  0
     Count Matches:            1
-  Device at ADR: 0xfffc0200
+  Device at ADR: 0xfffc0300
     ID:      2
     Type:    RootVoter
     Version: 2
@@ -380,7 +382,7 @@ grmon3> info sys
     Detection of Data Errors: 1
     Tracking of Match Pairs:  0
     Count Matches:            1
-  Device at ADR: 0xfffc0300
+  Device at ADR: 0xfffc0400
     ID:      3
     Type:    RootVoter
     Version: 2
@@ -388,7 +390,7 @@ grmon3> info sys
     Detection of Data Errors: 1
     Tracking of Match Pairs:  0
     Count Matches:            1
-  Device at ADR: 0xfffc0400
+  Device at ADR: 0xfffc0500
     ID:      4
     Type:    RootVoter
     Version: 2

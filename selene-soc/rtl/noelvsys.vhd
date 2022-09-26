@@ -90,7 +90,7 @@ entity noelvsys is
     -- BSC ------------------------------------------------------
     -- Bus ahbmo from all cores (PMU RDC)
     cpus_ahbmo     : out ahb_mst_out_vector_type(ncpu-1 downto 0);
-    freeze         : in std_logic_vector(ncpu-1 downto 0) := (others => '0');
+    freeze         : in std_logic_vector(ncpu-1 downto 0);
     -- DFT support
     testen  : in  std_ulogic := '0';
     testrst : in  std_ulogic := '1';

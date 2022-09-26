@@ -64,6 +64,7 @@ entity noelvcpu is
     irqo  : out nv_irq_out_type;
     dbgi  : in  nv_debug_in_type;
     dbgo  : out nv_debug_out_type;
+    eto   : out nv_etrace_out_type;
     cnt   : out nv_counter_out_type
     );
 end;
@@ -80,6 +81,14 @@ architecture hier of noelvcpu is
     ext_a         : integer;
     ext_c         : integer;
     ext_h         : integer;
+    ext_zba       : integer;
+    ext_zbb       : integer;
+    ext_zbc       : integer;
+    ext_zbs       : integer;
+    ext_zbkb      : integer;
+    ext_zbkc      : integer;
+    ext_zbkx      : integer;
+    ext_sscofpmf  : integer;
     mode_s        : integer;
     mode_u        : integer;
     fpulen        : integer;
@@ -88,6 +97,7 @@ architecture hier of noelvcpu is
     pmp_g         : integer;
     perf_cnts     : integer;
     perf_evts     : integer;
+    perf_bits     : integer;
     tbuf          : integer;
     trigger       : integer;
     icen          : integer;
@@ -118,6 +128,14 @@ architecture hier of noelvcpu is
     ext_a         => 0,
     ext_c         => 0,
     ext_h         => 0,
+    ext_zba       => 0,
+    ext_zbb       => 0,
+    ext_zbc       => 0,
+    ext_zbs       => 0,
+    ext_zbkb      => 0,
+    ext_zbkc      => 0,
+    ext_zbkx      => 0,
+    ext_sscofpmf  => 0,
     mode_s        => 0,
     mode_u        => 0,
     fpulen        => 0,
@@ -126,6 +144,7 @@ architecture hier of noelvcpu is
     pmp_g         => 0,
     perf_cnts     => 0,
     perf_evts     => 0,
+    perf_bits     => 0,
     tbuf          => 0,
     trigger       => 0,
     icen          => 0,
@@ -158,8 +177,16 @@ architecture hier of noelvcpu is
       single_issue  => 0,
       ext_m         => 1,
       ext_a         => 1,
-      ext_c         => 1, -- Should be enabled
+      ext_c         => 1,
       ext_h         => 1,
+      ext_zba       => 1,
+      ext_zbb       => 1,
+      ext_zbc       => 1,
+      ext_zbs       => 1,
+      ext_zbkb      => 1,
+      ext_zbkc      => 1,
+      ext_zbkx      => 1,
+      ext_sscofpmf  => 1,
       mode_s        => 1,
       mode_u        => 1,
       fpulen        => 64,
@@ -167,7 +194,8 @@ architecture hier of noelvcpu is
       pmp_entries   => 8,
       pmp_g         => 10,
       perf_cnts     => 16,
-      perf_evts     => 16,
+      perf_evts     => 32,
+      perf_bits     => 32,
       tbuf          => 4,
       trigger       => 32*0 + 16*1 + 2,
       icen          => 1,
@@ -196,8 +224,16 @@ architecture hier of noelvcpu is
       single_issue  => 0,
       ext_m         => 1,
       ext_a         => 1,
-      ext_c         => 1, -- Should be enabled
+      ext_c         => 1,
       ext_h         => 1,
+      ext_zba       => 1,
+      ext_zbb       => 1,
+      ext_zbc       => 0,
+      ext_zbs       => 1,
+      ext_zbkb      => 1,
+      ext_zbkc      => 1,
+      ext_zbkx      => 1,
+      ext_sscofpmf  => 1,
       mode_s        => 1,
       mode_u        => 1,
       fpulen        => 64,
@@ -206,6 +242,7 @@ architecture hier of noelvcpu is
       pmp_g         => 10,
       perf_cnts     => 16,
       perf_evts     => 16,
+      perf_bits     => 32,
       tbuf          => 4,
       trigger       => 32*0 + 16*1 + 2,
       icen          => 1,
@@ -234,8 +271,16 @@ architecture hier of noelvcpu is
       single_issue  => 1,
       ext_m         => 1,
       ext_a         => 1,
-      ext_c         => 1, -- Should be enabled
+      ext_c         => 1,
       ext_h         => 1,
+      ext_zba       => 1,
+      ext_zbb       => 1,
+      ext_zbc       => 0,
+      ext_zbs       => 1,
+      ext_zbkb      => 1,
+      ext_zbkc      => 0,
+      ext_zbkx      => 0,
+      ext_sscofpmf  => 1,
       mode_s        => 1,
       mode_u        => 1,
       fpulen        => 64,
@@ -244,6 +289,7 @@ architecture hier of noelvcpu is
       pmp_g         => 10,
       perf_cnts     => 16,
       perf_evts     => 16,
+      perf_bits     => 32,
       tbuf          => 4,
       trigger       => 32*0 + 16*1 + 2,
       icen          => 1,
@@ -274,6 +320,14 @@ architecture hier of noelvcpu is
       ext_a         => 1,
       ext_c         => 1,
       ext_h         => 0,
+      ext_zba       => 0,
+      ext_zbb       => 0,
+      ext_zbc       => 0,
+      ext_zbs       => 0,
+      ext_zbkb      => 0,
+      ext_zbkc      => 0,
+      ext_zbkx      => 0,
+      ext_sscofpmf  => 0,
       mode_s        => 0,
       mode_u        => 1,
       fpulen        => 64,
@@ -282,6 +336,7 @@ architecture hier of noelvcpu is
       pmp_g         => 10,
       perf_cnts     => 16,
       perf_evts     => 16,
+      perf_bits     => 32,
       tbuf          => 4,
       trigger       => 32*0 + 16*0 + 2,
       icen          => 1,
@@ -312,6 +367,14 @@ architecture hier of noelvcpu is
       ext_a         => 1,
       ext_c         => 1,
       ext_h         => 0,
+      ext_zba       => 0,
+      ext_zbb       => 0,
+      ext_zbc       => 0,
+      ext_zbs       => 0,
+      ext_zbkb      => 0,
+      ext_zbkc      => 0,
+      ext_zbkx      => 0,
+      ext_sscofpmf  => 0,
       mode_s        => 0,
       mode_u        => 1,
       fpulen        => 0,
@@ -320,6 +383,7 @@ architecture hier of noelvcpu is
       pmp_g         => 10,
       perf_cnts     => 16,
       perf_evts     => 16,
+      perf_bits     => 32,
       tbuf          => 4,
       trigger       => 32*0 + 16*0 + 2,
       icen          => 1,
@@ -350,6 +414,14 @@ architecture hier of noelvcpu is
       ext_a         => 0,
       ext_c         => 0,
       ext_h         => 0,
+      ext_zba       => 0,
+      ext_zbb       => 0,
+      ext_zbc       => 0,
+      ext_zbs       => 0,
+      ext_zbkb      => 0,
+      ext_zbkc      => 0,
+      ext_zbkx      => 0,
+      ext_sscofpmf  => 0,
       mode_s        => 0,
       mode_u        => 0,
       fpulen        => 0,
@@ -358,6 +430,7 @@ architecture hier of noelvcpu is
       pmp_g         => 10,
       perf_cnts     => 0,
       perf_evts     => 0,
+      perf_bits     => 0,
       tbuf          => 1,
       trigger       => 32*0 + 16*0 + 0,
       icen          => 0,
@@ -386,8 +459,16 @@ architecture hier of noelvcpu is
       single_issue  => 0,
       ext_m         => 1,
       ext_a         => 1,
-      ext_c         => 1, -- Should be enabled
-      ext_h         => 0,
+      ext_c         => 1,
+      ext_h         => 1,
+      ext_zba       => 1,
+      ext_zbb       => 1,
+      ext_zbc       => 0,
+      ext_zbs       => 1,
+      ext_zbkb      => 1,
+      ext_zbkc      => 0,
+      ext_zbkx      => 0,
+      ext_sscofpmf  => 0,
       mode_s        => 1,
       mode_u        => 1,
       fpulen        => 64,
@@ -396,6 +477,7 @@ architecture hier of noelvcpu is
       pmp_g         => 10,
       perf_cnts     => 3,
       perf_evts     => 16,
+      perf_bits     => 32,
       tbuf          => 4,
       trigger       => 32*0 + 16*0 + 2,
       icen          => 1,
@@ -461,6 +543,14 @@ begin
       ext_a           => cfg_c(cfg).ext_a,
       ext_c           => cfg_c(cfg).ext_c,
       ext_h           => cfg_c(cfg).ext_h,
+      ext_zba         => cfg_c(cfg).ext_zba,
+      ext_zbb         => cfg_c(cfg).ext_zbb,
+      ext_zbc         => cfg_c(cfg).ext_zbc,
+      ext_zbs         => cfg_c(cfg).ext_zbs,
+      ext_zbkb        => cfg_c(cfg).ext_zbkb,
+      ext_zbkc        => cfg_c(cfg).ext_zbkc,
+      ext_zbkx        => cfg_c(cfg).ext_zbkx,
+      ext_sscofpmf    => cfg_c(cfg).ext_sscofpmf,
       mode_s          => cfg_c(cfg).mode_s,
       mode_u          => cfg_c(cfg).mode_u,
       fpulen          => cfg_c(cfg).fpulen,
@@ -486,6 +576,7 @@ begin
       disas           => disas,
       perf_cnts       => cfg_c(cfg).perf_cnts,
       perf_evts       => cfg_c(cfg).perf_evts,
+      perf_bits       => cfg_c(cfg).perf_bits,
       illegalTval0    => 0,
       no_muladd       => 0,
       single_issue    => cfg_c(cfg).single_issue,
@@ -508,6 +599,7 @@ begin
       irqo            => irqo,
       dbgi            => dbgi,
       dbgo            => dbgo,
+      eto             => eto,
       cnt             => cnt
       );
 end;

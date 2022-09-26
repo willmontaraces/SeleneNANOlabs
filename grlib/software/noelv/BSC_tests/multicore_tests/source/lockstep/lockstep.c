@@ -4,7 +4,7 @@
 #include "binarysearch.h"
 //#include <time.h> 
 #include "pmu_hw.h"
-#include <lockstep.h>
+#include "SafeDE_driver.h"
 
 //#define __UART__
 

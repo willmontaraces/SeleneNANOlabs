@@ -6,6 +6,8 @@ Supported hardware configurations:
 
 * 4 core, 128 events, 24 counters -> Driver folder ```4-core```
 * 6 core, 128 events, 24 counters -> Driver folder ```6-core```
+* 6 core, 256 events, 24 counters (customization for SELENE platform) -> Driver folder ```6-core-256e```
+
 
 RTL and C drivers are tightly integrated, but both have different levels of parametrization.
 Due to these limitations, unsupported configurations may require manual changes on the RTL, drivers, or both.

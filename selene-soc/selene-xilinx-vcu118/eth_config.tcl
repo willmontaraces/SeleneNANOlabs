@@ -219,3 +219,4 @@ proc setup_eth {} {
 }
 
 setup_eth
+quit

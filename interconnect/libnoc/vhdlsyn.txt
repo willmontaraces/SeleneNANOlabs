@@ -2,3 +2,4 @@ libnoc.vhd vhdlstd=2008
 axi_noc.vhd
 axi_lite_noc.vhd
 axi_width_converter.vhd
+mem_monitor/mem_monitor.vhd

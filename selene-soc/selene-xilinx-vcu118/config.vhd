@@ -274,7 +274,7 @@ package config is
 -- If read/write combining is disabled, the bridge between the Processor bus
 -- and the I/O slave bus will not be able to handle all accesses from the
 -- processors(s).
-  constant CFG_AHB2AHB_RWCOMB  : integer := 1;  -- Use read and write combining
+  constant CFG_AHB2AHB_RWCOMB  : integer := 0;  -- Use read and write combining
 -- SPI controller
   constant CFG_SPICTRL_ENABLE : integer := 0;
   constant CFG_SPICTRL_NUM : integer := (1);
@@ -302,7 +302,7 @@ package config is
   --pragma synthesis_on
   ;
   constant CFG_IN_SYNTHESIS : boolean := not CFG_IN_SIMULATION;
-  constant CFG_HLSINF_EN : integer := 0;            -- Enable HLSinf accelerator (only for bitstream)
+  constant CFG_HLSINF_EN : integer := 1;            -- Enable HLSinf accelerator (only for bitstream)
   constant CFG_HLSINF_VERSION : integer := 10;      -- 10:HLSINF_1_0, 11:HLSINF_1_1, 12:HLSINF_1_2, 13:HLSINF_1_3
   
   constant CFG_AXI_N_ACCELERATORS : integer := 6;
@@ -310,18 +310,29 @@ package config is
 -- safeSU
   constant CFG_SAFESU_EN : integer := 1; -- Enable safeSU
   constant CFG_SAFESU_FT : integer := 0; -- Fault tolerance
-  constant CFG_SAFESU_NEV : integer := 128; -- Crossbar inputs
+  constant CFG_SAFESU_NEV : integer := 256; -- Crossbar inputs
   constant CFG_SAFESU_NCNT : integer := 24 ; -- Counters
   constant CFG_SAFESU_VERSION : integer := 0; -- 4 bits for version
+  -- Latency and contention
+  constant CFG_SAFESU_AHBMST : integer := 15; -- Depends on version. GPL 12 masters, Non-GPL 15 masters
+
+-- safeDE
+  constant CFG_SAFEDE_EN : integer := 1; -- Enable safeDE
+  constant CFG_SAFEDE_VERSION : integer := 0; -- 4 bits for version
 
 -- AXI xbar configuration
 --The following line "CFG_AXI_N_INITIATORS" must not contain labels, logic operations or comments due to preprocesor scripts
---the current value "5" corresponds to 1(gpp) + CFG_AXI_N_ACCELERATORS + 3(conv_acc have 4 ports)
+--the current value "7" corresponds to 1(gpp) + 6 (HLSinf have 6 ports)
   constant CFG_AXI_N_INITIATORS : integer := 7;
   constant CFG_AXI_N_TARGETS : integer := 1;
 -- AXI LITE xbar configuration
   constant CFG_AXI_LITE_N_INITIATORS : integer := 1;
   constant CFG_AXI_LITE_N_TARGETS : integer := CFG_AXI_N_ACCELERATORS;
+--MEMORY CONTROLLER SNIFFER (Sniffer for memory Req and Resp)
+  constant MEM_SNIFF_CORES_VECTOR_DEEP : integer := 16;
+  constant MEM_SNIFF_INITIATORS_VECTOR_DEEP : integer := 1;
+  constant MEM_SNIFF_MAX_PENDING_REQ : integer := 16;
+
 -- RootVoter Cells  
   constant CFG_RVC_VERSION     : integer := 2;
   

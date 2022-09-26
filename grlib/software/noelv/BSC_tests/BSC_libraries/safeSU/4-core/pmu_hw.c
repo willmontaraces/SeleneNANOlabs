@@ -355,7 +355,7 @@ unsigned int pmu_mccu_get_quota_remaining(unsigned int core) {
     #ifdef __PMU_LIB_DEBUG__
     printf("pmu_mccu_get_quota_remaining\n");
     #endif
-    return (_PMU_MCCU_QUOTA[3 + core]);
+    return (_PMU_MCCU_QUOTA[MCCU_N_CORES + core]);
 }
 
 /*

@@ -11,6 +11,7 @@
 #include "griommu.h"
 #include "greth.h"
 #include "l2c.h"
+#include "mem.h"
 //#include "l2capi.h"
 #include "grdmac2.h"
 
@@ -75,9 +76,10 @@
 #define GRETH_SYSTEST (1 << 9)
 #define L2C_SYSTEST (1 << 10)
 #define DMAC2_SYSTEST (1 << 11)
+#define MEM_SYSTEST (1 << 12)
 
 #ifndef SYSTEST_TYPE
-#define SYSTEST_TYPE DMAC2_SYSTEST
+#define SYSTEST_TYPE APBUART_SYSTEST 
 #endif
 
 void print_test_result(int test_failed, char* dev_string) {
@@ -184,6 +186,9 @@ int main() {
   if ((SYSTEST_TYPE) & DMAC2_SYSTEST) {
     test_failed |= grdmac2_test(DMAC2_ADDR_SYSTEST, 0);
     print_test_result(test_failed, "GRDMAC2");
+  }
+  if ((SYSTEST_TYPE) & MEM_SYSTEST) {
+    mem_test(0x100000,0x80000000,0);
   }
 
   print_test_result(test_failed, "All");

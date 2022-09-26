@@ -315,8 +315,8 @@ begin
         ioarea     => 0,
         ibrsten    => 0,
         lckdac     => 0,
-        slvmaccsz  => 32 + 96*CFG_AHB2AHB_RWCOMB,
-        mstmaccsz  => 32 + 96*CFG_AHB2AHB_RWCOMB,
+        slvmaccsz  => 128, -- 32 + 96*CFG_AHB2AHB_RWCOMB,
+        mstmaccsz  => 128, --32 + 96*CFG_AHB2AHB_RWCOMB,
         rdcomb     => 2*CFG_AHB2AHB_RWCOMB,
         wrcomb     => 2*CFG_AHB2AHB_RWCOMB,
         combmask   => 16#7FFF#,  -- No acc. combining on 0xf0000000 and up
@@ -430,8 +430,12 @@ begin
       io_ahbmo(hmidx_canfd1 + 1)          <= ahbmo_can2(0);
     end generate canfd2_ahbm_gen;
 
-  end generate iommu;
+    dma_ahbmi <= io_ahbmi;
+    dma_ahbm_gen : if CFG_GRDMAC2 /= 0 generate
+      io_ahbmo(hmidx_dma) <= dma_ahbmo(0);
+    end generate dma_ahbm_gen;
 
+  end generate iommu;
 
 
   --IOMMU generation Disabled
@@ -515,11 +519,11 @@ begin
      generic map (
        tech             => memtech,
        pindex           => pidx_dma,
-       paddr            => 16#a00#,
+       paddr            => 16#A00#,
        pmask            => 16#FF8#,
        pirq             => pidx_dma,
        dbits            => 128,
-       en_bm1           => 1,
+       en_bm1           => 0,
        hindex0          => hmidx_dma,
        hindex1          => 0,
        max_burst_length => 32,
@@ -836,7 +840,7 @@ begin
         hindex	        => hmidx_canfd1,
         pindex	        => pidx_canfd1,
         paddr 	        => 16#C00#,
-        pmask	        => 16#FFC#,
+        pmask	          => 16#FFC#,
         pirq            => pidx_canfd1,
         singleirq       => 1,
         txbufsize       => 2,

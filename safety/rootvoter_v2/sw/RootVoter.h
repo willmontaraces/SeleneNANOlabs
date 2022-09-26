@@ -236,10 +236,10 @@ NOTE: Base Address should be aligned by 256 bytes, i.e. BASE_ADR = AXI_ADDR & 12
 #ifndef ROOTVOTER_DEFS
 #define ROOTVOTER_DEFS
 
-#define RVC0_BASE 0xfffc0100
-#define RVC1_BASE 0xfffc0200
-#define RVC2_BASE 0xfffc0300
-#define RVC3_BASE 0xfffc0400
+#define RVC0_BASE 0xfffc0200
+#define RVC1_BASE 0xfffc0300
+#define RVC2_BASE 0xfffc0400
+#define RVC3_BASE 0xfffc0500
 
 
 typedef struct {

@@ -849,6 +849,250 @@ begin
 
     end procedure mig_test;
 
+    -- SafeDE testbench
+    procedure safedetb(signal dsurx : in std_ulogic; signal dsutx : out std_ulogic) is
+      variable w32        : std_logic_vector(31 downto 0);
+
+      -- Debug Unit Variables
+      variable halted   : std_logic := '0';
+      variable active   : std_logic := '0';
+      variable resumed  : std_logic := '0';
+      variable busy     : std_logic := '1';
+
+      variable status   : std_logic_vector(31 downto 0);
+
+      variable TP       : boolean := true;
+      variable Screen   : boolean := false;
+
+      constant txp      : time := 160 * 1 ns;
+      constant lresp    : boolean := false;
+
+      variable reg      : std_logic_vector(15 downto 0);
+
+    begin
+
+      report("-- Check AHBROM");
+      txc(dsutx, 16#80#, txp);
+      txa(dsutx, 16#C0#, 16#00#, 16#40#, 16#00#, txp);
+      rxi(dsurx, w32, txp, lresp);
+      report("-- AHBROM @ C000_4000: " & tost(w32));
+     
+      -- Enable TX and RX FIFO in APBUART
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FC#, 16#00#, 16#10#, 16#08#, txp);
+      txa(dsutx, 16#80#, 16#00#, 16#00#, 16#03#, txp);
+
+      print("-- Activate the Debug Module");
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#40#, txp);
+      txa(dsutx, 16#00#, 16#00#, 16#00#, 16#01#, txp);
+
+      print("-- Halt all of the cores");
+    
+      -- Select all harts in Hart Array Window
+      for i in 0 to CFG_NCPU-1 loop
+        w32(i) := '1';
+      end loop;
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#54#, txp);
+      txa(dsutx, conv_integer(w32(31 downto 24)), conv_integer(w32(23 downto 16)),
+                 conv_integer(w32(15 downto 8)) , conv_integer(w32(7 downto 0)), txp);
+      --Halting   
+      w32 := (others => '0');
+      w32(31) := '1';
+      w32(0) := '1';
+      if CFG_NCPU /= 1 then
+        w32(26) := '1';
+      end if;
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#40#, txp);
+      txa(dsutx, conv_integer(w32(31 downto 24)), conv_integer(w32(23 downto 16)),
+                 conv_integer(w32(15 downto 8)) , conv_integer(w32(7 downto 0)), txp);
+
+      txc(dsutx, 16#80#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#44#, txp);
+      rxi(dsurx, w32, txp, lresp);
+      print("-- DMSTATUS: " & tost(w32));
+
+      --read_srec("ram.srec", 1, dsutx);
+
+      print("-- Break on ebreak");
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#5C#, txp);
+      txa(dsutx, 16#00#, 16#32#, 16#07#, 16#b0#, txp);
+      
+      txc(dsutx, 16#80#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+      rxi(dsurx, w32, txp, lresp);
+      print("-- Abstract Control and Status is " & tost(w32));
+
+      busy := w32(12);
+
+      while busy = '1' loop
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("-- Abstract Control and Status is " & tost(w32));
+
+        busy := w32(12);
+      end loop;
+      
+      txc(dsutx, 16#80#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#10#, txp);
+      rxi(dsurx, w32, txp, lresp);
+      w32(15) := '1';
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#10#, txp);
+      txa(dsutx, conv_integer(w32(31 downto 24)), conv_integer(w32(23 downto 16)),
+                 conv_integer(w32(15 downto 8)) , conv_integer(w32(7 downto 0)), txp);
+
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#5C#, txp);
+      txa(dsutx, 16#00#, 16#33#, 16#07#, 16#b0#, txp);
+
+      txc(dsutx, 16#80#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+      rxi(dsurx, w32, txp, lresp);
+      print("-- Abstract Control and Status is " & tost(w32));
+
+      busy := w32(12);
+
+      while busy = '1' loop
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("-- Abstract Control and Status is " & tost(w32));
+
+        busy := w32(12);
+      end loop;
+
+      -- Write new PC to Core 0
+
+      print("-- Write new pc to core0");
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#10#, txp);
+      txa(dsutx, 16#C0#, 16#00#, 16#40#, 16#00#, txp);
+
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#5C#, txp);
+      txa(dsutx, 16#00#, 16#33#, 16#07#, 16#b1#, txp);
+      
+      txc(dsutx, 16#80#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+      rxi(dsurx, w32, txp, lresp);
+      print("-- Abstract Control and Status is " & tost(w32));
+
+      busy := w32(12);
+
+      while busy = '1' loop
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("-- Abstract Control and Status is " & tost(w32));
+
+        busy := w32(12);
+      end loop;
+
+
+      -- Write new PC to Core 1
+
+      print("-- Write new pc to core1");
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#40#, txp);
+      txa(dsutx, 16#04#, 16#01#, 16#00#, 16#01#, txp);
+
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#10#, txp);
+      txa(dsutx, 16#C0#, 16#00#, 16#40#, 16#00#, txp);
+
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#5C#, txp);
+      txa(dsutx, 16#00#, 16#33#, 16#07#, 16#b1#, txp);
+      
+      txc(dsutx, 16#80#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+      rxi(dsurx, w32, txp, lresp);
+      print("-- Abstract Control and Status is " & tost(w32));
+
+      busy := w32(12);
+
+      while busy = '1' loop
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("-- Abstract Control and Status is " & tost(w32));
+
+        busy := w32(12);
+      end loop;
+
+
+      print("-- Configure Stack Pointer");
+      if (CFG_MIG_7SERIES = 1) then
+      -- MIG 1GB Memory at 0x00000000, stack should be at 0x3FFFFFF0
+        w32 := conv_std_logic_vector(16#3ffffff0#, 32);
+        print("-- Stack Pointer configured at 0x3ffffff0");
+      else
+      -- 1MB AHBRAM Memory at 0x00000000 stack should be at 0x000FFFF0
+        w32 := conv_std_logic_vector(16#00FFFFF0#, 32);
+      end if;
+      reg := (12 => '1', others => '0'); reg(4 downto 0) := "00010"; --GPR_SP
+      dm_reg_write(dsurx, dsutx, reg, w32);
+
+
+      wait for 100 ns;
+      print("-- Trying to access address 0xFC0E0004");
+      txc(dsutx, 16#80#, txp); --read command
+      txa(dsutx, 16#FC#, 16#0E#, 16#00#, 16#04#, txp); --address to read
+      rxi(dsurx, w32, txp, lresp); -- wait for respone and save response
+                                   -- variable w32
+      print("-- READ from 0xFC0E0004: " & tost(w32));
+      
+      print("-- Trying to access address 0xFC0E0008");
+      txc(dsutx, 16#80#, txp); --read command
+      txa(dsutx, 16#FC#, 16#0E#, 16#00#, 16#08#, txp); --address to read
+      rxi(dsurx, w32, txp, lresp); -- wait for respone and save response
+                                   -- variable w32
+      print("-- READ from 0xFC0E0008: " & tost(w32));
+
+      wait for 100 ns;
+      print("-- Remove all halts");
+      -- Select all harts
+      txc(dsutx, 16#c0#, txp); --TX command
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#54#, txp); --address
+      txa(dsutx, 16#00#, 16#00#, 16#00#, 16#0F#, txp); --data
+
+      -- Remove all halts
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#40#, txp);
+      txa(dsutx, 16#44#, 16#00#, 16#00#, 16#01#, txp);
+
+      txc(dsutx, 16#80#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#44#, txp);
+      rxi(dsurx, w32, txp, lresp);
+      print("-- Debug Module Status is " & tost(w32));
+
+      --resumed := w32(10) and w32(11);
+      resumed := w32(10);
+
+      while resumed = '0' loop
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#44#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("-- Debug Module Status is " & tost(w32));
+
+        --resumed := w32(10) and w32(11);
+        resumed := w32(10);
+      end loop;
+      print("-- hart 0 resume status : " & tost(resumed));
+      while halted = '0' loop
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#44#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        halted := w32(9);
+      end loop;
+      print("Hart 0 halted after successfull RAM test binary execution.");
+    end;
+
     procedure riscvtb(signal dsurx : in std_ulogic; signal dsutx : out std_ulogic) is
       variable w32        : std_logic_vector(31 downto 0);
 
@@ -1055,12 +1299,13 @@ begin
       print("Hart 0 halted after successfull RAM test binary execution.");
     end;
 
+
   begin
     dsuctsn <= '0';
     dsucfg(dsutx, dsurx);
 
     -- Uncomment for AHBUART TEST
-    duart_test(dsutx, dsurx);
+    --duart_test(dsutx, dsurx);
 
     -- Uncomment for GRSPW TEST
     --spw_link_start(dsutx, dsurx);
@@ -1073,6 +1318,12 @@ begin
     -- RISCV Test
     riscvtb(dsutx, dsurx);
     mig_test(dsutx, dsurx);
+
+    -- SafeDE test
+    --safedetb(dsutx, dsurx);
+    --riscvtb(dsutx, dsurx);
+    --mig_test(dsutx, dsurx);
+
     wait for 10 ns;
     assert false
     report "Testbench execution completed successfully!"

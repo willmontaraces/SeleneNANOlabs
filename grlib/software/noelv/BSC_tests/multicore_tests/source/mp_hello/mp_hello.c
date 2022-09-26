@@ -1,6 +1,6 @@
 #include <stdio.h> 
 #include "util.h"
-#include "lockstep.h"
+#include "SafeDE_driver.h"
 
 void thread_entry(int cid, int nc)
 {
