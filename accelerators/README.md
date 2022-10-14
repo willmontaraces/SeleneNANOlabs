@@ -38,3 +38,14 @@ You can see examples of accelerator software interfacing on:
 You can find the address offset of the control signals for each configurable parameter on `<Kernel_name>_rtl_control_s_axi.v`.
 The base address of this module is that of your accelerator control interface, as described on the __Control signals__ section.
 Once the accelerator is configured you can assert the __ap\_start__ signal and wait for an __ap\_done__ pulse by polling.
+
+# Integrating a Vitis HLS kernel
+
+Vitis HLS kernels implement the AXI4 lite and AXI4 interface.
+We have designed an integration tool to automatically do the following steps:
+- Vitis HLS kernel export
+- Accelerator adaptation
+- Accelerator instanciation
+
+We can easily integrate these by using the hlsIntegrationTool as decribed in [`selene-hardware/accelerators/hlsIntegrationTool/README.md`](hlsIntegrationTool/README.md).
+
