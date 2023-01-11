@@ -93,6 +93,7 @@ architecture rtl of mem_monitor is
 
   signal read_pending_pre_o : std_ulogic_vector (NUM_CORES - 1 downto 0);
   signal read_serving_pre_o : std_ulogic_vector (NUM_CORES - 1 downto 0);
+  signal write_pending_pre_o : std_ulogic_vector (NUM_CORES - 1 downto 0);
   signal write_serving_pre_o : std_ulogic_vector (NUM_CORES - 1 downto 0);
   
   signal mem_sniff_coreID_read_serving_all  : std_ulogic_vector (NUM_CORES - 1 downto 0);
@@ -144,7 +145,8 @@ begin
     read_serving(i)  <= read_serving_pre_o(i) or mem_sniff_coreID_read_serving(i) or read_serving_cross_backpresure(i);
     read_serving_o(i) <= read_serving(i);
 
-    write_pending_o(i) <= mem_sniff_coreID_write_backpresure(i) or write_pending_cross_backpresure(i);
+    write_pending_pre_o(i)  <= '0' when (i = to_integer(mem_sniff_write(to_integer(b_id)).request(mem_sniff_write(to_integer(b_id)).read_ptr).qos)) else mem_sniff_coreID_write(i).pending;
+    write_pending_o(i) <= write_pending_pre_o(i) or mem_sniff_coreID_write_backpresure(i) or write_pending_cross_backpresure(i);
     write_serving_pre_o(i)  <= mem_sniff_coreID_write_pending(i) when (i = to_integer(mem_sniff_write(to_integer(b_id)).request(mem_sniff_write(to_integer(b_id)).read_ptr).qos)) else '0';
     write_serving(i)  <= write_serving_pre_o(i) or mem_sniff_coreID_write_serving(i) or write_serving_cross_backpresure(i);
     write_serving_o(i) <= write_serving(i);

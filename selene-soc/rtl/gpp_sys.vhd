@@ -493,6 +493,8 @@ gen_safeSU : if CFG_SAFESU_EN /= 0 generate
       clk            => clkm,
       -- AHB bus signals
       ahbmi          => ahbmi,
+      ahbsi          => ahbsi,
+      ahbso          => ahbso,
       cpus_ahbmo     => cpus_ahbmo,    -- cpu ahb master signals
       ahbsi_hmaster  => ahbsi.hmaster,
       -- mem_sniff signals
@@ -563,20 +565,16 @@ gen_safeSU : if CFG_SAFESU_EN /= 0 generate
            apbi_i   => apbi(pidx_lightlock),
            apbo_o   => apbo(pidx_lightlock),
            -- Lockstep signals
-           icnt1_i  => pmu_events(2).icnt,
-           icnt2_i  => pmu_events(3).icnt, 
-           stall1_o => freeze(2),
-           stall2_o => freeze(3)
+           icnt1_i  => pmu_events(0).icnt,
+           icnt2_i  => pmu_events(1).icnt, 
+           stall1_o => freeze(0),
+           stall2_o => freeze(1)
            );
-
-   cpu_freeze_top1 : for i in 0 to 1 generate
-        freeze(i) <= '0';
-   end generate;
-   gen_freeze_six_core : if (ncpu > 4) generate
-     cpu_freeze_top2 : for i in 4 to ncpu-1 generate --for the six-core version
-          freeze(i) <= '0';
-     end generate;
-    end generate gen_freeze_six_core;
+   
+      --cpu_freeze_top : for i in 2 to ncpu -1 generate
+      cpu_freeze_gen : for i in 2 to ncpu-1 generate
+           freeze(i) <= '0';
+      end generate;
   end generate gen_safeDE;
   
   nogen_safeDE : if CFG_SAFEDE_EN = 0 generate

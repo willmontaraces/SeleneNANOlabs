@@ -1,3 +1,6 @@
 pmu_module.vhd
+fifo_regs.vhd
+cpu_vector.vhd
+fifo_regs.vhd
 ahb_latency_and_contention.vhd
 ahb_wrapper.vhd

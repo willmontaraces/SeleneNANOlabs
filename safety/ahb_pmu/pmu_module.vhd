@@ -165,6 +165,8 @@ package pmu_module is
         clk   : in  std_ulogic;
         -- AHB bus signals
         ahbmi         : in ahb_mst_in_type;
+        ahbso         : in ahb_slv_out_vector;
+        ahbsi         : in ahb_slv_in_type;
         cpus_ahbmo    : in ahb_mst_out_vector_type(ncpu-1 downto 0);
         ahbsi_hmaster : in std_logic_vector(3 downto 0);
         -- mem_sniff signals
@@ -180,9 +182,40 @@ package pmu_module is
         );
   end component;
 
-      
-        
-        
+  component cpu_vector is
+    generic (
+          VECTOR_LENGTH : integer := 6
+      );
+    Port ( 
+     clk        : in std_logic;
+     rstn       : in std_logic;
+     push_in    : in std_logic; -- when 1 pushes CPU_IN into vector
+     cpu_in     : in std_logic_vector(VECTOR_LENGTH-1 downto 0); -- ONE HOT encoded vector of CPU to push inside queue
+     pop_in      : in std_logic; -- when 1 pops pop_vector_in of vector
+     pop_vector_in    : in std_logic_vector(VECTOR_LENGTH-1 downto 0); -- ONE HOT encoded vector of CPU to pop of queue
+     cpu_vector_o : out std_logic_vector(VECTOR_LENGTH-1 downto 0)
+    );
+  end component;      
+   
+  component module_fifo is
+    generic (
+    g_WIDTH : natural := 6;
+    g_DEPTH : integer := 6
+    );
+  port (
+    rst      : in std_logic;
+    clk      : in std_logic;
 
+    -- FIFO Write Interface
+    wr_en    : in  std_logic;
+    wr_data  : in  std_logic_vector(g_WIDTH-1 downto 0);
+    full     : out std_logic;
+
+    -- FIFO Read Interface
+    rd_en    : in  std_logic;
+    rd_data  : out std_logic_vector(g_WIDTH-1 downto 0);
+    empty    : out std_logic
+    );
+  end component ;
 
 end pmu_module;
