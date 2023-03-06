@@ -302,7 +302,7 @@ package config is
   --pragma synthesis_on
   ;
   constant CFG_IN_SYNTHESIS : boolean := not CFG_IN_SIMULATION;
-  constant CFG_HLSINF_EN : integer := 1;            -- Enable HLSinf accelerator (only for bitstream)
+  constant CFG_HLSINF_EN : integer := 0;            -- Enable HLSinf accelerator (only for bitstream)
   constant CFG_HLSINF_VERSION : integer := 10;      -- 10:HLSINF_1_0, 11:HLSINF_1_1, 12:HLSINF_1_2, 13:HLSINF_1_3
   
   constant CFG_AXI_N_ACCELERATORS : integer := 6;

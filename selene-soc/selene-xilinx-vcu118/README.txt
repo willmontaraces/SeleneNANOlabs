@@ -19,7 +19,9 @@ https://www.gaisler.com/index.php/downloads/debug-tools
 
 ===========================================================================================================
 
-• Synthesis should be done using Vivado 2019.2 or newer. For newer versions
+• To enable HLSinf convolutional neural network accelerator change generic CFG_HLSINF_EN in the config.vhd file.
+
+• Synthesis should be done using Vivado 2020.2 or newer. For newer versions
   the MIG and SGMII projects may need to be updated.
 
 • The DDR4 controller is implemented with Xilinx MIG 7-Series and 
