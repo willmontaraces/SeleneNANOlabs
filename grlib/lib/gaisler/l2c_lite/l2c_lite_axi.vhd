@@ -16,7 +16,7 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program; if not, write to the Free Software
---  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+--  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -76,6 +76,9 @@ architecture rtl of l2c_lite_axi is
     signal excl_err   : std_logic_vector(1 downto 0);
     signal excl_done  : std_ulogic;
 
+    signal lr_owner_s : std_logic_vector(15 downto 0);
+    signal le_owner_s : std_logic_vector(15 downto 0);
+
 begin
 
     ctrl : l2c_lite_ctrl
@@ -86,7 +89,9 @@ begin
         ioaddr   => ioaddr,
         waysize  => waysize,
         linesize => linesize,
-        cached   => cached)
+        cached   => cached,
+        repl     => repl,
+        ways     => ways)
     port map(
         rstn   => rstn,
         clk    => clk,
@@ -103,14 +108,17 @@ begin
         tech     => tech,
         waysize  => waysize,
         linesize => linesize,
-        ways     => ways,
-        repl     => repl)
+        ways     => ways
+        )
     port map(
         rstn  => rstn,
         clk   => clk,
         ctrli => ctrli,
         ctrlo => ctrlo,
-        ahbsi => ahbsi);
+        ahbsi => ahbsi,
+        ---- LINE REPLACER AND EVICT OWNERSHIP ON AXI QoS ----
+        lr_owner => lr_owner_s,   -- New owner of the line
+        le_owner => le_owner_s);  -- Previous owner of the line
 
     generic_bus_master : generic_bm_axi
     generic map(
@@ -122,7 +130,7 @@ begin
         addr_width       => addr_width,
         max_size         => max_size,
         max_burst_length => 256,
-           burst_chop_mask  => 4096,
+        burst_chop_mask  => 4096,
         bm_info_print    => 0,
         lendian_en       => 0,
         axi_bm_id_width  => 4)
@@ -142,7 +150,7 @@ begin
         axi_aw_cache => aximo.aw.cache,
         axi_aw_prot  => aximo.aw.prot,
         axi_aw_valid => aximo.aw.valid,
-        axi_aw_qos   => aximo.aw.qos,
+        axi_aw_qos   => open,
         axi_aw_ready => aximi.aw.ready,
         --write data channel
         axi_w_data  => aximo.w.data,
@@ -165,7 +173,7 @@ begin
         axi_ar_cache => aximo.ar.cache,
         axi_ar_prot  => aximo.ar.prot,
         axi_ar_valid => aximo.ar.valid,
-        axi_ar_qos   => aximo.ar.qos,
+        axi_ar_qos   => open,
         axi_ar_ready => aximi.ar.ready,
         --read data channel
         axi_r_ready => aximo.r.ready,
@@ -197,6 +205,16 @@ begin
         endian_out => endian_out
 
     );
+
+    ---- REPLACER AND EVICTED OWNERS ON QoS PROPAGATION ----
+    -- On AR.valid rising edge, sample both QoS busses which indicate previous
+    -- owner of the line (evicted as AW.qos) and new owner of the line (replacer
+    -- as AR.qos).
+    -- If no AW.valid rising edge appears between actual and next AR.valid
+    -- rising edge, that means that the actual eviction is clean, otherwise
+    -- is of a dirty line.
+    aximo.ar.qos  <= lr_owner_s(aximo.ar.qos'range);
+    aximo.aw.qos  <= le_owner_s(aximo.aw.qos'range);
 
     assert not ((ways mod 2 /= 0) and (repl = 1))
     report "L2 Cache configuration error: pLRU replacement policy requires ways to be power of 2."

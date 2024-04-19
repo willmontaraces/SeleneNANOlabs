@@ -16,7 +16,7 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program; if not, write to the Free Software
---  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+--  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -34,12 +34,13 @@ use techmap.gencomp.all;
 
 package l2c_lite is
 
-    constant bm_dw              : integer                       := 128; 
-    constant max_linesize       : integer                       := 256; 
-    constant endianess          : integer                       := GRLIB_CONFIG_ARRAY(grlib_little_endian); 
+    constant bm_dw              : integer                       := 128;
+    constant max_linesize       : integer                       := 256;
+    constant endianess          : integer                       := GRLIB_CONFIG_ARRAY(grlib_little_endian);
     constant active_mem_banks   : std_logic_vector(0 to 3)      := "1000";
     constant active_IO_banks    : std_logic_vector(0 to 3)      := "0100";
     constant IO_ADDR_MASK       : integer                       := 16#F00#;
+    constant cpu_count	        : positive			:= 6;
 
     -- Generic bus master
     constant async_reset        : boolean                       := true;
@@ -52,21 +53,24 @@ package l2c_lite is
     constant DIRTY_BIT          : integer                       := 0;
     constant VALID_BIT          : integer                       := 1;
 
+    constant bitmasks            : integer                       := 4;
 
-    -- STATE MACHINES -- 
-    type state_type is (READ_S, IDLE_S, WRITE_S, R_INCR_S, W_INCR_S, BACKEND_READ_S, DIRECT_READ_S, DIRECT_WRITE_S, FLUSH_S);
+
+    -- STATE MACHINES --
+    type state_type is (READ_S, IDLE_S, WRITE_S, R_INCR_S, W_INCR_S, IO_READ_S, IO_WRITE_S, BACKEND_READ_S, DIRECT_READ_S, DIRECT_WRITE_S, FLUSH_S);
     type bw_state_type is (BACKEND_WRITE_S, IDLE_S);
 
     type cache_ctrli_type is record
         cachectrl_s           : state_type;
         backendw_s            : bw_state_type;
+	    internal_repl		  : natural range 0 to 3;
         cache_data_in_backend : std_logic_vector(max_linesize * 8 - 1 downto 0);
         fetch_ready           : std_ulogic;
         seq_restart           : std_ulogic;
     end record;
 
     type cache_ctrlo_type is record
-        c_hit, c_miss, evict, f_done : std_ulogic;
+        c_hit, not_owner, c_miss, evict, f_done : std_ulogic;
         frontend_buf                 : std_logic_vector(max_linesize * 8 - 1 downto 0);
         backend_buf                  : std_logic_vector(max_linesize * 8 - 1 downto 0);
         backend_buf_addr             : std_logic_vector(31 downto 0);
@@ -110,7 +114,7 @@ package l2c_lite is
                          constant address_mask : std_logic_vector) return boolean;
 
     ---- FUNCTION DESCRIPTION:
-    --          Reverses data, used for little endian implementations. 
+    --          Reverses data, used for little endian implementations.
     --          Ex: input - AB 01 03 C0 ; output - 0C 03 01 AB;
     function reversedata(data : std_logic_vector; step : integer)
                             return std_logic_vector;
@@ -180,15 +184,15 @@ package l2c_lite is
                 be_dw      : integer := 32 );
         port (rstn  : in std_ulogic;
               clk   : in std_ulogic;
-    
+
               ---- CACHE FRONTEND ----
               ahbsi : in ahb_slv_in_type;
               ahbso : out ahb_slv_out_type;
-    
+
               ---- CACHE BACKEND ----
               aximi : in axi_somi_type;
               aximo : out axi4_mosi_type
-    
+
         );
 
     end component;
@@ -198,13 +202,15 @@ package l2c_lite is
             tech : integer := 0;
             waysize : integer := 32;
             linesize : integer := 32;
-            ways : integer := 2;
-            repl : integer := 0);
+            ways : integer := 2);
         port (rstn       : in std_ulogic;
               clk        : in std_ulogic;
               ctrli      : in cache_ctrli_type;
               ctrlo      : out cache_ctrlo_type;
-              ahbsi      : in ahb_slv_in_type );
+              ahbsi      : in ahb_slv_in_type;
+              ---- LINE REPLACER AND EVICT OWNERSHIP ON AXI QOS ----
+              lr_owner   : out std_logic_vector(15 downto 0);   -- New owner of the line
+              le_owner   : out std_logic_vector(15 downto 0));  -- Previous owner of the line
 
     end component;
 
@@ -221,7 +227,7 @@ package l2c_lite is
         port (
             rstn   : in std_ulogic;
             clk    : in std_ulogic;
-            ctrlo  : out cache_ctrli_type; 
+            ctrlo  : out cache_ctrli_type;
             ctrli  : in cache_ctrlo_type;
             ahbsi  : in ahb_slv_in_type;
             ahbso  : out ahb_slv_out_type;
@@ -251,7 +257,7 @@ package body l2c_lite is
     end size_vector_to_int;
 
     function is_cachable(constant address : std_logic_vector;
-        constant address_mask : std_logic_vector) return boolean is 
+        constant address_mask : std_logic_vector) return boolean is
     begin
         if address_mask(to_integer(unsigned(address))) = '1' then
             return true;
