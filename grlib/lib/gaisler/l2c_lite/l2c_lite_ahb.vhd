@@ -16,7 +16,7 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program; if not, write to the Free Software
---  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+--  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -121,14 +121,16 @@ begin
         tech     => tech,
         waysize  => waysize,
         linesize => linesize,
-        ways     => ways,
-        repl     => repl)
+        ways     => ways)
     port map(
         rstn  => rstn,
         clk   => clk,
         ctrli => ctrli,
         ctrlo => ctrlo,
-        ahbsi => ahbsi);
+        ahbsi => ahbsi,
+        ---- LINE REPLACER AND EVICT OWNERSHIP UNNUSED ON AHB ----
+        lr_owner => open,   -- New owner of the line
+        le_owner => open);  -- Previous owner of the line
 
     generic_bus_master : generic_bm_ahb
     generic map(

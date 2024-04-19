@@ -52,14 +52,19 @@ entity l2c_lite_ctrl is
         ahbso  : out ahb_slv_out_type;
         bm_out : in bm_out_type;
         bm_in  : out bm_in_type);
+        
 
 end entity l2c_lite_ctrl;
 
 architecture rtl of l2c_lite_ctrl is
 
+
     constant addr_depth : integer := log2ext(waysize * (2 ** 10) / linesize);
     constant tag_len    : integer := 32 - addr_depth - log2ext(linesize);
     constant tag_dbits  : integer := tag_len + 2;
+    constant owners	: integer := 2 ** ahbsi.hmaster'length;
+    constant totalRegisters : integer := register_count + owners;
+
 
     -- RANGES -- 
     subtype TAG_R is natural range 31 downto addr_depth + log2ext(linesize);
@@ -67,7 +72,7 @@ architecture rtl of l2c_lite_ctrl is
     subtype INDEX_R is natural range (addr_depth + log2ext(linesize) - 1) downto log2ext(linesize);
     subtype TAG_INDEX_R is natural range 31 downto log2ext(linesize);
     subtype OFFSET_R is natural range log2ext(linesize) - 1 downto 0;
-
+    
     constant hconfig : ahb_config_type := (
         0      => ahb_device_reg (VENDOR_GAISLER, GAISLER_L2CL, 0, 0, 0),
         4      => gen_pnp_bar(haddr, hmask, 2, 1, 1),
@@ -90,12 +95,14 @@ architecture rtl of l2c_lite_ctrl is
         hready : std_ulogic;
         hrdata : std_logic_vector(AHBDW - 1 downto 0);
         hresp  : std_logic_vector(1 downto 0);
+        hmbsel : std_logic_vector(0 to NAHBAMR - 1);
         bmrd_addr : std_logic_vector(32 - 1 downto 0);
         bmrd_size : std_logic_vector(log2ext(max_size) - 1 downto 0);
         bmrd_req  : std_logic;
         bmwr_addr : std_logic_vector(32 - 1 downto 0);
         bmwr_size : std_logic_vector(log2ext(max_size) - 1 downto 0);
         bmwr_req  : std_logic;
+    	internal_repl : integer range 0 to 3; -- DETERMINES REPLACEMENT POLICY OF CACHE --
         bmwr_data : std_logic_vector(bm_dw - 1 downto 0);
         cache_data_temp : std_logic_vector(linesize * 8 - 1 downto 0);
         bm_counter      : integer range 0 to linesize * 8/bm_dw + 1;
@@ -104,13 +111,14 @@ architecture rtl of l2c_lite_ctrl is
         IO_wr : std_ulogic;
         seq_restart : std_ulogic;
         cache_registers : std_logic_vector(register_count * 32 - 1 downto 0);
-        offset : integer range 0 to 31;
+        offset : integer range 0 to 63;
         haddr_buffer : std_logic_vector(31 downto 0);
         hwrite_buffer : std_ulogic;
-        htrans_buffer : std_logic_vector(1 downto 0);
         hsize_buffer  : std_logic_vector(2 downto 0);
         hburst_buffer : std_logic_vector(2 downto 0);
+        hmbsel_buffer : std_logic_vector( 0 to NAHBAMR - 1);
     end record;
+
 
     signal fetch_ready : std_ulogic := '0';
     signal r, rin      : reg_type;
@@ -131,6 +139,7 @@ begin
     comb : process (r, ahbsi, rstn, ctrli, bm_out, fetch_ready)
         variable v                         : reg_type;
         variable hit_trigger, miss_trigger : std_ulogic;
+    	variable dirty_evict               : std_ulogic;
         variable counter                   : integer range 0 to AHBDW/8;
         variable c_offset                  : integer range 0 to linesize-1;
         variable cache_en                  : std_ulogic;
@@ -144,6 +153,7 @@ begin
         v.hsel   := ahbsi.hsel;
         v.hwdata := ahbsi.hwdata;
         v.hsize  := ahbsi.hsize;
+        v.hmbsel := ahbsi.hmbsel;
         v.hrdata := (others => 'U');
 
         ---- BACKEND ----
@@ -154,94 +164,86 @@ begin
         v.bmwr_addr := (others => '0');
         v.bmwr_size := (others => '0');
 
-        v.write_delay := (others => '0');
-        v.fetch_delay := '0';
-        v.seq_restart := '0';
-        v.IO_wr       := '0';
-        hit_trigger   := '0';
-        miss_trigger  := '0';
-        fetch_ready <= '0';
-        cache_en := '1';
+        v.write_delay               := (others => '0');
+        v.fetch_delay               := '0';
+        v.seq_restart               := '0';
+        v.IO_wr                     := '0';
+        hit_trigger                 := '0';
+        miss_trigger                := '0';
+    	dirty_evict                 := '0';
+        fetch_ready                 <= '0';
+        cache_en                    := '1';
         ctrlo.cache_data_in_backend <= (others => 'U');
 
+        
         case r.control_state is
             when IDLE_S =>
+                
+                if ((r.seq_restart and r.hsel(hsindex) and r.htrans(1)) or (ahbsi.hsel(hsindex) and ahbsi.htrans(1))) = '1' then -- REQUEST AVAILABLE --
+                    
+                    if (r.seq_restart and r.hsel(hsindex) and r.htrans(1)) = '1' then         -- PIPELINED REQUEST --
+                        v.hready        := '0';                    
 
-                if (r.seq_restart and r.hsel(hsindex) and r.htrans(1)) = '1' then
+                        v.hwrite_buffer := r.hwrite;
+                        v.hsize_buffer  := r.hsize;
+                        v.hburst_buffer := r.hburst;
+                        v.haddr_buffer  := r.haddr;
+                        v.hmbsel_buffer := r.hmbsel;
 
-                    v.hready        := '0';
-                    v.hwrite_buffer := r.hwrite;
-                    v.htrans_buffer := r.htrans;
-                    v.hsize_buffer  := r.hsize;
-                    v.hburst_buffer := r.hburst;
-                    v.haddr_buffer  := r.haddr;
+                    else                               -- NORMAL REQUEST --
+                    
+                        v.hwrite_buffer := v.hwrite;
+                        v.hsize_buffer  := v.hsize;
+                        v.hburst_buffer := v.hburst;
+                        v.haddr_buffer  := v.haddr;
+                        v.hmbsel_buffer := v.hmbsel;
 
-                    if is_cachable(r.haddr(31 downto 28), cached) and cache_en = '1' then
-                        if v.hwrite_buffer = '0' then
-                            v.control_state := READ_S;
-                        else
-                            v.control_state := WRITE_S;
-                        end if;
-                    else ---- ADDRESS NOT CACHABLE ----
-
-                        if v.hwrite_buffer = '0' then
-                            v.control_state := DIRECT_READ_S;
-                        else
-                            v.control_state := DIRECT_WRITE_S;
-                        end if;
                     end if;
 
-                elsif (ahbsi.hsel(hsindex) and ahbsi.htrans(1)) = '1' and bank_select(ahbsi.hmbsel and active_mem_banks) then
+                    if bank_select(v.hmbsel_buffer and active_mem_banks) then -- REQUEST TO CACHE DATA --
+                        
+                        if v.hwrite_buffer = '0' then       -- READ
+                            
+                            if is_cachable(v.haddr_buffer(31 downto 28), cached) then
+                                v.control_state := READ_S;
+                            else
+                                v.control_state := DIRECT_READ_S;
+                            end if;
+                        
+                        else                                -- WRITE
+                            
+                            if is_cachable(v.haddr_buffer(31 downto 28), cached) then
+                                v.control_state := WRITE_S;
+                            else
+                                v.control_state := DIRECT_WRITE_S;
+                            end if;
 
-                    v.htrans_buffer := v.htrans;
-                    v.hsize_buffer  := v.hsize;
-                    v.hburst_buffer := v.hburst;
-                    v.hwrite_buffer := v.hwrite;
-                    v.haddr_buffer  := v.haddr;
+                        end if;
+                   
+                     elsif bank_select(v.hmbsel_buffer and active_IO_banks) then -- IO REQUEST --
 
-                    if is_cachable(v.haddr(31 downto 28), cached) and cache_en = '1' then
-                        if v.hwrite = '0' then
-                            v.control_state := READ_S;
+                        v.offset := IO_offset(v.haddr_buffer);
+                        
+                        if v.hwrite_buffer = '0' then
+                            v.control_state := IO_READ_S;                            
                         else
-                            v.control_state := WRITE_S;
+                            v.control_state := IO_WRITE_S;
                         end if;
 
-                    else ---- ADDRESS NOT CACHABLE ----
-
-                        if v.hwrite = '0' then
-                            v.control_state := DIRECT_READ_S;
-                        else
-                            v.write_delay(0) := '1';
-                            v.control_state  := DIRECT_WRITE_S;
-                        end if;
-                    end if;
+                     end if;
                 end if;
 
-                ---- ACCESS TO INTERNAL CACHE REGISTERS ----
-                if ((ahbsi.hsel(hsindex) and ahbsi.htrans(1)) = '1' and bank_select(ahbsi.hmbsel and active_IO_banks)) or r.IO_wr = '1' then --  HANDLES I/O accesses
-                    v.hready := '0';
-                    if r.IO_wr = '1' then
-                        v.hready := '1';
-                        if r.hwrite = '0' then
-                            v.hrdata(31 downto 0) := r.cache_registers((register_count - v.offset) * 32 - 1 downto (register_count - (v.offset + 1)) * 32);
-                        else
-                            v.cache_registers((register_count - r.offset) * 32 - 1 downto (register_count - (r.offset + 1)) * 32) := ahbsi.hwdata(31 downto 0);
-                        end if;
-                    elsif v.hwrite = '0' then
-                        v.offset := IO_offset(v.haddr);
-                        v.IO_wr  := '1';
-                    else
-                        v.offset := IO_offset(v.haddr);
-                        v.IO_wr  := '1';
-                    end if;
-                end if;
 
             when READ_S =>
                 v.hready := '0';
                 if (ctrli.c_miss = '1') and (r.fetch_delay = '0') then -- CACHE MISS
 
-                    v.control_state := BACKEND_READ_S;
-                    miss_trigger    := '1';
+		            if ctrli.not_owner = '1' then
+			            v.control_state := DIRECT_READ_S;
+		            else 
+                    	v.control_state := BACKEND_READ_S;
+                    	miss_trigger    := '1';
+		            end if;
 
                 elsif ctrli.c_hit = '1' then
 
@@ -250,6 +252,7 @@ begin
 
                     counter  := 0;
                     c_offset := to_integer(unsigned(r.haddr_buffer(OFFSET_R)));
+
                     for i in 0 to AHBDW/8 - 1 loop
                         v.hrdata(AHBDW - 8 * i - 1 downto AHBDW - (i + 1) * 8) :=
                         ctrli.frontend_buf(linesize * 8 - (c_offset + counter) * 8 - 1 downto linesize * 8 - (c_offset + counter + 1) * 8);
@@ -272,7 +275,7 @@ begin
 
                         v.control_state := R_INCR_S;
 
-                        if r.haddr_buffer(TAG_INDEX_R) /= v.haddr(TAG_INDEX_R) or r.htrans /= HTRANS_SEQ then
+                        if r.haddr_buffer(TAG_INDEX_R) /= v.haddr(TAG_INDEX_R) or v.htrans /= HTRANS_SEQ then
                             v.control_state := IDLE_S;
                             v.seq_restart   := '1';
                         end if;
@@ -290,44 +293,71 @@ begin
                 v.hready := '0';
 
                 if (ctrli.c_miss = '1') then
-
-                    v.control_state := BACKEND_READ_S;
-                    miss_trigger    := '1';
+		    
+        		    if ctrli.not_owner = '1' then
+		            	v.control_state := DIRECT_WRITE_S;
+		            else 
+                    	v.control_state := BACKEND_READ_S;
+                    	miss_trigger    := '1';
+		            end if;
 
                 elsif ctrli.c_hit = '1' then
-                    if r.write_delay(0) = '1' then ---- DELAY FOR SINGLE WRITES ----
-
-                        v.control_state := IDLE_S;
-                        v.hready        := '1';
-
-                        if v.htrans /= HTRANS_IDLE then
-                            v.seq_restart := '1';
-                        end if;
-
-                    elsif r.write_delay(1) = '1' then ---- DELAY FOR INCREMENT WRITES ----
-
-                        v.control_state := IDLE_S;
-                        v.seq_restart   := '1';
-                        v.hready        := '1';
-
-                    elsif v.htrans = HTRANS_IDLE then
-
-                        v.write_delay(0) := '1';
-                        hit_trigger      := '1';
-
-                    elsif r.hburst_buffer = HBURST_INCR then
-
+                    
+                    if v.htrans = HBURST_INCR then
+                        
                         v.control_state := W_INCR_S;
-                        hit_trigger     := '1';
-
-                        if r.haddr_buffer(TAG_INDEX_R) /= v.haddr(TAG_INDEX_R) or r.htrans /= HTRANS_SEQ then
-                            v.write_delay(1) := '1';
-                            v.control_state  := WRITE_S;
+                        
+                        if r.haddr_buffer(TAG_INDEX_R) /= v.haddr(TAG_INDEX_R) or v.htrans /=  HTRANS_SEQ then
+                            v.control_state := WRITE_S;
                         end if;
+
                     else
-                        v.write_delay(1) := '1';
-                        hit_trigger      := '1';
+                        hit_trigger     := '1';
+                        v.hready        := '1';
+                        v.control_state := IDLE_S;
                     end if;
+
+                    hit_trigger         := '1';
+                    v.hready            := '1';
+
+                    if v.htrans /= HTRANS_IDLE then
+                        v.seq_restart := '1';
+                    end if;
+
+
+                    -- if r.write_delay(0) = '1' then ---- DELAY FOR SINGLE WRITES ----
+
+                    --     v.control_state := IDLE_S;
+                    --     v.hready        := '1';
+
+                    --     if v.htrans /= HTRANS_IDLE then
+                    --         v.seq_restart := '1';
+                    --     end if;
+
+                    -- elsif r.write_delay(1) = '1' then ---- DELAY FOR INCREMENT WRITES ----
+
+                    --     v.control_state := IDLE_S;
+                    --     v.seq_restart   := '1';
+                    --     v.hready        := '1';
+
+                    -- elsif v.htrans = HTRANS_IDLE then
+
+                    --     v.write_delay(0) := '1';
+                    --     hit_trigger      := '1';
+
+                    -- elsif r.hburst_buffer = HBURST_INCR then
+
+                    --     v.control_state := W_INCR_S;
+                    --     hit_trigger     := '1';
+
+                    --     if r.haddr_buffer(TAG_INDEX_R) /= v.haddr(TAG_INDEX_R) or v.htrans /= HTRANS_SEQ then
+                    --         v.write_delay(1) := '1';
+                    --         v.control_state  := WRITE_S;
+                    --     end if;
+                    -- else
+                    --     v.write_delay(1) := '1';
+                    --     hit_trigger      := '1';
+                    -- end if;
                 end if;
 
             when R_INCR_S =>
@@ -376,6 +406,58 @@ begin
                     v.seq_restart   := '1';
                     v.control_state := IDLE_S;
                 end if;
+
+
+
+            when IO_READ_S =>
+                
+                v.hready := '1';
+                
+                if r.offset < register_count  then -- ACCESS TO CONTROL MODULE REGISTERS --
+
+                    for i in 0 to 3 loop
+                        v.hrdata(i*32 + 31 downto i*32) := r.cache_registers((register_count - r.offset) * 32 - 1
+                                                                              downto (register_count - (r.offset + 1))*32);
+                    end loop;
+
+                elsif r.offset < register_count + ways + owners then                           -- ACCESS TO MEMORY MODULE REGISTERS  --
+
+                    for i in 0 to 3 loop
+                        v.hrdata(i*32 + 31 downto i*32) := ctrli.frontend_buf(31 downto 0);
+                    end loop;
+                end if;
+
+                if v.htrans /= HTRANS_IDLE then 
+                    v.seq_restart   := '1';
+                end if;
+
+                v.control_state := IDLE_S;
+                    
+
+
+            when IO_WRITE_S =>
+                
+                v.hready := '1';
+                
+                if r.offset < register_count then -- ACCESS TO CONTROL REGISTERS --
+
+                    if r.offset = register_count - 2 then -- CACHE INFO REGISTER --
+
+                        v.internal_repl := to_integer(unsigned(ahbsi.hwdata(31 downto 30))); -- CHANGES REPLACEMENT POLICY
+
+                    else                                  
+
+                        v.cache_registers((register_count - r.offset) * 32 - 1 downto (register_count - (r.offset + 1))*32) := ahbsi.hwdata(31 downto 0);
+
+                    end if;
+                end if;
+
+                if v.htrans /= HTRANS_IDLE then
+                    v.seq_restart := '1';
+                end if;
+
+                v.control_state := IDLE_S;
+
 
             when BACKEND_READ_S =>
 
@@ -505,6 +587,8 @@ begin
 
                 if (ctrli.evict = '1') and ((fetch_ready = '1') or (r.control_state = FLUSH_S)) then
                     v.bw_state := BACKEND_WRITE_S;
+		    dirty_evict := '1';
+
 
                 end if;
 
@@ -527,15 +611,24 @@ begin
                     downto linesize * 8 - bm_dw * (1 + v.bm_counter));
 
                 end if;
+                
+                if v.bm_counter >= linesize *8 /bm_dw - 1 then
 
-                if bm_out.bmwr_done = '1' then
-
-                    v.bw_state   := IDLE_S;
-                    v.bm_counter := 0;
-
-                else
-
+                    v.bm_counter    := 0;
+                    v.bw_state      := IDLE_S;
+                    
                 end if;
+                
+                -- BACKEND DOES NOT WAIT FOR BACKEND WRITE TO BE DONE
+
+                -- if bm_out.bmwr_done = '1' then
+
+                --     v.bw_state   := IDLE_S;
+                --     v.bm_counter := 0;
+
+                -- else
+
+                -- end if;
 
             when others =>
         end case;
@@ -546,8 +639,8 @@ begin
             v.hready        := '0';
         end if;
 
-        ---- MODIFYING INTERNAL CACHE REGISTERS ----
-        if hit_trigger = '1' then
+        ---- UPDATES INTERNAL CACHE REGISTERS ----
+        if hit_trigger = '1' then	
             v.cache_registers((register_count - 1) * 32 - 1 downto (register_count - (1 + 1)) * 32) := conv_std_logic_vector((
             to_integer(unsigned(r.cache_registers((register_count - 1) * 32 - 1 downto (register_count - (1 + 1)) * 32))) + 1), 32);
         end if;
@@ -556,7 +649,12 @@ begin
             to_integer(unsigned(r.cache_registers((register_count - 2) * 32 - 1 downto (register_count - (2 + 1)) * 32))) + 1), 32);
         end if;
 
-        v.cache_registers((register_count - 3) * 32 - 1 downto (register_count - 3) * 32 - 2)   := conv_std_logic_vector(repl, 2); 
+	    if dirty_evict = '1' then
+	        v.cache_registers((register_count - 4) * 32 - 1 downto (register_count - (4 + 1)) * 32) := conv_std_logic_vector((
+	        to_integer(unsigned(r.cache_registers((register_count - 4) * 32 - 1 downto (register_count - (4 + 1)) * 32))) + 1), 32);
+    	end if;
+
+        v.cache_registers((register_count - 3) * 32 - 1 downto (register_count - 3) * 32 - 2)   := conv_std_logic_vector(v.internal_repl, 2); 
         v.cache_registers((register_count - 3) * 32 - 5 downto (register_count - 3) * 32 - 12)  := conv_std_logic_vector(ways-1, 8); 
         v.cache_registers((register_count - 3) * 32 - 13 downto (register_count - 3) * 32 - 16) := conv_std_logic_vector(log2ext(linesize)-4, 4);
         v.cache_registers((register_count - 3) * 32 - 19 downto (register_count - 3) * 32 - 32) := conv_std_logic_vector(waysize, 14);
@@ -574,6 +672,8 @@ begin
         ahbso.hready <= v.hready;
         ahbso.hrdata <= v.hrdata;
 
+	    ctrlo.internal_repl <= v.internal_repl;
+
         rin <= v;
 
     end process;
@@ -585,6 +685,7 @@ begin
             r.cache_registers <= (others => '0');
             r.control_state   <= IDLE_S;
             r.bw_state        <= IDLE_S;
+	        r.internal_repl     <= repl;
 
         elsif rising_edge(clk) then
             r <= rin;
