@@ -6,10 +6,10 @@
 	url = https://github.com/pulp-platform/common_cells.git
 [submodule "safety/ahb_pmu/bsc_pmu"]
 	path = safety/ahb_pmu/bsc_pmu
-	url = https://gitlab.bsc.es/caos_hw/hdl_ip/bsc_pmu.git 
+	url = https://github.com/bsc-loca/SafeSU.git 
 [submodule "safety/apb_lightlock/bsc_lightlock"]
 	path = safety/apb_lightlock/bsc_lightlock
-	url = https://gitlab.bsc.es/caos_hw/hdl_ip/bsc_lightlock.git 
+	url = https://github.com/bsc-loca/SafeDE.git 
 [submodule "accelerators/HLSinf"]
 	path = accelerators/HLSinf
 	url = https://github.com/PEAK-UPV/HLSinf.git
