@@ -22,3 +22,5 @@ The directories are organized as follows:
 |accelerators | Colection of tested HLS generated IP cores |
 |safety | Safety related IP cores |
 |interconnect | Interconnect submodules and bridging logic |
+
+This project was inititiated in the context of the European Union’s Horizon 2020 SELENE project under grant agreement no. 871467 and is currently updated and maintained in the context of the Chips Joint Undertaking project ISOLDE with grant no. 101112274
