@@ -325,7 +325,7 @@ package config is
   constant CFG_AXI_N_TARGETS : integer := 1;
 -- AXI LITE xbar configuration
   constant CFG_AXI_LITE_N_INITIATORS : integer := 1;
-  constant CFG_AXI_LITE_N_TARGETS : integer := 6;
+  constant CFG_AXI_LITE_N_TARGETS : integer := 5;
 --MEMORY CONTROLLER SNIFFER (Sniffer for memory Req and Resp)
   constant MEM_SNIFF_CORES_VECTOR_DEEP : integer := 16;
   constant MEM_SNIFF_INITIATORS_VECTOR_DEEP : integer := 1;
