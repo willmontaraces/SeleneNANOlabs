@@ -36,13 +36,7 @@ export PATH=$PATH:/opt/ncc-1.0.0-gcc/bin
 #export PATH=/opt/grmon-pro-3.2.13/linux/bin64:$PATH
 
 SELENE_HARDWARE=${PWD}
-if [[ "$SELENE_HARDWARE" == *selene-hardware ]] 
-then
-	export GRLIB=$SELENE_HARDWARE/grlib 
-	export PATH=$SELENE_HARDWARE/grlib/software/noelv/riscv-gnu-toolchain/bin:$PATH
-else
-	echo "ERROR: Please locate this script on the selene repository root folder named selene-hardware"
-	RESULT="Script execution not succesful, please follow the instructions shown on screen"
-fi
+export GRLIB=$SELENE_HARDWARE/grlib 
+export PATH=$SELENE_HARDWARE/grlib/software/noelv/riscv-gnu-toolchain/bin:$PATH
 
 echo $RESULT
