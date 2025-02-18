@@ -267,7 +267,7 @@ begin
       fpuconf  => CFG_FPU,
       mulconf => 0,
       disas    => disas,
-      ahbtrace => 1,
+      ahbtrace => 0,
       cfg      => CFG_CFG,
       devid    => 0,
       --version  => CFG_GRVERSION_VERSION,

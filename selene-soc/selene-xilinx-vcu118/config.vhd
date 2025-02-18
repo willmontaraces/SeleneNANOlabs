@@ -36,7 +36,7 @@ package config is
   constant CFG_CLK_NOFB : integer := 0;
 -- NOELV processor core
   constant CFG_NOELV : integer := 1;
-  constant CFG_NCPU : integer := (6);
+  constant CFG_NCPU : integer := (1);
   constant CFG_CFG : integer := (0);
   constant CFG_NODBUS : integer := 1;
   constant CFG_DISAS : integer := 0;
@@ -132,7 +132,7 @@ package config is
   constant CFG_L2_EDAC : integer := 0;
   constant CFG_L2_AXI : integer := 1;
   -- L2 Cache Lite
-  constant CFG_L2CL_EN : integer := 1;
+  constant CFG_L2CL_EN : integer := 0;
   constant CFG_L2CL_SIZE : integer := 128;
   constant CFG_L2CL_WAYS : integer := 4;
   constant CFG_L2CL_REPL : integer := 0;
@@ -317,17 +317,15 @@ package config is
   constant CFG_SAFESU_AHBMST : integer := 15; -- Depends on version. GPL 12 masters, Non-GPL 15 masters
 
 -- safeDE
-  constant CFG_SAFEDE_EN : integer := 1; -- Enable safeDE
+  constant CFG_SAFEDE_EN : integer := 0; -- Enable safeDE
   constant CFG_SAFEDE_VERSION : integer := 0; -- 4 bits for version
 
 -- AXI xbar configuration
---The following line "CFG_AXI_N_INITIATORS" must not contain labels, logic operations or comments due to preprocesor scripts
---the current value "7" corresponds to 1(gpp) + 6 (HLSinf have 6 ports)
-  constant CFG_AXI_N_INITIATORS : integer := 7;
+  constant CFG_AXI_N_INITIATORS : integer := 2;
   constant CFG_AXI_N_TARGETS : integer := 1;
 -- AXI LITE xbar configuration
   constant CFG_AXI_LITE_N_INITIATORS : integer := 1;
-  constant CFG_AXI_LITE_N_TARGETS : integer := CFG_AXI_N_ACCELERATORS;
+  constant CFG_AXI_LITE_N_TARGETS : integer := 6;
 --MEMORY CONTROLLER SNIFFER (Sniffer for memory Req and Resp)
   constant MEM_SNIFF_CORES_VECTOR_DEEP : integer := 16;
   constant MEM_SNIFF_INITIATORS_VECTOR_DEEP : integer := 1;

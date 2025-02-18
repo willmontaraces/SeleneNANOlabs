@@ -595,8 +595,8 @@ end generate;
     --  port map (
     --    clk                 => clkm,
     --    rst_n               => acc_rst_n,
-    --    axi_control_in      => accel_l_aximo(0), --address is 0xfffc0010 
-    --    axi_control_out     => accel_l_aximi(0),
+    --    axi_control_in      => accel_l_aximo(5), --address is 0xfffc0010 
+    --    axi_control_out     => accel_l_aximi(5),
     --    axi_to_mem          => acc_mem_aximo(0),
     --    axi_from_mem        => acc_mem_aximi(0),
     --    interrupt           => acc_interrupt  
@@ -618,8 +618,8 @@ end generate;
         port map (
           clk       => clkm,
           rst_n     => rstn, 
-          axi_in    => accel_l_aximo(1), 
-          axi_out   => accel_l_aximi(1), 
+          axi_in    => accel_l_aximo(0), 
+          axi_out   => accel_l_aximi(0), 
           interrupt => rv_interrupt(0) -- not used yet
         );  
     end generate;
@@ -637,8 +637,8 @@ end generate;
         port map (
           clk       => clkm,
           rst_n     => rstn, 
-          axi_in    => accel_l_aximo(2), 
-          axi_out   => accel_l_aximi(2), 
+          axi_in    => accel_l_aximo(1), 
+          axi_out   => accel_l_aximi(1), 
           interrupt => rv_interrupt(1) -- not used yet
         );  
 	end generate;
@@ -656,8 +656,8 @@ end generate;
         port map (
           clk       => clkm,
           rst_n     => rstn, 
-          axi_in    => accel_l_aximo(3), 
-          axi_out   => accel_l_aximi(3), 
+          axi_in    => accel_l_aximo(2), 
+          axi_out   => accel_l_aximi(2), 
           interrupt => rv_interrupt(2) -- not used yet
         );  
     end generate;
@@ -675,147 +675,12 @@ end generate;
         port map (
           clk       => clkm,
           rst_n     => rstn, 
-          axi_in    => accel_l_aximo(4), 
-          axi_out   => accel_l_aximi(4), 
+          axi_in    => accel_l_aximo(3), 
+          axi_out   => accel_l_aximi(3), 
           interrupt => rv_interrupt(3) -- not used yet
         );  	
     end generate;
 
---PLACE HOLDER, PLEASE DO NOT REMOVE COMMENTS
---PLEASE DO NOT ADD MORE CODE BETWEEN THIS, ADD AFTHER OR BEFORE PLACE HOLDER
-     HLSinf_en : if (CFG_HLSINF_EN = 1 and CFG_IN_SYNTHESIS) generate 
-     --Rtl accelerator conv created by vivado HLS
-     axi_acc_conv_instance : conv_kernel 
-       port map (
-         clk                 => clkm,
-         rst_n               => acc_rst_n,
-         axi_control_in      => accel_l_aximo(0), --address is
-         axi_control_out     => accel_l_aximi(0),
-         axi_to_mem          => acc_mem_aximo_wide(0),
-         axi_from_mem        => acc_mem_aximi_wide(0),
-         axi_to_mem_1          => acc_mem_aximo_wide(1),
-         axi_from_mem_1        => acc_mem_aximi_wide(1),
-         axi_to_mem_2          => acc_mem_aximo_wide(2),
-         axi_from_mem_2        => acc_mem_aximi_wide(2),
-         axi_to_mem_3          => acc_mem_aximo_wide(3),
-         axi_from_mem_3        => acc_mem_aximi_wide(3),
-         axi_to_mem_5          => acc_mem_aximo_wide(4),
-         axi_from_mem_5        => acc_mem_aximi_wide(4),
-         axi_to_mem_6          => acc_mem_aximo_wide(5),
-         axi_from_mem_6        => acc_mem_aximi_wide(5),
-         interrupt           => acc_interrupt  
-       );
-     width_converter_conv_mem0: axi_dw_wrapper 
-      generic map(
-        AxiMaxReads =>    1,     
-        AxiSlvPortDataWidth => 128,
-        AxiMstPortDataWidth => AXIDW
-      )
-      port map (
-        clk               => clkm, 
-        rst               => rstn, 
-        axi_component_in  => acc_mem_aximo_wide(0),
-        axi_component_out => acc_mem_aximi_wide(0),
-        axi_from_noc      => acc_mem_aximi(0),
-        axi_to_noc        => acc_mem_aximo(0)
-     );
- 
-     width_converter_conv_mem1: axi_dw_wrapper 
-      generic map(
-        AxiMaxReads =>    1,     
-        AxiSlvPortDataWidth => 32,
-        AxiMstPortDataWidth => AXIDW
-      )
-      port map (
-        clk               => clkm, 
-        rst               => rstn, 
-        axi_component_in  => acc_mem_aximo_wide(1),
-        axi_component_out => acc_mem_aximi_wide(1),
-        axi_from_noc      => acc_mem_aximi(1),
-        axi_to_noc        => acc_mem_aximo(1)
-     );
- 
-     width_converter_conv_mem2: axi_dw_wrapper 
-      generic map(
-        AxiMaxReads =>    1,     
-        AxiSlvPortDataWidth => 128,
-        AxiMstPortDataWidth => AXIDW
-      )
-      port map (
-        clk               => clkm, 
-        rst               => rstn, 
-        axi_component_in  => acc_mem_aximo_wide(2),
-        axi_component_out => acc_mem_aximi_wide(2),
-        axi_from_noc      => acc_mem_aximi(2),
-        axi_to_noc        => acc_mem_aximo(2)
-     );
- 
-     width_converter_conv_mem3: axi_dw_wrapper 
-      generic map(
-        AxiMaxReads =>    1,     
-        AxiSlvPortDataWidth => 128,
-        AxiMstPortDataWidth => AXIDW
-      )
-      port map (
-        clk               => clkm, 
-        rst               => rstn, 
-        axi_component_in  => acc_mem_aximo_wide(3),
-        axi_component_out => acc_mem_aximi_wide(3),
-        axi_from_noc      => acc_mem_aximi(3),
-        axi_to_noc        => acc_mem_aximo(3)
-     );
- 
-     width_converter_conv_mem5: axi_dw_wrapper 
-      generic map(
-        AxiMaxReads =>    1,     
-        AxiSlvPortDataWidth => 128,
-        AxiMstPortDataWidth => AXIDW
-      )
-      port map (
-        clk               => clkm, 
-        rst               => rstn, 
-        axi_component_in  => acc_mem_aximo_wide(4),
-        axi_component_out => acc_mem_aximi_wide(4),
-        axi_from_noc      => acc_mem_aximi(4),
-        axi_to_noc        => acc_mem_aximo(4)
-     );
- 
-     width_converter_conv_mem6: axi_dw_wrapper 
-      generic map(
-        AxiMaxReads =>    1,     
-        AxiSlvPortDataWidth => 512,
-        AxiMstPortDataWidth => AXIDW
-      )
-      port map (
-        clk               => clkm, 
-        rst               => rstn, 
-        axi_component_in  => acc_mem_aximo_wide(5),
-        axi_component_out => acc_mem_aximi_wide(5),
-        axi_from_noc      => acc_mem_aximi(5),
-        axi_to_noc        => acc_mem_aximo(5)
-     );
- 
-      acc_mem_aximi(0)      <= initiator_aximi(1); 
-      initiator_aximo(1) <= acc_mem_aximo(0);
- 
-      acc_mem_aximi(1)      <= initiator_aximi(2); 
-      initiator_aximo(2) <= acc_mem_aximo(1);
- 
-      acc_mem_aximi(2)      <= initiator_aximi(3); 
-      initiator_aximo(3) <= acc_mem_aximo(2);
- 
-      acc_mem_aximi(3)      <= initiator_aximi(4); 
-      initiator_aximo(4) <= acc_mem_aximo(3);
- 
-      acc_mem_aximi(4)      <= initiator_aximi(5); 
-      initiator_aximo(5) <= acc_mem_aximo(4);
- 
-      acc_mem_aximi(5)      <= initiator_aximi(6); 
-      initiator_aximo(6) <= acc_mem_aximo(5);
- 
-      end generate;
---PLEASE DO NOT ADD MORE CODE BETWEEN THIS, ADD AFTHER OR BEFORE PLACE HOLDER
---END PLACE HOLDER, PLEASE DO NOT REMOVE COMMENTS
 
     target_aximi(0)    <= mem_aximi; 
     mem_aximo          <= target_aximo(0); 
@@ -893,8 +758,8 @@ end generate;
     port map (
       clk       => clkm,
       rst_n     => rstn, 
-      axi_in    => accel_l_aximo(5), 
-      axi_out   => accel_l_aximi(5), 
+      axi_in    => accel_l_aximo(4), 
+      axi_out   => accel_l_aximi(4), 
       acc_sw_reset_n => acc_sw_reset_n
     ); 
 

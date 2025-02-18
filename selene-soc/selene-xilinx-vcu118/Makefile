@@ -180,6 +180,13 @@ unpatch_ffi:
 	- patch --reverse --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/HWquota.patch;\
 	patch --reverse --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/FFI.patch;
 
+student-sim:
+	make clean;\
+	ln -s /opt/xilinx_lib/ .;\
+	make map_xilinx_7series_lib; \
+	make selene-sim;
+	make sim-run;
+
 
 selene-sim:
 	make patch_selene; \
