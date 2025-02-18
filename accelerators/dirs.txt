@@ -1,2 +1,3 @@
 conv/src
 conv/src/libraries
+dotProd/
