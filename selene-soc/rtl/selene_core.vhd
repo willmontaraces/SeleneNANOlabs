@@ -39,7 +39,7 @@ library interconnect;
 use interconnect.libnoc.all;
 use interconnect.libaxirom.all;
 library accelerators;
-use accelerators.conv_pkg.all;
+use accelerators.dot_prod_pkg.all;
 library safety; 
 use safety.librv.all;
 
@@ -590,20 +590,59 @@ end generate;
         axi_to_initiator    => xbar_l_aximi
     );  
 
-    --Rtl accelerator created by vivado HLS
-    -- axi_acc_instance0 : vcopy_kernel 
-    --  port map (
-    --    clk                 => clkm,
-    --    rst_n               => acc_rst_n,
-    --    axi_control_in      => accel_l_aximo(5), --address is 0xfffc0010 
-    --    axi_control_out     => accel_l_aximi(5),
-    --    axi_to_mem          => acc_mem_aximo(0),
-    --    axi_from_mem        => acc_mem_aximi(0),
-    --    interrupt           => acc_interrupt  
-    --  );
-    
-    -- acc_mem_aximi(0)      <= initiator_aximi(1); 
-    -- initiator_aximo(1) <= acc_mem_aximo(0);
+    ----------------------------------------------------------------------
+    --- VITIS HLS ACCEL INSTANCE -----------------------------------------
+    ----------------------------------------------------------------------
+    axi_acc_instance0 : dot_prod_krnl 
+    port map (
+      clk              => clkm,
+      rst_n            => acc_rst_n,
+      axi_control_in   => accel_l_aximo(--NUMBER--),
+      axi_control_out  => accel_l_aximi(--NUMBER--),
+      axi_to_mem_1     => acc_mem_aximo_wide(0),
+      axi_from_mem_1   => acc_mem_aximi_wide(0),
+      axi_to_mem_2     => acc_mem_aximo_wide(1),
+      axi_from_mem_2   => acc_mem_aximi_wide(1),
+      interrupt        => acc_interrupt
+    );
+
+    width_converter_conv_mem0: axi_dw_wrapper 
+    generic map(
+      AxiMaxReads =>    32,     
+      AxiSlvPortDataWidth => 32,
+      AxiMstPortDataWidth => AXIDW
+    )
+    port map (
+      clk               => clkm, 
+      rst               => rstn, 
+      axi_component_in  => acc_mem_aximo_wide(0),
+      axi_component_out => acc_mem_aximi_wide(0),
+      axi_from_noc      => acc_mem_aximi(0),
+      axi_to_noc        => acc_mem_aximo(0)
+    );
+    width_converter_conv_mem1: axi_dw_wrapper 
+    generic map(
+      AxiMaxReads =>    32,     
+      AxiSlvPortDataWidth => 32,
+      AxiMstPortDataWidth => AXIDW
+    )
+    port map (
+      clk               => clkm, 
+      rst               => rstn, 
+      axi_component_in  => acc_mem_aximo_wide(1),
+      axi_component_out => acc_mem_aximi_wide(1),
+      axi_from_noc      => acc_mem_aximi(1),
+      axi_to_noc        => acc_mem_aximo(1)
+    );
+    acc_mem_aximi(--NUMBER--)      <= initiator_aximi(--NUMBER--); 
+    initiator_aximo(--NUMBER--) <= acc_mem_aximo(--NUMBER--);
+
+    acc_mem_aximi(--NUMBER--)      <= initiator_aximi(--NUMBER--); 
+    initiator_aximo(--NUMBER--) <= acc_mem_aximo(--NUMBER--);
+
+    ----------------------------------------------------------------------
+    --- END OF ACCEL INSTANCE -- -----------------------------------------
+    ----------------------------------------------------------------------
 
 
     RVC_0_GEN: if(RVC_0_ENABLE = 1) generate
